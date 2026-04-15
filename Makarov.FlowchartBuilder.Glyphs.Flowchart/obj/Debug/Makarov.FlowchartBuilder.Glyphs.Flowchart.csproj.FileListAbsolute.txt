@@ -3,3 +3,7 @@ C:\MakarovProject\Makarov.FlowchartBuilder\Plugins\Makarov.FlowchartBuilder.Glyp
 C:\MakarovProject\Makarov.FlowchartBuilder.Glyphs.Flowchart\obj\Debug\ResolveAssemblyReference.cache
 C:\MakarovProject\Makarov.FlowchartBuilder.Glyphs.Flowchart\obj\Debug\Makarov.FlowchartBuilder.Glyphs.Flowchart.dll
 C:\MakarovProject\Makarov.FlowchartBuilder.Glyphs.Flowchart\obj\Debug\Makarov.FlowchartBuilder.Glyphs.Flowchart.pdb
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder.Glyphs.Flowchart\obj\Debug\Makarov.FlowchartBuilder.Glyphs.Flowchart.csproj.AssemblyReference.cache
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder.Glyphs.Flowchart\obj\Debug\Makarov.FlowchartBuilder.Glyphs.Flowchart.csproj.CoreCompileInputs.cache
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder.Glyphs.Flowchart\obj\Debug\Makarov.FlowchartBuilder.Glyphs.Flowchart.dll
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder.Glyphs.Flowchart\obj\Debug\Makarov.FlowchartBuilder.Glyphs.Flowchart.pdb

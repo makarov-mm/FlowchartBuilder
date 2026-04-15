@@ -7,15 +7,15 @@
       "RelativeMoniker": "D:0:0:{BF0B57AE-9EAB-4206-BF30-12AB352C87B3}|Makarov.Framework.Core\\Makarov.Framework.Core.csproj|solutionrelative:makarov.framework.core\\cache.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{65DA593A-94D5-4DD2-819D-3D338F7B95EE}|Makarov.FlowchartBuilder\\Makarov.FlowchartBuilder.csproj|c:\\users\\makar\\desktop\\flowchartbuilder\\makarov.flowchartbuilder\\settings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{65DA593A-94D5-4DD2-819D-3D338F7B95EE}|Makarov.FlowchartBuilder\\Makarov.FlowchartBuilder.csproj|C:\\Users\\makar\\Desktop\\FlowchartBuilder\\makarov.flowchartbuilder\\settings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{65DA593A-94D5-4DD2-819D-3D338F7B95EE}|Makarov.FlowchartBuilder\\Makarov.FlowchartBuilder.csproj|solutionrelative:makarov.flowchartbuilder\\settings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{65DA593A-94D5-4DD2-819D-3D338F7B95EE}|Makarov.FlowchartBuilder\\Makarov.FlowchartBuilder.csproj|c:\\users\\makar\\desktop\\flowchartbuilder\\makarov.flowchartbuilder\\core_properties.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{65DA593A-94D5-4DD2-819D-3D338F7B95EE}|Makarov.FlowchartBuilder\\Makarov.FlowchartBuilder.csproj|C:\\Users\\makar\\Desktop\\FlowchartBuilder\\makarov.flowchartbuilder\\core_properties.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{65DA593A-94D5-4DD2-819D-3D338F7B95EE}|Makarov.FlowchartBuilder\\Makarov.FlowchartBuilder.csproj|solutionrelative:makarov.flowchartbuilder\\core_properties.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{BF0B57AE-9EAB-4206-BF30-12AB352C87B3}|Makarov.Framework.Core\\Makarov.Framework.Core.csproj|c:\\users\\makar\\desktop\\flowchartbuilder\\makarov.framework.core\\singleton.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{BF0B57AE-9EAB-4206-BF30-12AB352C87B3}|Makarov.Framework.Core\\Makarov.Framework.Core.csproj|C:\\Users\\makar\\Desktop\\FlowchartBuilder\\makarov.framework.core\\singleton.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{BF0B57AE-9EAB-4206-BF30-12AB352C87B3}|Makarov.Framework.Core\\Makarov.Framework.Core.csproj|solutionrelative:makarov.framework.core\\singleton.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
@@ -51,8 +51,7 @@
               "RelativeToolTip": "Makarov.Framework.Core\\Singleton.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-15T22:57:11.46Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-15T22:57:11.46Z"
             },
             {
               "$type": "Document",
@@ -64,8 +63,7 @@
               "RelativeToolTip": "Makarov.FlowchartBuilder\\Settings.cs",
               "ViewState": "AgIAAP0DAAAAAAAAAAAgwB4EAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-15T22:55:47.412Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-15T22:55:47.412Z"
             },
             {
               "$type": "Document",
@@ -77,8 +75,7 @@
               "RelativeToolTip": "Makarov.FlowchartBuilder\\Core_Properties.cs",
               "ViewState": "AgIAAI4AAAAAAAAAAAAMwKgAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-15T22:53:43.608Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-15T22:53:43.608Z"
             }
           ]
         }

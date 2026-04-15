@@ -3,3 +3,9 @@ C:\MakarovProject\Makarov.FlowchartBuilder\Plugins\Makarov.FlowchartBuilder.Shee
 C:\MakarovProject\Makarov.FlowchartBuilder.Sheets.Iso\obj\Debug\ResolveAssemblyReference.cache
 C:\MakarovProject\Makarov.FlowchartBuilder.Sheets.Iso\obj\Debug\Makarov.FlowchartBuilder.Sheets.Iso.dll
 C:\MakarovProject\Makarov.FlowchartBuilder.Sheets.Iso\obj\Debug\Makarov.FlowchartBuilder.Sheets.Iso.pdb
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder\Plugins\Makarov.FlowchartBuilder.Sheets.Iso.dll
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder\Plugins\Makarov.FlowchartBuilder.Sheets.Iso.pdb
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder.Sheets.Iso\obj\Debug\Makarov.FlowchartBuilder.Sheets.Iso.csproj.AssemblyReference.cache
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder.Sheets.Iso\obj\Debug\Makarov.FlowchartBuilder.Sheets.Iso.csproj.CoreCompileInputs.cache
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder.Sheets.Iso\obj\Debug\Makarov.FlowchartBuilder.Sheets.Iso.dll
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder.Sheets.Iso\obj\Debug\Makarov.FlowchartBuilder.Sheets.Iso.pdb

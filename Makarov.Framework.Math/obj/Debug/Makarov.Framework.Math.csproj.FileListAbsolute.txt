@@ -3,3 +3,9 @@ C:\MakarovProject\Makarov.Framework.Math\bin\Debug\Makarov.Framework.Math.pdb
 C:\MakarovProject\Makarov.Framework.Math\obj\Debug\ResolveAssemblyReference.cache
 C:\MakarovProject\Makarov.Framework.Math\obj\Debug\Makarov.Framework.Math.dll
 C:\MakarovProject\Makarov.Framework.Math\obj\Debug\Makarov.Framework.Math.pdb
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Math\bin\Debug\Makarov.Framework.Math.dll
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Math\bin\Debug\Makarov.Framework.Math.pdb
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Math\obj\Debug\Makarov.Framework.Math.csproj.AssemblyReference.cache
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Math\obj\Debug\Makarov.Framework.Math.csproj.CoreCompileInputs.cache
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Math\obj\Debug\Makarov.Framework.Math.dll
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Math\obj\Debug\Makarov.Framework.Math.pdb
