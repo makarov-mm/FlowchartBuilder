@@ -8,3 +8,12 @@ C:\MakarovProject\Makarov\Framework\Core\obj\FlowchartBuilder (Debug)\GenerateRe
 C:\MakarovProject\Makarov\Framework\Core\obj\FlowchartBuilder (Debug)\GenerateResource.write.1.tlog
 C:\MakarovProject\Makarov\Framework\Core\obj\FlowchartBuilder (Debug)\Makarov.Framework.Core.dll
 C:\MakarovProject\Makarov\Framework\Core\obj\FlowchartBuilder (Debug)\Makarov.Framework.Core.pdb
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Core\bin\FlowchartBuilder (Debug)\Makarov.Framework.Core.dll
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Core\bin\FlowchartBuilder (Debug)\Makarov.Framework.Core.pdb
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Core\obj\FlowchartBuilder (Debug)\Makarov.Framework.Core.csproj.AssemblyReference.cache
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Core\obj\FlowchartBuilder (Debug)\Makarov.Framework.Core.CriticalErrorDialog.resources
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Core\obj\FlowchartBuilder (Debug)\Makarov.Framework.Core.Properties.Resources.resources
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Core\obj\FlowchartBuilder (Debug)\Makarov.Framework.Core.csproj.GenerateResource.cache
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Core\obj\FlowchartBuilder (Debug)\Makarov.Framework.Core.csproj.CoreCompileInputs.cache
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Core\obj\FlowchartBuilder (Debug)\Makarov.Framework.Core.dll
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Core\obj\FlowchartBuilder (Debug)\Makarov.Framework.Core.pdb

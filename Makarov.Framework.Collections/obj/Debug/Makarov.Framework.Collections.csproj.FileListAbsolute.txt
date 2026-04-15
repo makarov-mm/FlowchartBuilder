@@ -3,3 +3,9 @@ C:\MakarovProject\Makarov.Framework.Collections\bin\Debug\Makarov.Framework.Coll
 C:\MakarovProject\Makarov.Framework.Collections\obj\Debug\ResolveAssemblyReference.cache
 C:\MakarovProject\Makarov.Framework.Collections\obj\Debug\Makarov.Framework.Collections.dll
 C:\MakarovProject\Makarov.Framework.Collections\obj\Debug\Makarov.Framework.Collections.pdb
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Collections\bin\Debug\Makarov.Framework.Collections.dll
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Collections\bin\Debug\Makarov.Framework.Collections.pdb
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Collections\obj\Debug\Makarov.Framework.Collections.csproj.AssemblyReference.cache
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Collections\obj\Debug\Makarov.Framework.Collections.csproj.CoreCompileInputs.cache
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Collections\obj\Debug\Makarov.Framework.Collections.dll
+C:\Users\makar\Desktop\FlowchartBuilder\Makarov.Framework.Collections\obj\Debug\Makarov.Framework.Collections.pdb

@@ -6,6 +6,7 @@
 // <date>2009-02-16</date>
 // <summary>Настройки программы.</summary>
 
+using Makarov.Framework.Core;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;

@@ -83,7 +83,7 @@ namespace Makarov.Framework.Core
                 T v1 = _dict[name];
 
                 // Сравниваем его с новым значением.
-                if (!v1.Equals(val))
+                if (v1 == null || !v1.Equals(val))
                 {
                     // Если не равны, то записываем новое значение.
                     _dict[name] = val;

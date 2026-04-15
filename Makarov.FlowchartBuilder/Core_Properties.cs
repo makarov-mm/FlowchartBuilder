@@ -164,10 +164,9 @@ namespace Makarov.FlowchartBuilder
         /// </summary>
         public Cache<string> CachedSettingsStorage
         {
-            get 
-            { 
-                return _cachedSettingsStorage ?? 
-                    (_cachedSettingsStorage = new Cache<string>(SettingsStorage)); 
+            get
+            {
+                return _cachedSettingsStorage ?? (_cachedSettingsStorage = new Cache<string>(SettingsStorage));
             }
         }
 
