@@ -18,8 +18,8 @@ namespace Makarov.Framework.Core
     {
         T IDict<T>.this[string key]
         {
-            get { return base[key]; }
-            set { base[key] = value; }
+            get => base[key];
+            set => base[key] = value;
         }
 
         /// <summary>

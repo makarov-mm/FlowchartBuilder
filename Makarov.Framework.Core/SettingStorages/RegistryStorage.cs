@@ -34,7 +34,7 @@ namespace Makarov.Framework.Core.SettingStorages
         {
             /// <param name="key">Имя ключа.</param>
             public CantCreateKeyException(string key)
-                : base(string.Format("Can't create registry key '{0}'.", key))
+                : base($"Can't create registry key '{key}'.")
             { }
         }
 
@@ -45,7 +45,7 @@ namespace Makarov.Framework.Core.SettingStorages
         {
             /// <param name="key">Имя ключа.</param>
             public CantDeleteKeyException(string key)
-                : base(string.Format("Can't delete value from registry key '{0}'.", key))
+                : base($"Can't delete value from registry key '{key}'.")
             { }
         }
         #endregion
@@ -66,7 +66,7 @@ namespace Makarov.Framework.Core.SettingStorages
                 registryKey,
                 RegistryKeyPermissionCheck.ReadWriteSubTree);
 
-            if (_key == null)
+            if (_key is null)
             {
                 _key = Registry.CurrentUser.CreateSubKey(
                     registryKey,
@@ -166,7 +166,6 @@ namespace Makarov.Framework.Core.SettingStorages
         }
         #endregion
 
-
         #region Properties
         /// <summary>
         /// Устанавливает и получает значение настроек в реестре.
@@ -175,17 +174,15 @@ namespace Makarov.Framework.Core.SettingStorages
         /// <returns>Значение настроек в реестре.</returns>
         public string this[string subKey]
         {
-            get { return GetRegistryValue(subKey); }
-            set { SetRegistryValue(subKey, value); }
+            get => GetRegistryValue(subKey);
+            set => SetRegistryValue(subKey, value);
         }
 
         /// <summary>
         /// Доступен ли реестр.
         /// </summary>
-        public bool IsRegistryAccessible
-        {
-            get { return _key != null; }
-        }
+        public bool IsRegistryAccessible => _key != null;
+
         #endregion
     }
 }

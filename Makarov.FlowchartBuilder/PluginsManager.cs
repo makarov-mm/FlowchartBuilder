@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Makarov.FlowchartBuilder.API.Attributes;
 using Makarov.FlowchartBuilder.Glyphs;
-using BaseSettings = Makarov.Framework.Core.Settings;
 
 namespace Makarov.FlowchartBuilder
 {
@@ -38,7 +37,7 @@ namespace Makarov.FlowchartBuilder
         /// <summary>
         /// Экземпляр менеджера плугинов уже существует.
         /// </summary>
-        public sealed class PluginsManagerAlreadyExistsException : SingletonObjectAlreayExistsException
+        public sealed class PluginsManagerAlreadyExistsException : SingletonObjectAlreadyExistsException
         {
             /// <summary>
             /// Конструктор.
@@ -154,9 +153,10 @@ namespace Makarov.FlowchartBuilder
             _glyphs.Clear();
 
             // Получаем список неабстрактных классов, определённых в сборке.
-            var classes = from type in Core.Instance.PluginsLoader.GetTypes<object>()
-                          where type.IsClass && !type.IsAbstract
-                          select type;
+            var classes = 
+                (from type in Core.Instance.PluginsLoader.GetTypes<object>()
+                where type.IsClass && !type.IsAbstract
+                select type).ToArray();
 
             // Проходим по полученным классам...
             foreach (Type cls in classes)
@@ -180,9 +180,10 @@ namespace Makarov.FlowchartBuilder
             }
 
             // Получаем список классов глифов.
-            var glyphs = from type in classes
-                         where type.IsSubclassOf(typeof (AbstractGlyph))
-                         select type;
+            var glyphs = 
+                from type in classes
+                where type.IsSubclassOf(typeof (AbstractGlyph))
+                select type;
 
             // Проходим по классам глифов...
             foreach (Type cls in glyphs)

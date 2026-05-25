@@ -22,7 +22,7 @@ namespace Makarov.Framework.Core
         {
             /// <param name="familyName">Семейство.</param>
             public CantCreateFontException(string familyName)
-                : base(string.Format("Can't create font '{0}'.", familyName))
+                : base($"Can't create font '{familyName}'.")
             { }
         }
 
@@ -74,13 +74,13 @@ namespace Makarov.Framework.Core
         {
             // Допустимые стили шрифтов.
             var styles = new[]
-                             {
-                                 FontStyle.Regular,
-                                 FontStyle.Italic,
-                                 FontStyle.Bold,
-                                 FontStyle.Underline,
-                                 FontStyle.Strikeout
-                             };
+            {
+                FontStyle.Regular,
+                FontStyle.Italic,
+                FontStyle.Bold,
+                FontStyle.Underline,
+                FontStyle.Strikeout
+            };
 
             // Проходим по всем стилям шрифтов...
             for (int i = 0; i < styles.Length; i++)

@@ -18,10 +18,7 @@ namespace Makarov.Framework.Serialization
         /// <summary>
         /// Сериализуемый тип.
         /// </summary>
-        public override Type SerializerType
-        {
-            get { return typeof(Font); }
-        }
+        public override Type SerializerType => typeof(Font);
 
         /// <summary>
         /// Сериализует значение в строку.

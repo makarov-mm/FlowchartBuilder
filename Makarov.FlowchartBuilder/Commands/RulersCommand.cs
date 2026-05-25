@@ -20,7 +20,7 @@ namespace Makarov.FlowchartBuilder.Commands
         /// </summary>
         public override void Run()
         {
-            using (new DontRedraw())
+            using (new DonNotRedraw())
             {
                 // Сохраняем новые настройки линеек.
                 Settings.Environment.Rulers = !Settings.Environment.Rulers;

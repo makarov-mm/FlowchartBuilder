@@ -46,7 +46,7 @@ namespace Makarov.Framework.Core.Managers
         {
             /// <param name="type">Тип окна.</param>
             public WindowTypeNotFoundException(Type type)
-                : base(string.Format(@"Window type '{0}' not found.", type.Name))
+                : base($@"Window type '{type.Name}' not found.")
             { }
         }
         #endregion

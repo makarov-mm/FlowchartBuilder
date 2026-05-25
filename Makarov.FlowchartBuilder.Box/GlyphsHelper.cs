@@ -54,13 +54,13 @@ namespace Makarov.FlowchartBuilder.Box
             foreach (PropertyInfo property in properties)
             {
                 // Ищем атрибут, указывающий, что данное свойство является активным.
-                object[] attribs = property.GetCustomAttributes(activePropertyAttribType, true);
+                object[] attributes = property.GetCustomAttributes(activePropertyAttribType, true);
 
                 // Найден атрибут - возвращаем активное свойство.
-                if (attribs.Length == 1) props.Add(property);
+                if (attributes.Length == 1) props.Add(property);
 
                 // Много атрибутов - непорядок, бросаем исключение.
-                if (attribs.Length > 1)
+                if (attributes.Length > 1)
                     throw new TooManyActivePropertyAttributesException(type.ToString(), property.Name);
             }
 

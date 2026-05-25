@@ -63,7 +63,7 @@ namespace Makarov.Framework.Core
         /// Загруженные сборки.
         /// <remarks>Пары (полное имя, сборка).</remarks>
         /// </summary>
-        private Dictionary<string, Assembly> _loadedAsms;
+        private Dictionary<string, Assembly> _loadedAssemblies;
         #endregion
 
         #region Public methods
@@ -82,7 +82,7 @@ namespace Makarov.Framework.Core
         /// <param name="name">Имя сборки.</param>
         public bool IsAssemblyLoaded(string name)
         {
-            return _loadedAsms.ContainsKey(name ?? string.Empty);
+            return _loadedAssemblies.ContainsKey(name ?? string.Empty);
         }
 
         /// <summary>
@@ -91,16 +91,16 @@ namespace Makarov.Framework.Core
         /// <param name="name">Имя сборки.</param>
         public Assembly GetAssembly(string name)
         {
-            if (_loadedAsms.ContainsKey(name))
-                return _loadedAsms[name];
+            if (_loadedAssemblies.ContainsKey(name))
+                return _loadedAssemblies[name];
 
             if (_assemblies.ContainsKey(name))
             {
-                if (_loadedAsms == null)
-                    _loadedAsms = new Dictionary<string, Assembly>(_assemblies.Count);
+                if (_loadedAssemblies is null)
+                    _loadedAssemblies = new Dictionary<string, Assembly>(_assemblies.Count);
 
                 Assembly asm = Assembly.LoadFile(name);
-                _loadedAsms.Add(name, asm);
+                _loadedAssemblies.Add(name, asm);
                 return asm;
             }
 
@@ -123,19 +123,19 @@ namespace Makarov.Framework.Core
             get
             {
                 // Если ничего ещё не загружено...
-                if (_loadedAsms == null)
+                if (_loadedAssemblies is null)
                 {
                     // Создаём словарь пар (имя сборки, сборка).
-                    _loadedAsms = new Dictionary<string, Assembly>(_assemblies.Count);
+                    _loadedAssemblies = new Dictionary<string, Assembly>(_assemblies.Count);
                 }
 
                 // Проходим по всем найденным сборкам и догружаем то, что ещё не загружено...
                 foreach (KeyValuePair<string, string> kvp in _assemblies)
-                    if (!_loadedAsms.ContainsKey(kvp.Key))
-                        _loadedAsms.Add(kvp.Key, Assembly.LoadFile(kvp.Value));
+                    if (!_loadedAssemblies.ContainsKey(kvp.Key))
+                        _loadedAssemblies.Add(kvp.Key, Assembly.LoadFile(kvp.Value));
 
                 // Возвращаем загруженные сборки.
-                return _loadedAsms;
+                return _loadedAssemblies;
             }
         }
 

@@ -13,11 +13,12 @@ namespace Makarov.Framework.Core
             ErrorReportMail = errorReportMail;
             ErrorReportTitle = errorReportTitle;
 
-            lblException.Text = string.Format("Exception: {0}", exception);
-            tbExceptionDetails.Text = string.Format("Message:{0}{1}{0}{0}Stack trace:{0}{2}",
-                                                    Environment.NewLine,
-                                                    message,
-                                                    stackTrace);
+            lblException.Text = $@"Exception: {exception}";
+            tbExceptionDetails.Text = string.Format(
+                @"Message:{0}{1}{0}{0}Stack trace:{0}{2}",
+                Environment.NewLine,
+                message,
+                stackTrace);
         }
 
         private void btnClose_Click(object sender, EventArgs e)
@@ -39,7 +40,7 @@ namespace Makarov.Framework.Core
         /// </summary>
         public string ErrorReportMail
         {
-            get; private set;
+            get;
         }
 
         /// <summary>
@@ -47,7 +48,7 @@ namespace Makarov.Framework.Core
         /// </summary>
         public string ErrorReportTitle
         {
-            get; private set;
+            get;
         }
     }
 }

@@ -52,7 +52,7 @@ namespace Makarov.FlowchartBuilder
         {
             /// <param name="propertyName">Сообщение.</param>
             public PropertyNotExistsException(string propertyName)
-                : base(string.Format("Property '{0}' not found.", propertyName ?? string.Empty))
+                : base($"Property '{propertyName ?? string.Empty}' not found.")
             { }
         }
         #endregion

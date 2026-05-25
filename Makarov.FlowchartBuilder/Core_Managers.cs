@@ -19,59 +19,38 @@ namespace Makarov.FlowchartBuilder
         /// <summary>
         /// Менеджер изображений.
         /// </summary>
-        public GraphicsManager Images
-        {
-            get { return _graphicsManager ?? (_graphicsManager = new GraphicsManager(Settings.Directories.Graphics)); }
-        }
+        public GraphicsManager Images => _graphicsManager ?? (_graphicsManager = new GraphicsManager(Settings.Directories.Graphics));
 
         /// <summary>
         /// Менеджер иконок.
         /// </summary>
-        public GraphicsManager Icons
-        {
-            get { return _iconsManager ?? (_iconsManager = new GraphicsManager(Settings.Directories.Icons)); }
-        }
+        public GraphicsManager Icons => _iconsManager ?? (_iconsManager = new GraphicsManager(Settings.Directories.Icons));
 
         /// <summary>
         /// Менеджер окон.
         /// </summary>
-        public WindowsManager Windows
-        {
-            get { return _windowsManager ?? (_windowsManager = new WindowsManager(Assembly.GetExecutingAssembly())); }
-        }
+        public WindowsManager Windows => _windowsManager ?? (_windowsManager = new WindowsManager(Assembly.GetExecutingAssembly()));
 
         /// <summary>
         /// Менеджер переводчиков.
         /// </summary>
-        public TranslatorsManager Translators
-        {
-            get
-            {
-                return _translatorsManager ?? (_translatorsManager = TranslatorsManager.LoadFromFolder(
-                    Settings.Directories.Translations,
-                    Settings.Files.TranslationsSchema));
-            }
-        }
+        public TranslatorsManager Translators =>
+            _translatorsManager ?? (_translatorsManager = TranslatorsManager.LoadFromFolder(
+                Settings.Directories.Translations,
+                Settings.Files.TranslationsSchema));
 
         /// <summary>
         /// Менеджер сериализаторов.
         /// </summary>
-        public SerializerManager Serializers
-        {
-            get
-            {
-                return _serializer ??
-                    (_serializer = new SerializerManager(Assembly.LoadFrom(Settings.Files.SerializationDll)));
-            }
-        }
+        public SerializerManager Serializers =>
+            _serializer 
+            ??
+            (_serializer = new SerializerManager(Assembly.LoadFrom(Settings.Files.SerializationDll)));
 
         /// <summary>
         /// Менеджер единиц измерения.
         /// </summary>
-        public UnitsManager Units
-        {
-            get { return _unitsManager ?? (_unitsManager = new UnitsManager()); }
-        }
+        public UnitsManager Units => _unitsManager ?? (_unitsManager = new UnitsManager());
 
         /// <summary>
         /// Менеджер изображений.

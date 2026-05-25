@@ -44,10 +44,7 @@ namespace Makarov.Framework.Core
         /// <summary>
         /// Создан ли уже экземпляр класса.
         /// </summary>
-        public static bool IsInstanceExists
-        {
-            get { return _obj != null; }
-        }
+        public static bool IsInstanceExists => _obj != null;
 
         /// <summary>
         /// Удаляет экземпляр класса из кеша.

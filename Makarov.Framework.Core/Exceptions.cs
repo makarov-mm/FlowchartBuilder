@@ -38,7 +38,7 @@ namespace Makarov.Framework.Core
     {
         /// <param name="typeName">Имя типа.</param>
         public SingletonObjectAlreadyExistsException(string typeName)
-            : base(string.Format("Singleton object (of class '{0}') already exists.", typeName))
+            : base($"Singleton object (of class '{typeName}') already exists.")
         { }
 
         /// <param name="t">Тип.</param>
@@ -60,13 +60,13 @@ namespace Makarov.Framework.Core
     {
         /// <param name="entity">Сущность, содержащая неправильное значение.</param>
         public InvalidValueException(string entity)
-            : base(string.Format("'{0}' contains invalid value.", entity))
+            : base($"'{entity}' contains invalid value.")
         { }
 
         /// <param name="entity">Сущность, содержащая неправильное значение.</param>
         /// <param name="val">Значение.</param>
         public InvalidValueException(string entity, string val)
-            : base(string.Format("'{0}' contains invalid value: '{1}'.", entity, val))
+            : base($"'{entity}' contains invalid value: '{val}'.")
         { }
 
         /// <param name="message">Сообщение.</param>

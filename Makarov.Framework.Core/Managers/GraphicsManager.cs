@@ -42,7 +42,7 @@ namespace Makarov.Framework.Core.Managers
             /// </summary>
             /// <param name="name">Имя картинки.</param>
             public ImageNotFoundException(string name)
-                : base(string.Format("Image '{0}' not found.", name))
+                : base($"Image '{name}' not found.")
             { }
         }
         #endregion
@@ -55,7 +55,7 @@ namespace Makarov.Framework.Core.Managers
         public GraphicsManager(string directory)
         {
             if (!System.IO.Directory.Exists(directory))
-                throw new DirectoryNotFoundException(string.Format("Directory '{0}' not found.", directory));
+                throw new DirectoryNotFoundException($"Directory '{directory}' not found.");
 
             Directory = directory;
         }
@@ -67,7 +67,7 @@ namespace Makarov.Framework.Core.Managers
         /// </summary>
         public string Directory
         {
-            get; private set;
+            get;
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace Makarov.Framework.Core.Managers
                     ResurrectionFailures++;
                 }
 
-                if (result == null)
+                if (result is null)
                     foreach (string ext in arr)
                     {
                         string filename = Path.Combine(Directory, name + ext);

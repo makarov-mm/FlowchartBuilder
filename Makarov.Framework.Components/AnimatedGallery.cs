@@ -17,10 +17,10 @@ namespace Makarov.Framework.Components
 
             public AnimatedImage(AnimatedGallery owner, Image image, Point pt)
             {
-                if (image == null)
+                if (image is null)
                     throw new NullReferenceException();
 
-                if (owner == null)
+                if (owner is null)
                     throw new NullReferenceException();
 
                 _owner = owner;

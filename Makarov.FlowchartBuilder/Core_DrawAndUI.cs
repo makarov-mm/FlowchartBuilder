@@ -8,6 +8,7 @@
 
 using System;
 using System.Drawing;
+using System.Windows.Forms;
 using Makarov.FlowchartBuilder.Extensions;
 using Makarov.FlowchartBuilder.Forms;
 using Makarov.FlowchartBuilder.Sheets;
@@ -27,8 +28,8 @@ namespace Makarov.FlowchartBuilder
         private Point UpdateScrollbars(MainForm wndMain)
         {
             // Скроллбары.
-            var hbar = wndMain.HorizontalScrollBar;
-            var vbar = wndMain.VerticalScrollBar;
+            HScrollBar hbar = wndMain.HorizontalScrollBar;
+            VScrollBar vbar = wndMain.VerticalScrollBar;
 
             // Толщина линеек.
             var rulersBorderWidth = (int)Math.Ceiling(

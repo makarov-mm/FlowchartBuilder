@@ -40,7 +40,7 @@ namespace Makarov.Framework.Instance
             ChannelServices.RegisterChannel(channel, false);
             return (IInstance) Activator.GetObject(
                 typeof (IInstance),
-                string.Format(@"ipc://{0}/{1}", serverPortName, objectUri));
+                $@"ipc://{serverPortName}/{objectUri}");
         }
     }
 }

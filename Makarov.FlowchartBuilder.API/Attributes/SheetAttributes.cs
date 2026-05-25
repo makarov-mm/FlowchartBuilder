@@ -25,21 +25,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class SheetWidthAttribute : SheetAttribute
     {
-        private readonly float _widthInMM;
-
         /// <param name="width">Ширина в миллиметрах.</param>
         public SheetWidthAttribute(float width)
         {
-            _widthInMM = width;
+            WidthInMM = width;
         }
 
         /// <summary>
         /// Ширина в миллиметрах.
         /// </summary>
-        public float WidthInMM
-        {
-            get { return _widthInMM; }
-        }
+        public float WidthInMM { get; }
     }
 
     /// <summary>
@@ -48,21 +43,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class SheetHeightAttribute : SheetAttribute
     {
-        private readonly float _heightInMM;
-
         /// <param name="width">Ширина в миллиметрах.</param>
         public SheetHeightAttribute(float width)
         {
-            _heightInMM = width;
+            HeightInMM = width;
         }
 
         /// <summary>
         /// Ширина в миллиметрах.
         /// </summary>
-        public float HeightInMM
-        {
-            get { return _heightInMM; }
-        }
+        public float HeightInMM { get; }
     }
 
     /// <summary>
@@ -71,21 +61,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class SheetNameAttribute : SheetAttribute
     {
-        private readonly string _name;
-
         /// <param name="name">Имя.</param>
         public SheetNameAttribute(string name)
         {
-            _name = name;
+            Name = name;
         }
 
         /// <summary>
         /// Имя.
         /// </summary>
-        public string Name
-        {
-            get { return _name; }
-        }
+        public string Name { get; }
     }
 
     /// <summary>
@@ -94,21 +79,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class SheetFamilyAttribute : SheetAttribute
     {
-        private readonly string _family;
-
         /// <param name="family">Семейство.</param>
         public SheetFamilyAttribute(string family)
         {
-            _family = family;
+            Family = family;
         }
 
         /// <summary>
         /// Семейство.
         /// </summary>
-        public string Family
-        {
-            get { return _family; }
-        }
+        public string Family { get; }
     }
 
     // ReSharper restore InconsistentNaming

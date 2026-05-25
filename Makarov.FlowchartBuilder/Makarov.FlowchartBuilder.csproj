@@ -268,7 +268,7 @@
     <Compile Include="LinkPoint.cs" />
     <Compile Include="MenuLoader.cs" />
     <Compile Include="ManipPoint.cs" />
-    <Compile Include="DontRedraw.cs" />
+    <Compile Include="DonNotRedraw.cs" />
     <Compile Include="PluginsManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="MoveDirection.cs" />

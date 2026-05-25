@@ -44,7 +44,7 @@ namespace Makarov.Framework.Core.Managers
             /// </summary>
             /// <param name="language">Язык.</param>
             public LanguageNotExistsException(string language)
-                : base(string.Format("Language '{0}' not exists.", language))
+                : base($"Language '{language}' not exists.")
             { }
         }
 
@@ -58,7 +58,7 @@ namespace Makarov.Framework.Core.Managers
             /// </summary>
             /// <param name="language">Язык.</param>
             public LanguageAlreadyExistsException(string language)
-                : base(string.Format("Language '{0}' already exists.", language))
+                : base($"Language '{language}' already exists.")
             { }
         }
         #endregion

@@ -1,9 +1,0 @@
-C:\MakarovProject\Makarov.FlowchartBuilder\Plugins\Makarov.FlowchartBuilder.Glyphs.Containers.dll
-C:\MakarovProject\Makarov.FlowchartBuilder\Plugins\Makarov.FlowchartBuilder.Glyphs.Containers.pdb
-C:\MakarovProject\Makarov.FlowchartBuilder.Glyphs.Containers\obj\Debug\ResolveAssemblyReference.cache
-C:\MakarovProject\Makarov.FlowchartBuilder.Glyphs.Containers\obj\Debug\Makarov.FlowchartBuilder.Glyphs.Containers.dll
-C:\MakarovProject\Makarov.FlowchartBuilder.Glyphs.Containers\obj\Debug\Makarov.FlowchartBuilder.Glyphs.Containers.pdb
-C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder.Glyphs.Containers\obj\Debug\Makarov.FlowchartBuilder.Glyphs.Containers.csproj.AssemblyReference.cache
-C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder.Glyphs.Containers\obj\Debug\Makarov.FlowchartBuilder.Glyphs.Containers.csproj.CoreCompileInputs.cache
-C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder.Glyphs.Containers\obj\Debug\Makarov.FlowchartBuilder.Glyphs.Containers.dll
-C:\Users\makar\Desktop\FlowchartBuilder\Makarov.FlowchartBuilder.Glyphs.Containers\obj\Debug\Makarov.FlowchartBuilder.Glyphs.Containers.pdb

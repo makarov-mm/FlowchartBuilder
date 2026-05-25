@@ -105,8 +105,8 @@ namespace Makarov.Framework.Core
         /// <returns>Значение.</returns>
         public T this[string name]
         {
-            get { return GetValue(name); }
-            set { SetValue(name, value); }
+            get => GetValue(name);
+            set => SetValue(name, value);
         }
 
         /// <summary>

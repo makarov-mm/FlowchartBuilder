@@ -32,7 +32,7 @@ namespace Makarov.Framework.Core
             MaxValue = maxValue;
 
             if (maxValue < minValue)
-                throw new RangeException("maxValue must be greater or equal than minValue.");
+                throw new RangeException($"{nameof(maxValue)} must be greater or equal than {nameof(minValue)}.");
         }
 
         /// <summary>
@@ -41,7 +41,6 @@ namespace Makarov.Framework.Core
         public int MinValue
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -50,16 +49,12 @@ namespace Makarov.Framework.Core
         public int MaxValue
         {
             get;
-            private set;
         }
 
         /// <summary>
         /// Количество элементов в диапазоне.
         /// </summary>
-        public int Count
-        {
-            get { return MaxValue - MinValue + 1; }
-        }
+        public int Count => MaxValue - MinValue + 1;
 
         /// <summary>
         /// Можно ли объединить диапазоны.

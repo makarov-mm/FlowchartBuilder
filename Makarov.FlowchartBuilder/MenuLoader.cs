@@ -14,9 +14,6 @@ using System.Xml.Schema;
 using Makarov.FlowchartBuilder.Commands;
 using Makarov.FlowchartBuilder.Forms;
 using Makarov.Framework.Components;
-using attrs = Makarov.FlowchartBuilder.Settings.Xml.Attributes;
-using tags = Makarov.FlowchartBuilder.Settings.Xml.Tags;
-using BaseSettings = Makarov.Framework.Core.Settings;
 
 namespace Makarov.FlowchartBuilder
 {
@@ -278,7 +275,7 @@ namespace Makarov.FlowchartBuilder
                                      : false;
 
             // Задаём текст всплывающей подсказки.
-            item.ActiveBaloon = node.Attributes[Settings.Xml.Attributes.ToolTip] != null
+            item.ActiveBalloon = node.Attributes[Settings.Xml.Attributes.ToolTip] != null
                                     ? Core.Instance.CurrentTranslator[node.Attributes[Settings.Xml.Attributes.ToolTip].Value]
                                     : string.Empty;
 
@@ -338,7 +335,7 @@ namespace Makarov.FlowchartBuilder
                                      : false;
 
             // Задаём текст всплывающей подсказки.
-            item.ActiveBaloon = node.Attributes[Settings.Xml.Attributes.ToolTip] != null
+            item.ActiveBalloon = node.Attributes[Settings.Xml.Attributes.ToolTip] != null
                                     ? Core.Instance.CurrentTranslator[node.Attributes[Settings.Xml.Attributes.ToolTip].Value]
                                     : string.Empty;
 

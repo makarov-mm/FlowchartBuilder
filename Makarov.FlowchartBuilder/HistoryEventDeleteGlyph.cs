@@ -24,7 +24,7 @@ namespace Makarov.FlowchartBuilder
         {
             /// <param name="propertyName">Имя свойства.</param>
             public PropertyAlreadyExistsException(string propertyName)
-                : base(string.Format("Property '{0}' already exists.", propertyName ?? string.Empty))
+                : base($"Property '{propertyName ?? string.Empty}' already exists.")
             { }
         }
         #endregion

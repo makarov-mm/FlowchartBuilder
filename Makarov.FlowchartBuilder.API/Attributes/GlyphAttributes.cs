@@ -25,21 +25,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class GlyphDefaultWidthAttribute : GlyphAttribute
     {
-        private readonly float _widthInMM;
-
         /// <param name="width">Ширина в миллиметрах.</param>
         public GlyphDefaultWidthAttribute(float width)
         {
-            _widthInMM = width;
+            WidthInMM = width;
         }
 
         /// <summary>
         /// Ширина в миллиметрах.
         /// </summary>
-        public float WidthInMM
-        {
-            get { return _widthInMM; }
-        }
+        public float WidthInMM { get; }
     }
 
     /// <summary>
@@ -48,21 +43,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class GlyphDefaultHeightAttribute : GlyphAttribute
     {
-        private readonly float _heightInMM;
-
         /// <param name="height">Высота в миллиметрах.</param>
         public GlyphDefaultHeightAttribute(float height)
         {
-            _heightInMM = height;
+            HeightInMM = height;
         }
 
         /// <summary>
         /// Высота в миллиметрах.
         /// </summary>
-        public float HeightInMM
-        {
-            get { return _heightInMM; }
-        }
+        public float HeightInMM { get; }
     }
 
     /// <summary>
@@ -71,21 +61,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class GlyphMinimalWidthAttribute : GlyphAttribute
     {
-        private readonly float _widthInMM;
-
         /// <param name="width">Минимальная ширина в миллиметрах.</param>
         public GlyphMinimalWidthAttribute(float width)
         {
-            _widthInMM = width;
+            WidthInMM = width;
         }
 
         /// <summary>
         /// Минимальная ширина в миллиметрах.
         /// </summary>
-        public float WidthInMM
-        {
-            get { return _widthInMM; }
-        }
+        public float WidthInMM { get; }
     }
 
     /// <summary>
@@ -94,21 +79,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class GlyphMinimalHeightAttribute : GlyphAttribute
     {
-        private readonly float _heightInMM;
-
         /// <param name="height">Минимальная высота в миллиметрах.</param>
         public GlyphMinimalHeightAttribute(float height)
         {
-            _heightInMM = height;
+            HeightInMM = height;
         }
 
         /// <summary>
         /// Минимальная высота в миллиметрах.
         /// </summary>
-        public float HeightInMM
-        {
-            get { return _heightInMM; }
-        }
+        public float HeightInMM { get; }
     }
 
     /// <summary>
@@ -117,21 +97,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class GlyphNameAttribute : GlyphAttribute
     {
-        private readonly string _name;
-
         /// <param name="name">Имя.</param>
         public GlyphNameAttribute(string name)
         {
-            _name = name;
+            Name = name;
         }
 
         /// <summary>
         /// Имя.
         /// </summary>
-        public string Name
-        {
-            get { return _name; }
-        }
+        public string Name { get; }
     }
 
     /// <summary>
@@ -140,21 +115,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class GlyphFamilyAttribute : GlyphAttribute
     {
-        private readonly string _family;
-
         /// <param name="family">Семейство.</param>
         public GlyphFamilyAttribute(string family)
         {
-            _family = family;
+            Family = family;
         }
 
         /// <summary>
         /// Семейство.
         /// </summary>
-        public string Family
-        {
-            get { return _family; }
-        }
+        public string Family { get; }
     }
 
     /// <summary>
@@ -186,21 +156,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class GlyphOrderAttribute : GlyphAttribute
     {
-        private readonly int _order;
-
         /// <param name="order">Порядковый номер глифа в палитре.</param>
         public GlyphOrderAttribute(int order)
         {
-            _order = order;
+            Order = order;
         }
 
         /// <summary>
         /// >Порядковый номер глифа в палитре.
         /// </summary>
-        public int Order
-        {
-            get { return _order; }
-        }
+        public int Order { get; }
     }
 
     /// <summary>
@@ -217,21 +182,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class CommandGlyphAttribute : GlyphAttribute
     {
-        private readonly string _cmdName;
-
         /// <param name="cmdName">Имя команды.</param>
         public CommandGlyphAttribute(string cmdName)
         {
-            _cmdName = cmdName;
+            CommandName = cmdName;
         }
 
         /// <summary>
         /// Имя команды.
         /// </summary>
-        public string CommandName
-        {
-            get { return _cmdName; }
-        }
+        public string CommandName { get; }
     }
 
     /// <summary>
@@ -241,21 +201,16 @@ namespace Makarov.FlowchartBuilder.API.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class VisibleGlyphAttribute : GlyphAttribute
     {
-        private readonly bool _visible;
-
         /// <param name="isVisible">Нужно ли отображать глиф в палитре глифов.</param>
         public VisibleGlyphAttribute(bool isVisible)
         {
-            _visible = isVisible;
+            IsVisible = isVisible;
         }
 
         /// <summary>
         /// Нужно ли отображать глиф в палитре глифов.
         /// </summary>
-        public bool IsVisible
-        {
-            get { return _visible; }
-        }
+        public bool IsVisible { get; }
     }
 
     // ReSharper restore InconsistentNaming

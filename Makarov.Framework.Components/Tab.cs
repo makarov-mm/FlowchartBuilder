@@ -87,14 +87,14 @@ namespace Makarov.Framework.Components
             const int cornerSize = 5;
 
             var pts = new[]
-                          {
-                              new Point(0, height + offset),
-                              new Point(width, height + offset),
-                              new Point(width, 0),
-                              new Point(cornerSize, 0),
-                              new Point(0, cornerSize),
-                              new Point(0, height + offset)
-                          };
+            {
+                new Point(0, height + offset),
+                new Point(width, height + offset),
+                new Point(width, 0),
+                new Point(cornerSize, 0),
+                new Point(0, cornerSize),
+                new Point(0, height + offset)
+            };
 
             var path = new GraphicsPath();
             path.StartFigure();

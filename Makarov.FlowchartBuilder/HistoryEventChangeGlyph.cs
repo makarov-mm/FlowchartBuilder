@@ -45,34 +45,22 @@ namespace Makarov.FlowchartBuilder
         /// <summary>
         /// Свойства.
         /// </summary>
-        public IEnumerable<string> Properties
-        {
-            get { return _props.Select(kvp => kvp.Key); }
-        }
+        public IEnumerable<string> Properties => _props.Select(kvp => kvp.Key);
 
         /// <summary>
         /// Новые пары (имя свойства, значение).
         /// </summary>
-        public IEnumerable<KeyValuePair<string, string>> NewPairs
-        {
-            get { return _props.Select(prop => new KeyValuePair<string, string>(prop.Key, prop.Value.Value)); }
-        }
+        public IEnumerable<KeyValuePair<string, string>> NewPairs => _props.Select(prop => new KeyValuePair<string, string>(prop.Key, prop.Value.Value));
 
         /// <summary>
         /// Старые пары (имя свойства, значение).
         /// </summary>
-        public IEnumerable<KeyValuePair<string, string>> OldPairs
-        {
-            get { return _props.Select(prop => new KeyValuePair<string, string>(prop.Key, prop.Value.Key)); }
-        }
+        public IEnumerable<KeyValuePair<string, string>> OldPairs => _props.Select(prop => new KeyValuePair<string, string>(prop.Key, prop.Value.Key));
 
         /// <summary>
         /// Количество свойств.
         /// </summary>
-        public int Count
-        {
-            get { return _props.Count; }
-        }
+        public int Count => _props.Count;
 
         /// <summary>
         /// Возвращает значения свойства.

@@ -133,7 +133,7 @@ namespace Makarov.FlowchartBuilder
         public void SetDefaultWindowsPos()
         {
             // Отключаем на время отрисовку главного окна...
-            using (new DontRedraw())
+            using (new DonNotRedraw())
             {
                 // Главное окно.
                 MainForm mainWindow = MainWindow;

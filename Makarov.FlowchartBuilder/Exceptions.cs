@@ -34,15 +34,15 @@ namespace Makarov.FlowchartBuilder
     /// <summary>
     /// Объект синглетона уже существует.
     /// </summary>
-    public class SingletonObjectAlreayExistsException : FlowchartBuilderException
+    public class SingletonObjectAlreadyExistsException : FlowchartBuilderException
     {
         /// <param name="typeName">Имя типа.</param>
-        public SingletonObjectAlreayExistsException(string typeName)
-            : base(string.Format("Singleton object (of '{0}' class) already exists.", typeName))
+        public SingletonObjectAlreadyExistsException(string typeName)
+            : base($"Singleton object (of '{typeName}' class) already exists.")
         { }
 
         /// <param name="t">Тип.</param>
-        public SingletonObjectAlreayExistsException(Type t)
+        public SingletonObjectAlreadyExistsException(Type t)
             : this(t.Name)
         { }
     }
@@ -54,13 +54,13 @@ namespace Makarov.FlowchartBuilder
     {
         /// <param name="entity">Сущность, содержащая неправильное значение.</param>
         public InvalidValueException(string entity)
-            : base(string.Format("'{0}' contains invalid value.", entity))
+            : base($"'{entity}' contains invalid value.")
         { }
 
         /// <param name="entity">Сущность, содержащая неправильное значение.</param>
         /// <param name="val">Значение.</param>
         public InvalidValueException(string entity, string val)
-            : base(string.Format("'{0}' contains invalid value: '{1}'.", entity, val))
+            : base($"'{entity}' contains invalid value: '{val}'.")
         { }
     }
 
@@ -86,7 +86,7 @@ namespace Makarov.FlowchartBuilder
     {
         /// <param name="nodeType">Тип ноды.</param>
         public InvalidNodeTypeException(string nodeType)
-            : base(string.Format("Invalid node '{0}'.", nodeType))
+            : base($"Invalid node '{nodeType}'.")
         { }
     }
 
@@ -97,7 +97,7 @@ namespace Makarov.FlowchartBuilder
     {
         /// <param name="nodeName">Имя ноды.</param>
         public InvalidNodeNameException(string nodeName)
-            : base(string.Format("Invalid node '{0}'.", nodeName))
+            : base($"Invalid node '{nodeName}'.")
         { }
     }
 
@@ -112,7 +112,7 @@ namespace Makarov.FlowchartBuilder
 
         /// <param name="message">Сообщение.</param>
         public InvalidContextException(string message)
-            : base(string.Format("Invalid context: {0}", message ?? string.Empty))
+            : base($"Invalid context: {message ?? string.Empty}")
         { }
     }
 

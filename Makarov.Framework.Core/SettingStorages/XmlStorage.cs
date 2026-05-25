@@ -19,8 +19,7 @@ namespace Makarov.Framework.Core.SettingStorages
     public sealed class XmlStorage : IDict<string>
     {
         private readonly StringDictionary<string> _dict = new StringDictionary<string>();
-
-        private string _settingsFileName;
+        private readonly string _settingsFileName;
 
         public XmlStorage(string settingsFileName)
         {
@@ -75,15 +74,10 @@ namespace Makarov.Framework.Core.SettingStorages
         /// <summary>
         /// Имя файла настроек.
         /// </summary>
-        public string SettingsFileName
-        {
-            get
-            {
-                return Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    _settingsFileName);
-            }
-        }
+        public string SettingsFileName =>
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                _settingsFileName);
 
         /// <summary>
         /// Загружает данные.

@@ -51,7 +51,7 @@ namespace Makarov.FlowchartBuilder
         /// <param name="fileName">Имя файла.</param>
         public Document(string fileName)
         {
-            using (new DontRedraw())
+            using (new DonNotRedraw())
                 Load(fileName);
         }
         #endregion

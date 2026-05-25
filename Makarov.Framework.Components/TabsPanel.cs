@@ -127,13 +127,13 @@ namespace Makarov.Framework.Components
         /// </summary>
         public int TabWidth
         {
-            get { return _tabWidth; }
+            get => _tabWidth;
 
             set
             {
                 if (value <= 0)
                     throw new TabsPanelException(
-                        string.Format("Invalid tab width: {0}.", value));
+                        $"Invalid tab width: {value}.");
 
                 _tabWidth = value;
             }
@@ -144,13 +144,13 @@ namespace Makarov.Framework.Components
         /// </summary>
         public int TabHeight
         {
-            get { return _tabHeight; }
+            get => _tabHeight;
 
             set
             {
                 if (value <= 0)
                     throw new TabsPanelException(
-                        string.Format("Invalid tab height: {0}", value));
+                        $"Invalid tab height: {value}");
 
                 _tabHeight = value;
             }
@@ -187,7 +187,7 @@ namespace Makarov.Framework.Components
                     _selectedIndex = value;
 
                     if (SelectedTabChanged != null)
-                        SelectedTabChanged(this, new EventArgs());
+                        SelectedTabChanged(this, EventArgs.Empty);
                 }
                 else
                 {
@@ -212,29 +212,29 @@ namespace Makarov.Framework.Components
 
                 using (Graphics gfx = CreateGraphics())
                 using (var font = new Font("Arial", 8))
-                foreach (Tab tab in _tabs)
-                {
-                    //int requiredWidth = System.Math.Max(TabWidth, tab.RequiredWidth(gfx, font));
+                    foreach (Tab tab in _tabs)
+                    {
+                        //int requiredWidth = System.Math.Max(TabWidth, tab.RequiredWidth(gfx, font));
 
-                    //var pts = new[]
-                    //              {
-                    //                  new Point(i*requiredWidth + Offset, Height + Offset),
-                    //                  new Point(i*requiredWidth + Offset, Height - TabHeight + Offset + CornerSize),
-                    //                  new Point(i*requiredWidth + Offset + CornerSize, Height - TabHeight + Offset),
-                    //                  new Point((i + 1)*requiredWidth - Offset, Height - TabHeight + Offset),
-                    //                  new Point((i + 1)*requiredWidth - Offset, Height + Offset)
-                    //              };
+                        //var pts = new[]
+                        //              {
+                        //                  new Point(i*requiredWidth + Offset, Height + Offset),
+                        //                  new Point(i*requiredWidth + Offset, Height - TabHeight + Offset + CornerSize),
+                        //                  new Point(i*requiredWidth + Offset + CornerSize, Height - TabHeight + Offset),
+                        //                  new Point((i + 1)*requiredWidth - Offset, Height - TabHeight + Offset),
+                        //                  new Point((i + 1)*requiredWidth - Offset, Height + Offset)
+                        //              };
 
-                    //var path = new GraphicsPath();
-                    //path.StartFigure();
-                    //path.AddLines(pts);
-                    //path.CloseFigure();
+                        //var path = new GraphicsPath();
+                        //path.StartFigure();
+                        //path.AddLines(pts);
+                        //path.CloseFigure();
 
-                    var path = tab.CreatePath(gfx, font, 200, null, Height, Height);
+                        var path = tab.CreatePath(gfx, font, 200, null, Height, Height);
 
-                    list.Add(new KeyValuePair<string, GraphicsPath>(tab.Caption, path));
-                    ++i;
-                }
+                        list.Add(new KeyValuePair<string, GraphicsPath>(tab.Caption, path));
+                        ++i;
+                    }
 
                 return list.ToArray();
             }

@@ -37,7 +37,7 @@ namespace Makarov.Framework.Core.Managers
         {
             /// <param name="type">Тип.</param>
             public SerializerAlreadyExistsException(string type)
-                : base(string.Format(@"Serializer for type '{0}' already exists.", type ?? string.Empty))
+                : base($@"Serializer for type '{type ?? string.Empty}' already exists.")
             { }
 
             /// <param name="type">Тип.</param>
@@ -53,7 +53,7 @@ namespace Makarov.Framework.Core.Managers
         {
             /// <param name="type">Тип.</param>
             public SerializerNotExistsException(string type)
-                : base(string.Format(@"Serializer for type '{0}' not exists.", type ?? string.Empty))
+                : base($@"Serializer for type '{type ?? string.Empty}' not exists.")
             { }
 
             /// <param name="type">Тип.</param>

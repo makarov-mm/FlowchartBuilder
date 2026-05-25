@@ -39,7 +39,7 @@ namespace Makarov.FlowchartBuilder
         /// <summary>
         /// Менеджер единиц измерения уже существует.
         /// </summary>
-        public sealed class UnitManagerAlreadyExistsException : SingletonObjectAlreayExistsException
+        public sealed class UnitManagerAlreadyExistsException : SingletonObjectAlreadyExistsException
         {
             /// <summary>
             /// Конструктор.
@@ -155,10 +155,10 @@ namespace Makarov.FlowchartBuilder
         /// <returns>Единицы измерения.</returns>
         public Units GetUnits(string name)
         {
-            if (!_units.ContainsKey(name))
+            if (!_units.TryGetValue(name, out var units))
                 throw new UnitsNotFoundException(name);
 
-            return _units[name];
+            return units;
         }
 
         /// <summary>

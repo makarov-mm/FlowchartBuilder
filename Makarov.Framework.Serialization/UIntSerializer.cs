@@ -16,10 +16,7 @@ namespace Makarov.Framework.Serialization
         /// <summary>
         /// Сериализуемый тип.
         /// </summary>
-        public override Type SerializerType
-        {
-            get { return typeof(uint); }
-        }
+        public override Type SerializerType => typeof(uint);
 
         /// <summary>
         /// Сериализует значение в строку.

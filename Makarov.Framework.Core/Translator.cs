@@ -171,10 +171,10 @@ namespace Makarov.Framework.Core
         /// <param name="translation">Перевод.</param>
         public void Add(string word, string translation)
         {
-            if (word == null)
+            if (word is null)
                 throw new NullStringValueException("word");
 
-            if (translation == null)
+            if (translation is null)
                 throw new NullStringValueException("translation");
 
             // Ищем слово в словаре.
@@ -209,7 +209,7 @@ namespace Makarov.Framework.Core
         /// <param name="word">Слово.</param>
         public void Delete(string word)
         {
-            if (word == null)
+            if (word is null)
                 throw new NullStringValueException("word");
 
             foreach (var kvp in _words)
@@ -229,7 +229,7 @@ namespace Makarov.Framework.Core
         /// <returns>Перевод.</returns>
         public string GetTranslation(string word)
         {
-            if (word == null)
+            if (word is null)
                 throw new NullStringValueException("word");
 
             foreach (var kvp in _words)
@@ -400,7 +400,7 @@ namespace Makarov.Framework.Core
         /// <returns>Переводчик.</returns>
         public static Translator CreateEmptyTranslator(string language)
         {
-            if (language == null)
+            if (language is null)
                 throw new NullStringValueException("language");
 
             return new Translator {Language = language};

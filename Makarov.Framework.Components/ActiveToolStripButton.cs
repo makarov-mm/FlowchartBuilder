@@ -29,17 +29,17 @@ namespace Makarov.Framework.Components
         /// </summary>
         public string ActiveCaption
         {
-            get { return Text ?? ""; } 
-            set { Text = value ?? ""; }
+            get => Text ?? string.Empty;
+            set => Text = value ?? string.Empty;
         }
 
         /// <summary>
         /// Текст всплывающей подсказки.
         /// </summary>
-        public string ActiveBaloon
+        public string ActiveBalloon
         {
-            get { return ToolTipText ?? ""; }
-            set { ToolTipText = value ?? ""; }
+            get => ToolTipText ?? string.Empty;
+            set => ToolTipText = value ?? string.Empty;
         }
 
         /// <summary>
@@ -47,8 +47,8 @@ namespace Makarov.Framework.Components
         /// </summary>
         public Bitmap ActiveIcon
         {
-            get { return Image == null ? null : (Bitmap)Image; }
-            set { Image = value; }
+            get => Image is null ? null : (Bitmap)Image;
+            set => Image = value;
         }
 
         /// <summary>
@@ -56,8 +56,8 @@ namespace Makarov.Framework.Components
         /// </summary>
         public bool ActiveEnabled
         {
-            get { return Enabled; }
-            set { Enabled = value; }
+            get => Enabled;
+            set => Enabled = value;
         }
 
         /// <summary>
@@ -65,8 +65,8 @@ namespace Makarov.Framework.Components
         /// </summary>
         public bool ActiveChecked
         {
-            get { return Checked; }
-            set { Checked = value; }
+            get => Checked;
+            set => Checked = value;
         }
     }
 }

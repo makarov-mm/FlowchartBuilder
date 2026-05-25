@@ -18,10 +18,7 @@ namespace Makarov.Framework.Serialization
         /// <summary>
         /// Сериализуемый тип.
         /// </summary>
-        public override Type SerializerType
-        {
-            get { return typeof(Color); }
-        }
+        public override Type SerializerType => typeof(Color);
 
         /// <summary>
         /// Сериализует значение в строку.
@@ -29,7 +26,7 @@ namespace Makarov.Framework.Serialization
         public override string Serialize(object obj)
         {
             var color = (Color)obj;
-            return string.Format("{0};{1};{2};{3}", color.R, color.G, color.B, color.A);
+            return $"{color.R};{color.G};{color.B};{color.A}";
         }
 
         /// <summary>

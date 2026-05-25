@@ -6,8 +6,6 @@
 // <date>2011-II-18</date>
 // <summary>Исключения помошника для работы с глифами.</summary>
 
-using System.Reflection;
-using Makarov.FlowchartBuilder.API;
 using Makarov.Framework.Core;
 
 namespace Makarov.FlowchartBuilder.Box
@@ -36,8 +34,7 @@ namespace Makarov.FlowchartBuilder.Box
             /// <param name="glyphType">Тип глифа.</param>
             /// <param name="propertyName">Имя свойства.</param>
             public TooManyActivePropertyAttributesException(string glyphType, string propertyName)
-                : base(string.Format("Too many ActivePropertyAttributes for property. " +
-                "Glyph '{0}', property '{1}'.", glyphType ?? string.Empty, propertyName ?? string.Empty))
+                : base($"Too many ActivePropertyAttributes for property. Glyph '{glyphType ?? string.Empty}', property '{propertyName ?? string.Empty}'.")
             { }
         }
     }

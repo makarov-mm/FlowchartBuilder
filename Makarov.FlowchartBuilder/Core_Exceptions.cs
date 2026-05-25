@@ -29,7 +29,7 @@ namespace Makarov.FlowchartBuilder
         /// <summary>
         /// Кора уже создана.
         /// </summary>
-        public sealed class CoreAlreadyExistsException : SingletonObjectAlreayExistsException
+        public sealed class CoreAlreadyExistsException : SingletonObjectAlreadyExistsException
         {
             public CoreAlreadyExistsException()
                 : base("Core already exists.")
@@ -63,7 +63,7 @@ namespace Makarov.FlowchartBuilder
         {
             /// <param name="type">Тип окна.</param>
             public WindowTypeNotFoundException(string type)
-                : base(string.Format(@"Window type '{0}' not found.", type ?? string.Empty))
+                : base($@"Window type '{type ?? string.Empty}' not found.")
             { }
 
             /// <param name="type">Тип окна.</param>

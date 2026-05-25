@@ -62,17 +62,17 @@ namespace Makarov.Framework.Graphics.Primitives
             path.StartFigure();
             path.AddLines(
                 new[]
-                    {
-                        new PointF(x + (width >> 1), y),
-                        new PointF(x + width, y + (height >> 1)),
-                        new PointF(x + width  / 3 * 2, y + (height >> 1)),
-                        new PointF(x + width  / 3 * 2, y + height),
-                        new PointF(x + width  / 3, y + height),
-                        new PointF(x + width  / 3, y + (height >> 1)),
-                        new PointF(x, y + (height >> 1)),
-                        new PointF(x + (width >> 1), y)
-                    }
-                );
+                {
+                    new PointF(x + (width >> 1), y),
+                    new PointF(x + width, y + (height >> 1)),
+                    new PointF(x + width  / 3 * 2, y + (height >> 1)),
+                    new PointF(x + width  / 3 * 2, y + height),
+                    new PointF(x + width  / 3, y + height),
+                    new PointF(x + width  / 3, y + (height >> 1)),
+                    new PointF(x, y + (height >> 1)),
+                    new PointF(x + (width >> 1), y)
+                }
+            );
             path.CloseFigure();
 
             return path;

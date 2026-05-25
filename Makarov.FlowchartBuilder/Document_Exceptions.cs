@@ -31,7 +31,7 @@ namespace Makarov.FlowchartBuilder
         {
             /// <param name="reason">Причина.</param>
             protected IncorrectSavedDocumentException(string reason)
-                : base(string.Format(@"Incorrect saved document: {0}.", reason ?? string.Empty))
+                : base($@"Incorrect saved document: {reason ?? string.Empty}.")
             { }
         }
 
@@ -72,7 +72,7 @@ namespace Makarov.FlowchartBuilder
         {
             /// <param name="glyphType">Тип глифа.</param>
             public GlyphTypeNotFoundException(string glyphType)
-                : base(string.Format(@"Glyph type '{0}' not found", glyphType ?? string.Empty))
+                : base($@"Glyph type '{glyphType ?? string.Empty}' not found")
             { }
         }
     }

@@ -76,8 +76,8 @@ namespace Makarov.FlowchartBuilder
         /// </summary>
         public PointF Coords
         {
-            get { return _coords; }
-            set { _coords = value; }
+            get => _coords;
+            set => _coords = value;
         }
 
         /// <summary>
@@ -85,8 +85,8 @@ namespace Makarov.FlowchartBuilder
         /// </summary>
         public float XInMM
         {
-            get { return Coords.X; }
-            set { Coords = new PointF(value, Coords.Y); }
+            get => Coords.X;
+            set => Coords = new PointF(value, Coords.Y);
         }
 
         /// <summary>
@@ -94,17 +94,15 @@ namespace Makarov.FlowchartBuilder
         /// </summary>
         public float YInMM
         {
-            get { return Coords.Y; }
-            set { Coords = new PointF(Coords.X, value); }
+            get => Coords.Y;
+            set => Coords = new PointF(Coords.X, value);
         }
 
         /// <summary>
         /// Тип.
         /// </summary>
-        public LinkPointType PointType
-        {
-            get { return _type; }
-        }
+        public LinkPointType PointType => _type;
+
         #endregion
 
         #region Operators

@@ -23,7 +23,7 @@ namespace Makarov.Framework.Components
         /// <summary>
         /// Текст всплывающей подсказки.
         /// </summary>
-        string ActiveBaloon { get; set; }
+        string ActiveBalloon { get; set; }
 
         /// <summary>
         /// Иконка.

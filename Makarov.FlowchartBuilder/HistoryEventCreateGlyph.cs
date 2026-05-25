@@ -24,7 +24,7 @@ namespace Makarov.FlowchartBuilder
         {
             /// <param name="propertyName">Имя свойства.</param>
             public PropertyAlreadyExistsException(string propertyName)
-                : base(string.Format("Property '{0}' already exists.", propertyName ?? string.Empty))
+                : base($"Property '{propertyName ?? string.Empty}' already exists.")
             { }
         }
         #endregion
@@ -76,18 +76,12 @@ namespace Makarov.FlowchartBuilder
         /// <summary>
         /// Пары (имя свойства, значение).
         /// </summary>
-        public IEnumerable<KeyValuePair<string, string>> Pairs
-        {
-            get { return _props; }
-        }
+        public IEnumerable<KeyValuePair<string, string>> Pairs => _props;
 
         /// <summary>
         /// Количество свойств.
         /// </summary>
-        public int Count
-        {
-            get { return _props.Count; }
-        }
+        public int Count => _props.Count;
 
         /// <summary>
         /// Возвращает значение свойства.

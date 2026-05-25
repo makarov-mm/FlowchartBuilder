@@ -27,7 +27,7 @@ namespace Makarov.FlowchartBuilder
                               DefaultExt = Settings.Environment.AppSettingsExtension,
                               CheckFileExists = false,
                               CheckPathExists = true,
-                              Filter = string.Format("(*.{0})|*.{0}", Settings.Environment.AppSettingsExtension),
+                              Filter = string.Format(@"(*.{0})|*.{0}", Settings.Environment.AppSettingsExtension),
                               FileName = "FlowchartBuilder." + Settings.Environment.AppSettingsExtension
                           };
 

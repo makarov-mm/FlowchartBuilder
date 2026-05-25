@@ -27,20 +27,11 @@ namespace Makarov.Framework.Core.Managers
         /// <summary>
         /// Имя сборки.
         /// </summary>
-        private static AssemblyName AsmName
-        {
-            get { return new AssemblyName("MakarovProxyAssembly" + (++_asmI) + ".dll"); }
-        }
+        private static AssemblyName AsmName => new AssemblyName("MakarovProxyAssembly" + (++_asmI) + ".dll");
 
-        private static AssemblyBuilder AsmBuilder
-        {
-            get { return AppDomain.CurrentDomain.DefineDynamicAssembly(AsmName, AssemblyBuilderAccess.Run); }
-        }
+        private static AssemblyBuilder AsmBuilder => AppDomain.CurrentDomain.DefineDynamicAssembly(AsmName, AssemblyBuilderAccess.Run);
 
-        private static ModuleBuilder ModBuilder
-        {
-            get { return AsmBuilder.DefineDynamicModule(AsmName.Name); }
-        }
+        private static ModuleBuilder ModBuilder => AsmBuilder.DefineDynamicModule(AsmName.Name);
 
         /// <summary>
         /// Счётчик типов (используется в имени типа прокси-объекта).

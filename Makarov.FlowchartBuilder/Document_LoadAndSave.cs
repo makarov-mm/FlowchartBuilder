@@ -111,9 +111,9 @@ namespace Makarov.FlowchartBuilder
                 var glyphType = Type.GetType(glyphTypeAttrib.Value);
 
                 // Если тип не найден, ищем в плагинах.
-                if (glyphType == null)
+                if (glyphType is null)
                 {
-                    bool finded = false; // Найден ли тип глифа.
+                    bool found = false; // Найден ли тип глифа.
 
                     // Проходим по всем загруженным плагинам...
                     foreach (var kvp in Core.Instance.PluginsLoader.LoadedAssemblies)
@@ -128,18 +128,18 @@ namespace Makarov.FlowchartBuilder
                             if (asmType.FullName == glyphTypeAttrib.Value)
                             {
                                 glyphType = asmType;
-                                finded = true;
+                                found = true;
                             }
                         }
 
                         // Тип найден - прекращаем проход по плагинам для текущего типа.
-                        if (finded)
+                        if (found)
                             break;
                     }
                 }
 
                 // Тип глифа не найден - бросаем исключение.
-                if (glyphType == null)
+                if (glyphType is null)
                     throw new GlyphTypeNotFoundException(glyphTypeAttrib.Value);
 
                 // Если тип является подтипом базового класса глифов,
@@ -208,10 +208,8 @@ namespace Makarov.FlowchartBuilder
             sheetNode.Attributes.Append(sheetClassAttrib);
 
             // Ширина и высота в миллиметрах, если нужны.
-            if (sheet is FixedSheet)
+            if (sheet is FixedSheet fixedSheet)
             {
-                var fixedSheet = (FixedSheet)sheet;
-
                 var sheetWidthAttrib = doc.CreateAttribute(Settings.Xml.Attributes.SheetWidth);
                 sheetWidthAttrib.Value = fixedSheet.Width.ToString();
                 sheetNode.Attributes.Append(sheetWidthAttrib);
