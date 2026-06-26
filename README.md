@@ -135,3 +135,9 @@ Feature-complete for its original scope. Preserved as a snapshot of the
 ## License
 
 Copyright © 2008–2011 Mykhailo Makarov. All rights reserved.
+
+## Support
+
+If you found this project interesting or useful, you can support my work:
+
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/makarov-mm?style=flat&logo=github)](https://github.com/sponsors/makarov-mm)
