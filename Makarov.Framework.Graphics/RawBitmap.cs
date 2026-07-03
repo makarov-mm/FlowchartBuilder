@@ -1,11 +1,3 @@
-﻿// <copyright file="RawBitmap.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2009 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2009-03-28</date>
-// <summary>Класс для работы с битмапом.</summary>
-
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -13,44 +5,22 @@ using Makarov.Framework.Core;
 
 namespace Makarov.Framework.Graphics
 {
-    /// <summary>
-    /// Класс для работы с битмапом.
-    /// </summary>
+
     public unsafe sealed class RawBitmap : IDisposable
     {
         #region Pixel data
-        /// <summary>
-        /// Пиксель.
-        /// </summary>
+
         public struct Pixel
         {
-            /// <summary>
-            /// Синий цвет.
-            /// </summary>
+
             public byte Blue;
 
-            /// <summary>
-            /// Зелёный цвет.
-            /// </summary>
             public byte Green;
 
-            /// <summary>
-            /// Красный цвет.
-            /// </summary>
             public byte Red;
 
-            /// <summary>
-            /// Альфа-канал.
-            /// </summary>
             public byte Alpha;
 
-            /// <summary>
-            /// Конструктор.
-            /// </summary>
-            /// <param name="red">Красный цвет.</param>
-            /// <param name="green">Зелёный цвет.</param>
-            /// <param name="blue">Синий цвет.</param>
-            /// <param name="alpha">Альфа-канал.</param>
             public Pixel(byte red, byte green, byte blue, byte alpha)
             {
                 Red = red;
@@ -59,12 +29,6 @@ namespace Makarov.Framework.Graphics
                 Alpha = alpha;
             }
 
-            /// <summary>
-            /// Конструктор.
-            /// </summary>
-            /// <param name="red">Красный цвет.</param>
-            /// <param name="green">Зелёный цвет.</param>
-            /// <param name="blue">Синий цвет.</param>
             public Pixel(byte red, byte green, byte blue)
             {
                 Red = red;
@@ -76,28 +40,18 @@ namespace Makarov.Framework.Graphics
         #endregion
 
         #region Exceptions
-        /// <summary>
-        /// Исключение.
-        /// </summary>
+
         public class RawBitmapException : MakarovFrameworkException
         {
-            /// <summary>
-            /// Конструктор.
-            /// </summary>
-            /// <param name="message">Сообщение.</param>
+
             public RawBitmapException(string message)
                 : base(message)
             { }
         }
 
-        /// <summary>
-        /// Неправильный формат пикселей.
-        /// </summary>
         public sealed class InvalidPixelFormatException : RawBitmapException
         {
-            /// <summary>
-            /// Конструктор.
-            /// </summary>
+
             public InvalidPixelFormatException()
                 : base("Invalid pixel format.")
             { }
@@ -110,10 +64,7 @@ namespace Makarov.Framework.Graphics
         #endregion
 
         #region Constructors
-        /// <summary>
-        /// Конструктор.
-        /// </summary>
-        /// <param name="bmp">Битмап.</param>
+
         public RawBitmap(Bitmap bmp)
         {
             if (bmp.PixelFormat != PixelFormat.Format32bppArgb)
@@ -124,15 +75,12 @@ namespace Makarov.Framework.Graphics
             Height = bmp.Height;
 
             _data = bmp.LockBits(
-                new Rectangle(0, 0, bmp.Width, bmp.Height), 
+                new Rectangle(0, 0, bmp.Width, bmp.Height),
                 ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
             _pBase = (byte*)_data.Scan0;
         }
 
-        /// <summary>
-        /// Освободить ресурсы.
-        /// </summary>
         public void Dispose()
         {
             InnerBitmap.UnlockBits(_data);
@@ -141,25 +89,17 @@ namespace Makarov.Framework.Graphics
         #endregion
 
         #region Properties
-        /// <summary>
-        /// Ширина.
-        /// </summary>
+
         public int Width
         {
             get; private set;
         }
 
-        /// <summary>
-        /// Высота.
-        /// </summary>
         public int Height
         {
             get; private set;
         }
 
-        /// <summary>
-        /// Внутренний битмап.
-        /// </summary>
         public Bitmap InnerBitmap
         {
             get; private set;
@@ -167,12 +107,7 @@ namespace Makarov.Framework.Graphics
         #endregion
 
         #region Random access
-        /// <summary>
-        /// Доступ к пикселям.
-        /// </summary>
-        /// <param name="x">Координата X.</param>
-        /// <param name="y">Координата Y.</param>
-        /// <returns>Цвет.</returns>
+
         public Color this[int x, int y]
         {
             get

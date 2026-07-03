@@ -1,11 +1,3 @@
-﻿// <copyright file="XmlStorage.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2011 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2011-IV-25</date>
-// <summary>Класс для хранения настроек в XML.</summary>
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,9 +5,7 @@ using System.Xml;
 
 namespace Makarov.Framework.Core.SettingStorages
 {
-    /// <summary>
-    /// Класс для хранения настроек в XML.
-    /// </summary>
+
     public sealed class XmlStorage : IDict<string>
     {
         private readonly StringDictionary<string> _dict = new StringDictionary<string>();
@@ -27,9 +17,6 @@ namespace Makarov.Framework.Core.SettingStorages
             LoadData();
         }
 
-        /// <summary>
-        /// Доступ к элементам по ключу.
-        /// </summary>
         public string this[string x]
         {
             get
@@ -60,9 +47,6 @@ namespace Makarov.Framework.Core.SettingStorages
             }
         }
 
-        /// <summary>
-        /// Есть ли ключ в словаре.
-        /// </summary>
         public bool IsKeyExists(string key)
         {
             if (string.IsNullOrEmpty(key))
@@ -71,17 +55,11 @@ namespace Makarov.Framework.Core.SettingStorages
             return _dict.ContainsKey(key);
         }
 
-        /// <summary>
-        /// Имя файла настроек.
-        /// </summary>
         public string SettingsFileName =>
             Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 _settingsFileName);
 
-        /// <summary>
-        /// Загружает данные.
-        /// </summary>
         public void LoadData()
         {
             if (!File.Exists(SettingsFileName))
@@ -104,9 +82,6 @@ namespace Makarov.Framework.Core.SettingStorages
                 }
         }
 
-        /// <summary>
-        /// Сохраняет данные.
-        /// </summary>
         public void SaveData()
         {
             var xmlDoc = new XmlDocument();

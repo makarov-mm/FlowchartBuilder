@@ -1,19 +1,9 @@
-﻿// <copyright file="PanelGlyph.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2011 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2011-03-20</date>
-// <summary>Панель.</summary>
-
 using System.Drawing;
 using Makarov.FlowchartBuilder.API.Attributes;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Containers
 {
-    /// <summary>
-    /// Панель.
-    /// </summary>
+
     [GlyphName("Panel")]
     public sealed class PanelGlyph : AbstractContainerGlyph
     {
@@ -41,8 +31,6 @@ namespace Makarov.FlowchartBuilder.Glyphs.Containers
                         offset,
                         ThumbnailWidth - (offset << 1),
                         ThumbnailHeight - (offset << 1));
-
-
 
                 }
 

@@ -1,18 +1,8 @@
-﻿// <copyright file="ThreadSafeConsole.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2011 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2011-IV-21</date>
-// <summary>Потокобезопасная консоль.</summary>
-
 using System;
 
 namespace Makarov.Framework.Core
 {
-    /// <summary>
-    /// Потокобезопасная консоль.
-    /// </summary>
+
     public static class ThreadSafeConsole
     {
         private static readonly object SyncObject = new object();

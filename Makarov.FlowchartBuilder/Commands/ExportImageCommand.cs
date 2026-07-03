@@ -1,11 +1,3 @@
-﻿// <copyright file="ExportImageCommand.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2008 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2009-05-22</date>
-// <summary>Команда - экспортировать изображение.</summary>
-
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -14,24 +6,17 @@ using BaseSettings = Makarov.Framework.Core.Settings;
 
 namespace Makarov.FlowchartBuilder.Commands
 {
-    /// <summary>
-    /// Команда - экспортировать изображение.
-    /// </summary>
+
     public sealed class ExportImageCommand : Command
     {
-        /// <summary>
-        /// Предыдущее имя файла.
-        /// </summary>
+
         public static string _oldFileName = "Flowchart.png";
 
-        /// <summary>
-        /// Выполнить команду.
-        /// </summary>
         public override void Run()
         {
             if (Settings.Environment.Registered)
             {
-                // Если документа не существует, бросаем исключение.
+
                 if (!Core.Instance.IsDocumentsExists)
                     throw new Core.CurrentDocumentNotExistsException();
 

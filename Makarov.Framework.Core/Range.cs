@@ -1,18 +1,8 @@
-﻿// <copyright file="Range.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2011 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2011-IV-07</date>
-// <summary>Диапазон значений.</summary>
-
 using System;
 
 namespace Makarov.Framework.Core
 {
-    /// <summary>
-    /// Диапазон значений.
-    /// </summary>
+
     public sealed class Range
     {
         public sealed class RangeException : MakarovFrameworkException
@@ -35,39 +25,24 @@ namespace Makarov.Framework.Core
                 throw new RangeException($"{nameof(maxValue)} must be greater or equal than {nameof(minValue)}.");
         }
 
-        /// <summary>
-        /// Минимальное значение диапазона.
-        /// </summary>
         public int MinValue
         {
             get;
         }
 
-        /// <summary>
-        /// Максимальное значение диапазона.
-        /// </summary>
         public int MaxValue
         {
             get;
         }
 
-        /// <summary>
-        /// Количество элементов в диапазоне.
-        /// </summary>
         public int Count => MaxValue - MinValue + 1;
 
-        /// <summary>
-        /// Можно ли объединить диапазоны.
-        /// </summary>
         public bool CanBeCombinedWith(Range range)
         {
             return !(MaxValue < range.MinValue - 1 ||
                      MinValue > range.MaxValue + 1);
         }
 
-        /// <summary>
-        /// Объединяет пересекающиеся или рядом лежащие диапазоны в один.
-        /// </summary>
         public Range Combine(Range range)
         {
             if (!CanBeCombinedWith(range))

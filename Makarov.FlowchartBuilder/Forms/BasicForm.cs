@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Windows.Forms;
 using BaseSettings = Makarov.Framework.Core.Settings;
 
@@ -11,33 +11,21 @@ namespace Makarov.FlowchartBuilder.Forms
             InitializeComponent();
         }
 
-        /// <summary>
-        /// Главное меню.
-        /// </summary>
         public MenuStrip MainMenu
         {
             get { return mnuMain; }
         }
 
-        /// <summary>
-        /// Вторичное меню.
-        /// </summary>
         public ToolStrip SecondaryMenu
         {
             get { return mnuSecondary; }
         }
 
-        /// <summary>
-        /// Статус.
-        /// </summary>
         public StatusStrip StatusMenu
         {
             get { return mnuStatus; }
         }
 
-        /// <summary>
-        /// Область окна в которой нужно рисовать. Относительно графикса.
-        /// </summary>
         public virtual Rectangle InnerRectangle
         {
             get
@@ -50,18 +38,14 @@ namespace Makarov.FlowchartBuilder.Forms
             }
         }
 
-        /// <summary>
-        /// Загружает размеры и положение окна из реестра.
-        /// </summary>
         protected void LoadWindowParamsFromRegistry()
         {
-            // Размеры окна.
+
             string x = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.X];
             string y = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Y];
             string width = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Width];
             string height = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Height];
 
-            // Устанавливаем координату X окна.
             if (!string.IsNullOrEmpty(x))
             {
                 int ix = int.Parse(x);
@@ -73,7 +57,6 @@ namespace Makarov.FlowchartBuilder.Forms
                 Left = ix;
             }
 
-            // Устанавливаем координату Y окна.
             if (!string.IsNullOrEmpty(y))
             {
                 int iy = int.Parse(y);
@@ -85,7 +68,6 @@ namespace Makarov.FlowchartBuilder.Forms
                 Top = iy;
             }
 
-            // Устанавливаем координату ширину окна.
             if (!string.IsNullOrEmpty(width))
             {
                 int iwidth = int.Parse(width);
@@ -97,7 +79,6 @@ namespace Makarov.FlowchartBuilder.Forms
                 Width = iwidth;
             }
 
-            // Устанавливаем координату высоту окна.
             if (!string.IsNullOrEmpty(height))
             {
                 int iheight = int.Parse(height);
@@ -109,7 +90,6 @@ namespace Makarov.FlowchartBuilder.Forms
                 Height = iheight;
             }
 
-            // Состояние окна.
             string windowState = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.WindowState];
             if (!string.IsNullOrEmpty(windowState))
             {
@@ -120,12 +100,9 @@ namespace Makarov.FlowchartBuilder.Forms
             }
         }
 
-        /// <summary>
-        /// Сохраняет размеры и положение окна из реестра.
-        /// </summary>
         protected void SaveWindowParamsToRegistry()
         {
-            // Сохраняем размеры окна.
+
             if (WindowState == FormWindowState.Normal)
             {
                 Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.X] = Left.ToString();
@@ -134,13 +111,9 @@ namespace Makarov.FlowchartBuilder.Forms
                 Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Height] = Height.ToString();
             }
 
-            // Сохраняем состояние окна.
             Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.WindowState] = WindowState.ToString();
         }
 
-        /// <summary>
-        /// Рабочая область окна. Относительно окна.
-        /// </summary>
         public Rectangle WorkRectangle
         {
             get

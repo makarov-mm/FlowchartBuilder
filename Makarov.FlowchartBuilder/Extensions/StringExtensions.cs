@@ -1,29 +1,13 @@
-﻿// <copyright file="StringExtensions.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2008 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2009-03-28</date>
-// <summary>Расширитель класса строк.</summary>
-
 using System.Drawing;
 using Makarov.Framework.Core;
 using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder.Extensions
 {
-    /// <summary>
-    /// Расширитель класса строк.
-    /// </summary>
+
     public static class StringExtensions
     {
-        /// <summary>
-        /// Возвращает размер области, необходимой для вывода текста.
-        /// </summary>
-        /// <param name="gfx">Graphics.</param>
-        /// <param name="font">Шрифт.</param>
-        /// <param name="str">Строка.</param>
-        /// <returns>Размер области, необходимой для вывода текста.</returns>
+
         public static Size CalcSize(this string str, Graphics gfx, Font font)
         {
             var fSize = gfx.MeasureString(str, font);
@@ -110,12 +94,6 @@ namespace Makarov.FlowchartBuilder.Extensions
             }
         }
 
-        /// <summary>
-        /// Безопасное создание шрифтов.
-        /// </summary>
-        /// <param name="familyName">Имя семейства шрифтов.</param>
-        /// <param name="emSize">Размер.</param>
-        /// <returns>Шрифт.</returns>
         public static Font SafeCreateFont(this string familyName, float emSize)
         {
             return Fonts.SafeCreateFont(familyName, emSize);

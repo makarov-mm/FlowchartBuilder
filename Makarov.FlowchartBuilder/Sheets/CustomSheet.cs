@@ -1,11 +1,3 @@
-﻿// <copyright file="InfiniteSheet.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2008 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2009-05-14</date>
-// <summary>Кастомный лист.</summary>
-
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -20,9 +12,6 @@ namespace Makarov.FlowchartBuilder.Sheets
     {
         #region Properties
 
-        /// <summary>
-        /// Иконка.
-        /// </summary>
         public override Bitmap Thumbnail
         {
             get
@@ -31,7 +20,7 @@ namespace Makarov.FlowchartBuilder.Sheets
 
                 using (Graphics gfx = Graphics.FromImage(bmp))
                 {
-                    // Область для рисования.
+
                     const int innerOffsetX = 8;
                     const int innerOffsetY = 8;
                     int innerWidth = bmp.Width - innerOffsetX * 2;
@@ -40,7 +29,6 @@ namespace Makarov.FlowchartBuilder.Sheets
                     float w = 210f / 500f * innerWidth;
                     float h = 297f / 500f * innerHeight;
 
-                    // Рисуем лист.
                     using (var brush = new LinearGradientBrush(
                         new PointF((innerWidth - w) / 2f + innerOffsetX, (innerHeight - h) / 2f + innerOffsetY),
                         new PointF((innerWidth - w) / 2f + innerOffsetX + w, (innerHeight - h) / 2f + innerOffsetY + h),
@@ -72,20 +60,12 @@ namespace Makarov.FlowchartBuilder.Sheets
         #endregion
 
         #region Public methods
-        /// <summary>
-        /// Отрисовать лист.
-        /// </summary>
-        /// <param name="Scaled">Нужно ли применять масштабирование.</param>
-        /// <returns>Отрисованный лист.</returns>
+
         public override Bitmap Draw(bool Scaled)
         {
             throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// Клонирует лист.
-        /// </summary>
-        /// <returns>Клон листа.</returns>
         public override object Clone()
         {
             return new CustomSheet();

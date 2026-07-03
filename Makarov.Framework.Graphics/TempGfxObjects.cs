@@ -1,20 +1,10 @@
-﻿// <copyright file="TempGfxObjects.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2010 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2010-12-04</date>
-// <summary>Временные настройки для рисования.</summary>
-
 using System;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 
 namespace Makarov.Framework.Graphics
 {
-    /// <summary>
-    /// Позволяет временно сменить настройки сглаживания.
-    /// </summary>
+
     public sealed class TempSmoothingMode : IDisposable
     {
         private readonly SmoothingMode _smootingMode;
@@ -40,9 +30,6 @@ namespace Makarov.Framework.Graphics
         }
     }
 
-    /// <summary>
-    /// Позволяет временно сменить настройки рендеринга текста.
-    /// </summary>
     public sealed class TempTextRenderingHint : IDisposable
     {
         private readonly TextRenderingHint _textRenderingHint;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -16,9 +16,6 @@ namespace Makarov.FlowchartBuilder.Forms
             InitializeComponent();
         }
 
-        /// <summary>
-        /// Имя окна (для хранения настроек в реестре).
-        /// </summary>
         protected override string RegistrySettingsName
         {
             get { return "GlyphsForm"; }
@@ -36,22 +33,17 @@ namespace Makarov.FlowchartBuilder.Forms
         {
             FBGlyphs_Resize(sender, new EventArgs());
 
-            // Создаём список иконок.
             lstView.LargeImageList = new ImageList { ColorDepth = ColorDepth.Depth32Bit };
 
-            // Устанавливаем цвет текста.
             lstView.ForeColor = Settings.Colors.ThumbnailText;
 
-            // Группы глифов (имя группы - сортированные глифы, несортированные глифы).
             var groups = new List<KeyValuePair<string, KeyValuePair<List<Type>, List<Type>>>>();
 
-            // Загружаем найденные глифы...
             foreach (var glyphType in PluginsManager.Instance.VisibleGlyphs)
             {
-                // Создаём экземпляр глифа.
+
                 var glyph = (AbstractGlyph)Activator.CreateInstance(glyphType);
 
-                // Если нет данной группы, создаём её.
                 if (!groups.Any(x => x.Key == glyph.Family))
                 {
                     groups.Add(new KeyValuePair<string, KeyValuePair<List<Type>, List<Type>>>(
@@ -59,14 +51,13 @@ namespace Makarov.FlowchartBuilder.Forms
                         new KeyValuePair<List<Type>, List<Type>>(new List<Type>(), new List<Type>())));
                 }
 
-                // Проверяем, в какой список добавлять глиф.
                 if (glyph.OrderExists)
                 {
                     bool added = false;
 
                     for (int i = 0; i < groups.First(x => x.Key == glyph.Family).Value.Value.Count; i++)
                     {
-                        // Создаём экземпляр глифа.
+
                         var tg = (AbstractGlyph)Activator.CreateInstance(groups.First(x => x.Key == glyph.Family).Value.Value[i]);
 
                         if (glyph.Order <= tg.Order)
@@ -86,9 +77,6 @@ namespace Makarov.FlowchartBuilder.Forms
                 }
             }
 
-            // TODO: сортировать правильно. Нужно учитывать GlyphGroupOrderAttribute.
-
-            // Загружаем глифы в окно.
             foreach (var group in groups.OrderBy(x => x.Key))
             {
                 lstView.Groups.Add(group.Key, group.Key);
@@ -144,21 +132,18 @@ namespace Makarov.FlowchartBuilder.Forms
 
         private void FBGlyphs_Load(object sender, EventArgs e)
         {
-            // Заголовок окна.
+
             Text = Core.Instance.CurrentTranslator["Wnd_Palette_Title"];
         }
 
         private void lstView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            // Если нет выбранных элементов, выходим.
+
             if (!e.IsSelected)
                 return;
 
-            // Получаем тип глифа.
             var glyphType = (Type)e.Item.Tag;
 
-            // Есть ли атрибут, указывающий, что нужно не создавать глиф,
-            // а вызвать определённую команду.
             var cmdAttrs = glyphType.GetCustomAttributes(typeof (CommandGlyphAttribute), true);
             bool isCmdGlyph = cmdAttrs.Length > 0;
 
@@ -166,10 +151,9 @@ namespace Makarov.FlowchartBuilder.Forms
             {
                 foreach (var cmdAttr in cmdAttrs)
                 {
-                    // Имя команды.
+
                     string cmd = ((CommandGlyphAttribute)cmdAttr).CommandName;
 
-                    // Экземпляр класса команды.
                     var command = Command.GetInstance(cmd);
 
                     if (command is NoneCommand)
@@ -177,13 +161,11 @@ namespace Makarov.FlowchartBuilder.Forms
                         ClearGlyphsSelection();
                         break;
                     }
-                    
+
                     var glyphCommand = (CommandedGlyphCommand)Command.GetInstance(cmd);
 
-                    // Задаём команде тип вызвавшего её глифа.
                     glyphCommand.GlyphType = glyphType;
 
-                    // Выполняем команду.
                     glyphCommand.Run();
                 }
 
@@ -194,24 +176,21 @@ namespace Makarov.FlowchartBuilder.Forms
                 Core.Instance.CurrentGlyphType = glyphType;
             }
 
-            // Перерисовываем окно.
             Core.Instance.Redraw();
         }
 
         private void lstView_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            // Если нет выбранного глифа, выходим.
+
             if (!Core.Instance.CurrGlyphTypeSelected)
                 return;
 
-            // Кидаем экземпляр выбранного глифа на лист.
             Core.Instance.CurrentDocument.DocumentSheet.DeselectAllGlyphs();
             var glyph = (AbstractGlyph) Activator.CreateInstance(Core.Instance.CurrentGlyphType);
             glyph.Selected = true;
             Core.Instance.CurrentDocument.DocumentSheet.Add(glyph);
             Core.Instance.CurrentGlyphType = null;
 
-            // Перерисовываем окно.
             Core.Instance.Redraw();
         }
 
@@ -220,20 +199,15 @@ namespace Makarov.FlowchartBuilder.Forms
             if (Core.Instance.MainWindow.IsClosing)
                 return;
 
-            // Не закрываем окно, а скрываем его.
             e.Cancel = true;
             Hide();
 
-            // Включаем команду отображения окна.
             Command.GetInstance("PaletteWindowCommand").Enabled = true;
         }
 
-        /// <summary>
-        /// Снимает выделение глифов.
-        /// </summary>
         public void ClearGlyphsSelection()
         {
-            // Снимаем выделение.
+
             lstView.SelectedIndices.Clear();
         }
     }

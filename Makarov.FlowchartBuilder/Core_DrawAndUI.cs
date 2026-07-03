@@ -1,11 +1,3 @@
-﻿// <copyright file="Core_DrawAndUI.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2011 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2011-01-02</date>
-// <summary>Кора (Синглетон).</summary>
-
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -15,49 +7,36 @@ using Makarov.FlowchartBuilder.Sheets;
 
 namespace Makarov.FlowchartBuilder
 {
-    /// <summary>
-    /// Кора (Синглетон).
-    /// </summary>
+
     public sealed partial class Core
     {
-        /// <summary>
-        /// Обновляет расположение скроллбаров.
-        /// </summary>
-        /// <param name="wndMain">Главное окно.</param>
-        /// <returns>Смещение листа.</returns>
+
         private Point UpdateScrollbars(MainForm wndMain)
         {
-            // Скроллбары.
+
             HScrollBar hbar = wndMain.HorizontalScrollBar;
             VScrollBar vbar = wndMain.VerticalScrollBar;
 
-            // Толщина линеек.
             var rulersBorderWidth = (int)Math.Ceiling(
                 Settings.Environment.Rulers
                     ? Settings.Pens.RulersBorder.Width
                     : 0);
 
-            // Обновляем расположение скроллбаров.
             if (IsDocumentsExists && CurrentDocument.DocumentSheet is FixedSheet)
             {
-                // Лист.
+
                 var sheet = (FixedSheet)CurrentDocument.DocumentSheet;
 
-                // Прямоугольник, в который производится отрисовка.
                 var rect = wndMain.InnerRectangle;
 
-                // Была ли изменена видимость линеек.
                 bool rulersVisibleChanged = false;
 
-                // Прямоугольник, в который производится отрисовка с
-                // учётом толщины линеек.
                 rect = new Rectangle(
                     rect.Left + rulersBorderWidth,
                     rect.Top + rulersBorderWidth,
                     rect.Width - rulersBorderWidth,
                     rect.Height - rulersBorderWidth);
 
-                // Видимость горизонтального скроллбара.
                 if (sheet.ScaledWidth.MMToPx() > rect.Width)
                 {
                     if (!hbar.Visible)
@@ -75,7 +54,6 @@ namespace Makarov.FlowchartBuilder
                     }
                 }
 
-                // Видимость вертикального скроллбара.
                 if (sheet.ScaledHeight.MMToPx() > rect.Height)
                 {
                     if (!vbar.Visible)
@@ -94,7 +72,6 @@ namespace Makarov.FlowchartBuilder
                     }
                 }
 
-                // Параметры горизонтального скроллбара.
                 if (hbar.Visible)
                 {
                     hbar.Left = rect.Left;
@@ -113,7 +90,6 @@ namespace Makarov.FlowchartBuilder
                     }
                 }
 
-                // Параметры вертикального скроллбара.
                 if (vbar.Visible)
                 {
                     vbar.Left = rect.Left + rect.Width - vbar.Width;
@@ -132,30 +108,20 @@ namespace Makarov.FlowchartBuilder
                     }
                 }
 
-                // Если изменена видимость скроллбаров,
-                // заапдейтить расположение дочерних окон.
                 if (rulersVisibleChanged)
                 {
-                    // Корректируем положение дочерних окон.
+
                     foreach (var wnd in Windows.Windows)
                         if (wnd is DockingForm)
                             ((DockingForm)wnd).UpdateDockedWindowPosition();
                 }
             }
 
-            // Смещение листа, заданное скроллбарами.
             return new Point(
                 hbar.Visible ? hbar.Value - (hbar.Maximum >> 1) : 0,
                 vbar.Visible ? vbar.Value - (vbar.Maximum >> 1) : 0);
         }
 
-        /// <summary>
-        /// Отрисовывает линейки.
-        /// </summary>
-        /// <param name="gfx">Graphics.</param>
-        /// <param name="clientRect">Область графикса, в которой идёт отрисовка.</param>
-        /// <param name="leftOffset">Смещение начала измерения линейки по горизонтали.</param>
-        /// <param name="topOffset">Смещение начала измерения линейки по вертикали.</param>
         private void DrawRulers(Graphics gfx, Rectangle clientRect,
             float leftOffset, float topOffset)
         {
@@ -163,12 +129,10 @@ namespace Makarov.FlowchartBuilder
 
             MainForm wndMain = MainWindow;
 
-            // Коэффициент масштабирования.
             float scaleFactor = IsDocumentsExists
                 ? CurrentDocument.DocumentSheet.ScaleFactor
                 : 1f;
 
-            // Ширина линеек.
             int rulersSize = Settings.Environment.RulersSize;
 
             using (Brush brush = new SolidBrush(Settings.Colors.RulersBackground))

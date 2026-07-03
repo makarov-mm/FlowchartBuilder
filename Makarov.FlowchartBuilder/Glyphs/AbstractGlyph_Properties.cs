@@ -1,11 +1,3 @@
-﻿// <copyright file="AbstractGlyph_Serialization.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2010 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2009-12-11</date>
-// <summary>Абстрактный глиф.</summary>
-
 using System;
 using System.ComponentModel;
 using System.Drawing.Drawing2D;
@@ -13,14 +5,10 @@ using Makarov.FlowchartBuilder.API.Attributes;
 
 namespace Makarov.FlowchartBuilder.Glyphs
 {
-    /// <summary>
-    /// Абстрактный глиф.
-    /// </summary>
+
     public abstract partial class AbstractGlyph
     {
-        /// <summary>
-        /// Выбран ли глиф.
-        /// </summary>
+
         public bool Selected
         {
             get { return _selected; }
@@ -34,10 +22,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Зафиксирован ли глиф.
-        /// </summary>
-        /// <remarks>Зафиксированный глиф нельзя модифицировать.</remarks>
         public bool Fixed
         {
             get { return _fixed; }
@@ -51,9 +35,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Заголовок.
-        /// </summary>
         [Description(@"Caption.")]
         [Category(@"Layout")]
         [DisplayName(@"Caption")]
@@ -64,9 +45,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             set;
         }
 
-        /// <summary>
-        /// Есть ли нумерация (для размещения в галерее) для данного глифа.
-        /// </summary>
         public bool OrderExists
         {
             get
@@ -75,9 +53,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Номер глифа в палитре.
-        /// </summary>
         public int Order
         {
             get
@@ -95,9 +70,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Имя.
-        /// </summary>
         public string Name
         {
             get
@@ -117,9 +89,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Семейство.
-        /// </summary>
         public string Family
         {
             get
@@ -139,9 +108,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Режим сглаживания.
-        /// </summary>
         protected static SmoothingMode SmoothMode
         {
             get

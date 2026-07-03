@@ -1,4 +1,5 @@
-﻿using System;
+using System.ComponentModel;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using Makarov.FlowchartBuilder.Extensions;
@@ -17,10 +18,9 @@ namespace Makarov.FlowchartBuilder.Forms
 
         private void FBMainWindow_Load(object sender, EventArgs e)
         {
-            // Заголовок окна.
+
             Text = Core.Instance.CurrentTranslator["FlowchartBuilder_Caption"];
 
-            // Если первый запуск, задаём дефолтные размеры.
             if (Core.Instance.IsFirstRun)
             {
                 Left = 50;
@@ -32,31 +32,23 @@ namespace Makarov.FlowchartBuilder.Forms
 
             LoadWindowParamsFromRegistry();
 
-            // Загружаем главное меню.
             MenuLoader.LoadMainMenu(this);
 
-            // Загружаем вторичное меню.
             MenuLoader.LoadSecondaryMenu(this);
 
-            // Создаём окно палитры глифов.
             Core.Instance.GetWindowAsChild<GlyphsForm>().Show();
 
-            // Создаём окно свойств.
             Core.Instance.GetWindowAsChild<PropertiesForm>().Show();
 
             DocumentsTabs.SelectedTabChanged += (s, args) =>
                                                     {
                                                         var tab = DocumentsTabs.SelectedTab;
 
-                                                        // TODO: Exception?
-
                                                         Core.Instance.SelectDocument(tab.Id);
                                                     };
         }
 
-        /// <summary>
-        /// Происходит ли закрытие приложения.
-        /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsClosing
         {
             get; set;
@@ -70,7 +62,6 @@ namespace Makarov.FlowchartBuilder.Forms
             SaveWindowParamsToRegistry();
             IsClosing = true;
 
-            // Закрываем все окна.
             foreach (var wnd in Core.Instance.Windows.Windows)
                 if (wnd != this)
                     wnd.Close();
@@ -85,22 +76,19 @@ namespace Makarov.FlowchartBuilder.Forms
 
         private void FBMainWindow_Resize(object sender, EventArgs e)
         {
-            // Обновляем расположение прилипающих окон.
+
             foreach (var wnd in Core.Instance.Windows.Windows)
                 if (wnd is DockingForm)
                 {
                     var dockingWnd = (DockingForm)wnd;
-                    //dockingWnd.UpdateDockingWindowOnResize();
+
                     dockingWnd.UpdateDockedWindowPosition();
                 }
 
-            // Перерисовываем окно.
-            Core.Instance.Redraw();
+            if (Visible)
+                Core.Instance.Redraw();
         }
 
-        /// <summary>
-        /// Область окна в которой нужно рисовать. Относительно графикса.
-        /// </summary>
         public override Rectangle InnerRectangle
         {
             get
@@ -116,10 +104,6 @@ namespace Makarov.FlowchartBuilder.Forms
             }
         }
 
-        /// <summary>
-        /// Область окна в которой нужно рисовать. Относительно графикса.
-        /// С учётом скроллбаров.
-        /// </summary>
         public Rectangle InnerRectangleWithScrollbars
         {
             get
@@ -135,10 +119,6 @@ namespace Makarov.FlowchartBuilder.Forms
             }
         }
 
-        /// <summary>
-        /// Рабочая область окна. Относительно окна.
-        /// С учётом скроллбаров.
-        /// </summary>
         public Rectangle WorkRectangleWithScrollbars
         {
             get
@@ -156,10 +136,10 @@ namespace Makarov.FlowchartBuilder.Forms
 
         private void FBMainWindow_Shown(object sender, EventArgs e)
         {
-            // Показать ли при старте окно выбора листа.
+
             if (!Framework.Core.Settings.Environment.IsMono)
             {
-                // TODO: некорректно работает диалог под Mono
+
                 string showOnStartup = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.NewSheetDialog.ShowOnStartup];
                 if (string.IsNullOrEmpty(showOnStartup) || bool.Parse(showOnStartup))
                     if (string.IsNullOrEmpty(Settings.Environment.LoadedDocumentName))
@@ -167,35 +147,29 @@ namespace Makarov.FlowchartBuilder.Forms
             }
             else
             {
-                // TODO: remove this
+
                 Core.Instance.AddDocument(new Document(new VerticalA4()));
                 Core.Instance.Redraw();
             }
 
-            // Если это первый запуск программы, устанавливаем стандартное расположение окон.)
             if (Core.Instance.IsFirstRun)
                 Core.Instance.SetDefaultWindowsPos();
 
-            // Перерисовываем окно.
             Core.Instance.Redraw();
         }
 
         private void FBMainWindow_Enter(object sender, EventArgs e)
         {
-            // Перерисовываем окно.
+
             Core.Instance.Redraw();
         }
 
-        /// <summary>
-        /// Преобразует координаты из системы окна в систему листа.
-        /// </summary>
         private Point CoordinatesInSheet(Point pt)
         {
             if (Core.Instance.CurrentDocument.DocumentSheet is IScaledSize)
             {
                 var sizedSheet = (IScaledSize)Core.Instance.CurrentDocument.DocumentSheet;
 
-                // Смещение листа, заданное скроллбарами.
                 var hbar = HorizontalScrollBar;
                 var vbar = VerticalScrollBar;
                 int xScrollbarOffset = hbar.Visible ? hbar.Value - (hbar.Maximum >> 1) : 0;
@@ -238,12 +212,12 @@ namespace Makarov.FlowchartBuilder.Forms
 
         private void FBMainWindow_Move(object sender, EventArgs e)
         {
-            // Обновляем расположение прилипающих окон.
+
             foreach (var wnd in Core.Instance.Windows.Windows)
                 if (wnd is DockingForm)
                 {
                     var dockingWnd = (DockingForm)wnd;
-                    //dockingWnd.UpdateDockingWindowOnMove();
+
                     dockingWnd.UpdateDockedWindowPosition();
                 }
         }

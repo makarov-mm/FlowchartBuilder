@@ -1,11 +1,3 @@
-﻿// <copyright file="B3.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2008 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2009-03-30</date>
-// <summary>Лист формата B3.</summary>
-
 using Makarov.FlowchartBuilder.API.Attributes;
 
 namespace Makarov.FlowchartBuilder.Sheets.Iso

@@ -1,0 +1,45 @@
+<Project>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Company>Michael Makarov</Company>
+    <Authors>Michael Makarov</Authors>
+    <Product>FlowchartBuilder</Product>
+    <Copyright>Copyright (c) 2008-2026 Mykhailo Makarov</Copyright>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <!-- Build output layout: everything lands in <root>\Build for both Debug and Release. -->
+  <PropertyGroup>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)Build\</BaseOutputPath>
+    <OutputPath>$(MSBuildThisFileDirectory)Build\</OutputPath>
+  </PropertyGroup>
+
+  <!-- Glyph plugin libraries (Makarov.FlowchartBuilder.Glyphs.*) land in <root>\Build\Plugins. -->
+  <PropertyGroup Condition="$(MSBuildProjectName.StartsWith('Makarov.FlowchartBuilder.Glyphs.'))">
+    <BaseOutputPath>$(MSBuildThisFileDirectory)Build\Plugins\</BaseOutputPath>
+    <OutputPath>$(MSBuildThisFileDirectory)Build\Plugins\</OutputPath>
+  </PropertyGroup>
+
+  <!-- Keep the Plugins folder clean: plugins must not copy their framework references
+       next to themselves, otherwise the runtime plugin loader would load duplicate
+       copies of the framework assemblies into separate load contexts. -->
+  <ItemDefinitionGroup Condition="$(MSBuildProjectName.StartsWith('Makarov.FlowchartBuilder.Glyphs.'))">
+    <ProjectReference>
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+
+</Project>

@@ -1,63 +1,63 @@
-﻿// <copyright file="AbstractFlowchartGlyph.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2011 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2011-II-15</date>
-// <summary>Абстрактный глиф.</summary>
-
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Flowchart
 {
-    /// <summary>
-    /// Абстрактный глиф.
-    /// </summary>
+
     [GlyphFamily("Flowchart")]
     [GlyphDefaultWidth(30)]
     [GlyphDefaultHeight(30)]
     public abstract class AbstractFlowchartGlyph : BlockGlyph
     {
-        /// <summary>
-        /// Конструктор.
-        /// </summary>
+
         protected AbstractFlowchartGlyph()
         {
             BackgroundColor = Color.Silver;
             ForegroundColor = Color.WhiteSmoke;
         }
 
-        /// <summary>
-        /// Отрисовать заголовок.
-        /// </summary>
-        /// <param name="gfx">Graphics.</param>
+        public override bool CanRotate
+        {
+            get { return false; }
+        }
+
+        public override bool SupportsLinks
+        {
+            get { return true; }
+        }
+
+        protected override void DrawLinkPoints(Graphics gfx)
+        {
+            float size = LinkPointSize;
+            float half = size / 2f;
+
+            using (var brush = new SolidBrush(Color.White))
+            using (var pen = new Pen(Color.SteelBlue))
+            {
+                foreach (PointF point in LinkPointsScaled)
+                {
+                    gfx.FillEllipse(brush, point.X - half, point.Y - half, size, size);
+                    gfx.DrawEllipse(pen, point.X - half, point.Y - half, size, size);
+                }
+            }
+        }
+
         protected override void DrawText(Graphics gfx)
         {
-            // Текст рисовать не нужно.
+
         }
 
-        /// <summary>
-        /// Центрированный путь для шейпа.
-        /// </summary>
         protected abstract GraphicsPath CenteredPath
-        { 
+        {
             get;
         }
 
-        /// <summary>
-        /// Путь для шейпа.
-        /// </summary>
         protected abstract GraphicsPath Path
-        { 
+        {
             get;
         }
 
-        /// <summary>
-        /// Отрисовать картинку глифа.
-        /// </summary>
-        /// <param name="gfx">Graphics.</param>
         protected override void DrawGlyph(Graphics gfx)
         {
             using (GraphicsPath path = CenteredPath)
@@ -77,9 +77,6 @@ namespace Makarov.FlowchartBuilder.Glyphs.Flowchart
             }
         }
 
-        /// <summary>
-        /// Иконка.
-        /// </summary>
         public override Bitmap Thumbnail
         {
             get

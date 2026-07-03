@@ -1,31 +1,33 @@
-- позиционировать мышь к точке манипулировани€
-- сделать нормальный about-диалог
-- доработать translations
-- убрать лишние шаблоны листов
-- вкладки документов: переключение, закрытие
-- подобрать подход€щую лицензию
-- минимизировать количество классов исключений
-- устранить багу: невозможно создать последовательно два экземпл€ра одного и того же глифа
-- при двойном клике на иконке глифа, экземл€ры создаютс€ как-то сильно в одном месте
-- корректный скроллинг
-- юнит-тесты хот€ бы на основные подсистемы
-- тени дл€ глифов
-- сделать фон значков глифов однородным, а изображение глифов - с градиентом
-- устанавливать дефолтный €зык и единицы измерени€ в зависимости от локали системы пользовател€
-- использовать системный буфер обмена и вставл€ть в него xml описание того, что скопировано
-- экспорт документа в битмап
-- печать документа
-- устранить багу: если сделать copy, а потом paste + paste, то второй paste не работает
+FlowchartBuilder - TODO
 
+Pending:
+- Snap the mouse to the manipulation point
+- Proper About dialog
+- Finish translations
+- Remove redundant sheet templates
+- Document tabs: switching and closing
+- Choose an appropriate license
+- Minimize the number of exception classes
+- Fix bug: cannot create two instances of the same glyph consecutively
+- Fix bug: double-clicking a glyph icon spawns instances stacked in one spot
+- Correct scrolling
+- Unit tests, at least for the core subsystems
+- Glyph shadows
+- Uniform glyph-icon background, gradient glyph image
+- Default language and units of measurement from the user's system locale
+- Use the system clipboard and put an XML description of the copied content into it
+- Export the document to a bitmap
+- Print the document
+- Fix bug: copy, then paste + paste - the second paste does nothing
 
-
-+ если нет доступа к реестру, попытатьс€ работать с xml-файлом настроек
-+ вынести работу с окнами в WindowsManager
-+ рисовать замочек возле залоченных глифов
-+ убрать меню Tools
-+ перенести все кеши и менеджеры в Core
-+ убрать меню Help Topics
-+ гор€чие клавиши
-+ убрать (или минимизировать) класс Framework.Core.Settings
-+ определить все глифы дл€ релизной версии
-+ красиво рисовать точки манипулировани€
+Done:
+- Fall back to an XML settings file when the registry is not accessible
+- Move window handling into WindowsManager
+- Draw a lock next to locked glyphs
+- Remove the Tools menu
+- Move all caches and managers into Core
+- Remove the Help Topics menu
+- Hotkeys
+- Remove (or minimize) the Framework.Core.Settings class
+- Define all glyphs for the release version
+- Draw manipulation points nicely

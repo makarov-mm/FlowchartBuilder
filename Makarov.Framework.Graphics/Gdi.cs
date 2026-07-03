@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Security.Permissions;
 
 namespace Makarov.Framework.Graphics
 {
@@ -18,7 +17,6 @@ namespace Makarov.Framework.Graphics
         [DllImport("gdi32.dll")]
         private static extern bool DeleteObject(IntPtr hObject);
 
-        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode)] 
         public static void BitBlt(Bitmap sourceBmp,
                                   System.Drawing.Graphics source,
                                   int sourceX, int sourceY,

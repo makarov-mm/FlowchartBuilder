@@ -1,11 +1,3 @@
-﻿// <copyright file="InfiniteSheet.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2008 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2009-03-29</date>
-// <summary>Лист бесконечного размера.</summary>
-
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -21,9 +13,7 @@ namespace Makarov.FlowchartBuilder.Sheets
     public sealed class InfiniteSheet : Sheet
     {
         #region Properties
-        /// <summary>
-        /// Иконка.
-        /// </summary>
+
         public override Bitmap Thumbnail
         {
             get
@@ -32,11 +22,10 @@ namespace Makarov.FlowchartBuilder.Sheets
 
                 using (Graphics gfx = Graphics.FromImage(bmp))
                 {
-                    // Область для рисования.
+
                     int innerWidth = bmp.Width;
                     int innerHeight = bmp.Height;
 
-                    // Рисуем лист.
                     using (var brush = new LinearGradientBrush(
                         new PointF(0, 0),
                         new PointF(innerWidth, innerHeight),
@@ -57,11 +46,7 @@ namespace Makarov.FlowchartBuilder.Sheets
         #endregion
 
         #region Public methods
-        /// <summary>
-        /// Отрисовать лист.
-        /// </summary>
-        /// <param name="scaled">Нужно ли применять масштабирование.</param>
-        /// <returns>Отрисованный лист.</returns>
+
         public override Bitmap Draw(bool scaled)
         {
             float tmpScaleFactor = ScaleFactor;
@@ -72,12 +57,11 @@ namespace Makarov.FlowchartBuilder.Sheets
             int w = Core.Instance.MainWindow.InnerRectangle.Width;
             int h = Core.Instance.MainWindow.InnerRectangle.Height;
 
-            // Битмап для отрисовки листа.
             var bmp = new Bitmap(w, h);
 
             using (Graphics gfx = Graphics.FromImage(bmp))
             {
-                // Заливаем лист градиентом.
+
                 using (var brush = new LinearGradientBrush(
                     new Point(0, 0),
                     new Point(w, h),
@@ -87,7 +71,6 @@ namespace Makarov.FlowchartBuilder.Sheets
                     gfx.FillRectangle(brush, 0, 0, w, h);
                 }
 
-                // Рисуем сетку.
                 if (Settings.Environment.Grid)
                     using (var pen = (Pen)Settings.Pens.SheetGrid.Clone())
                     {
@@ -103,13 +86,11 @@ namespace Makarov.FlowchartBuilder.Sheets
                             gfx.DrawLine(pen, 0, i, w, i);
                     }
 
-                // Рисуем глифы в обратном порядке.
                 var glyphs = new List<AbstractGlyph>(Glyphs);
                 glyphs.Reverse();
                 foreach (AbstractGlyph glyph in glyphs)
                     glyph.Draw(gfx);
 
-                // Рисуем рамку выделения.
                 if (_selectionStart.HasValue)
                 {
                     int x = _selectionStart.Value.X <= _selectionEnd.X
@@ -128,19 +109,31 @@ namespace Makarov.FlowchartBuilder.Sheets
 
                     gfx.DrawRectangle(Settings.Pens.SelectionBorder, x, y, width, height);
                 }
+
+                if (_connectorSource != null && _connectorCurrent.HasValue)
+                {
+                    PointF start = _connectorSource.LinkPointsScaled[_connectorSourcePort];
+                    Point end = _connectorCurrent.Value;
+
+                    using (var pen = new Pen(Color.DodgerBlue, 1.5f))
+                    {
+                        pen.DashStyle = DashStyle.Dash;
+
+                        using (var cap = new AdjustableArrowCap(4f, 5f, true))
+                        {
+                            pen.CustomEndCap = cap;
+                            gfx.DrawLine(pen, start.X, start.Y, end.X, end.Y);
+                        }
+                    }
+                }
             }
 
             if (!scaled)
                 ScaleFactor = tmpScaleFactor;
 
-            // Возвращаем отрисованный лист.
             return bmp;
         }
 
-        /// <summary>
-        /// Клонирует лист.
-        /// </summary>
-        /// <returns>Клон листа.</returns>
         public override object Clone()
         {
             return new InfiniteSheet();

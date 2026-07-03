@@ -1,59 +1,33 @@
-﻿// <copyright file="Tab.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2011 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2011-IV-24</date>
-// <summary>Табик.</summary>
-
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
 namespace Makarov.Framework.Components
 {
-    /// <summary>
-    /// Табик.
-    /// </summary>
+
     public sealed class Tab
     {
-        /// <param name="id">Идентификатор.</param>
-        /// <param name="caption">Текст.</param>
+
         public Tab(int id, string caption)
         {
             Id = id;
             Caption = caption ?? string.Empty;
         }
 
-        /// <summary>
-        /// Идентификатор.
-        /// </summary>
         public int Id { get; private set; }
 
-        /// <summary>
-        /// Текст.
-        /// </summary>
         public string Caption { get; private set; }
 
-        /// <summary>
-        /// Вычисляет необходимую ширину.
-        /// </summary>
         public int RequiredWidth(Graphics gfx, Font font)
         {
             return (int)Math.Ceiling(gfx.MeasureString(Caption, font).Width);
         }
 
-        /// <summary>
-        /// Вычисляет необходимую высоту.
-        /// </summary>
         public int RequiredHeight(Graphics gfx, Font font)
         {
             return (int) Math.Ceiling(gfx.MeasureString(Caption, font).Height);
         }
 
-        /// <summary>
-        /// Вычисляет необходимый размер.
-        /// </summary>
         public Size RequiredSize(Graphics gfx, Font font)
         {
             return new Size(
@@ -61,9 +35,6 @@ namespace Makarov.Framework.Components
                 RequiredHeight(gfx, font));
         }
 
-        /// <summary>
-        /// Создаёт путь для рисования.
-        /// </summary>
         public GraphicsPath CreatePath(Graphics gfx, Font font,
             int? minWidth, int? maxWidth, int? minHeight, int? maxHeight)
         {

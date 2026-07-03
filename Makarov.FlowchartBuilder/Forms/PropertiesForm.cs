@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 using Makarov.FlowchartBuilder.Commands;
 using BaseSettings = Makarov.Framework.Core.Settings;
 
@@ -11,9 +11,6 @@ namespace Makarov.FlowchartBuilder.Forms
             InitializeComponent();
         }
 
-        /// <summary>
-        /// Имя окна (для хранения настроек в реестре).
-        /// </summary>
         protected override string RegistrySettingsName
         {
             get { return "PropertiesForm"; }
@@ -21,7 +18,7 @@ namespace Makarov.FlowchartBuilder.Forms
 
         private void FBProperties_Load(object sender, System.EventArgs e)
         {
-            // Заголовок окна.
+
             Text = Core.Instance.CurrentTranslator["Wnd_Properties_Title"];
         }
 
@@ -43,11 +40,9 @@ namespace Makarov.FlowchartBuilder.Forms
             if (Core.Instance.MainWindow.IsClosing)
                 return;
 
-            // Не закрываем окно, а скрываем его.
             e.Cancel = true;
             Hide();
 
-            // Включаем команду отображения окна.
             Command.GetInstance("PropertiesWindowCommand").Enabled = true;
         }
 

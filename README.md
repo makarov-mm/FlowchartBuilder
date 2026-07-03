@@ -3,8 +3,7 @@
 A modular WinForms diagram editor with a custom .NET framework underneath.
 
 Developed 2008–2011 as a deep exploration of plugin architecture, declarative
-metadata, and pluggable rendering — well before MEF, modern DI containers,
-or `System.Text.Json` were available in the .NET ecosystem.
+metadata, and pluggable rendering — well before MEF, modern DI containers, or `System.Text.Json` were available in the .NET ecosystem.
 
 ![Screenshot](screenshot.png)
 
@@ -15,8 +14,7 @@ WinForms / GDI+, with optional OpenGL rendering. Most of the patterns it
 explores — attribute-based plugin discovery, pluggable graphics backends,
 declarative metadata for extensions — were not yet standard practice in
 .NET tooling at the time. The codebase reflects the conventions of its era
-(`System.Runtime.Remoting` for IPC, manual reflection-based loaders, custom
-serialization) and is preserved as-is.
+(manual reflection-based loaders, custom serialization) and is preserved as-is.
 
 ## Solution Layout
 
@@ -33,7 +31,7 @@ The repository contains **21 projects** split into two layers:
 | `Makarov.Framework.Math` | Math utilities |
 | `Makarov.Framework.Components` | Custom UI components |
 | `Makarov.Framework.Collections` | Collection extensions |
-| `Makarov.Framework.Instance` | Single-instance application pattern via `System.Runtime.Remoting` IPC channels |
+| `Makarov.Framework.Instance` | Single-instance application pattern via `Mutex` + named-pipe IPC |
 | `Makarov.Framework.Launcher` | Generic launcher |
 | `Makarov.Framework.VersionUpdater` | Auto-updater (separate process to bypass file-locks on the main executable) |
 
@@ -89,9 +87,9 @@ Paste, alignment (6 directions × {glyph, sheet}), Group/Ungroup, Fix/Unfix,
 Zoom, PageSetup, Print, ExportImage, language switching, units of
 measurement — all sharing one `Command` base, all decoupled from UI.
 
-**Single-instance pattern via .NET Remoting.** `InstanceHelper` registers
-an IPC channel and exposes the running instance through `RemotingConfiguration.
-RegisterWellKnownServiceType` — the canonical 2011 approach.
+**Single-instance pattern via Mutex + named pipes.** `InstanceHelper` acquires a named `Mutex` to detect the primary instance and
+exposes it through a background named-pipe listener; subsequent instances hand
+off their command-line arguments over the pipe.
 
 **Settings with graceful fallback.** Primary storage is the Windows Registry;
 if access is denied, the layer falls back to an XML file transparently
@@ -113,24 +111,35 @@ regions, typed exceptions per domain.
 
 ## Tech
 
-- C# 3 / .NET Framework
+- C# (latest language version) / .NET 10
 - WinForms + GDI+
 - OpenGL (optional rendering backend)
-- `System.Runtime.Remoting` (IPC)
-- `System.Reflection` (plugin discovery)
+- Named pipes + `Mutex` (single-instance IPC)
+- `System.Reflection` / `System.Reflection.Emit` (plugin discovery, runtime proxies)
 - InnoSetup (installer)
-- Mono (cross-platform target)
 
 ## Building
 
-Open `FlowchartBuilder.sln` in Visual Studio 2010+ and build. The installer
-is produced through `MakeFlowchartBuilder/Make.cmd` and the InnoSetup script
-`FlowchartBuilder.iss`.
+Open `FlowchartBuilder.sln` in Visual Studio 2022 (17.12+) or build from the
+command line with the .NET 10 SDK:
+
+```
+dotnet build FlowchartBuilder.sln -c Release
+```
+
+The application is a Windows desktop app (`net10.0-windows`, WinForms), so it
+builds and runs on Windows. Runtime assets (`Data`, `Icons`, `Graphics`,
+`Translations`) are copied next to the executable on build; glyph and sheet
+plugin assemblies are loaded at runtime from the `Plugins` folder.
 
 ## Project Status
 
-Feature-complete for its original scope. Preserved as a snapshot of the
-2008–2011 era of .NET application design.
+Originally developed 2008-2011 on .NET Framework / C# 3. Modernized in 2026 to
+.NET 10 and the latest C# language version: all 19 projects converted to
+SDK-style, .NET Remoting replaced with a `Mutex` + named-pipe single-instance
+mechanism, `AppDomain.DefineDynamicAssembly` migrated to
+`AssemblyBuilder.DefineDynamicAssembly`, legacy CAS attributes removed, and the
+solution stripped of commentary. See `MIGRATION.md` for details.
 
 ## License
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 
 namespace Makarov.Framework.Core
@@ -31,21 +31,15 @@ namespace Makarov.Framework.Core
         {
             if (!SendReport.Send(ErrorReportMail, ErrorReportTitle, tbExceptionDetails.Text))
             {
-                // TODO: не удалось отправить отчёт об ошибке
+
             }
         }
 
-        /// <summary>
-        /// Адрес электронной почты, на которую нужно слать отчёты об ошибках.
-        /// </summary>
         public string ErrorReportMail
         {
             get;
         }
 
-        /// <summary>
-        /// Заголовок письма отчёта об ошибке.
-        /// </summary>
         public string ErrorReportTitle
         {
             get;

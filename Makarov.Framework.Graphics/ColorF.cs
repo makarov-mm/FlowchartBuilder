@@ -1,18 +1,8 @@
-﻿// <copyright file="ColorF.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2011 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2011-IV-23</date>
-// <summary>Цвет в формате с плавающей точкой.</summary>
-
 using System.Drawing;
 
 namespace Makarov.Framework.Graphics
 {
-    /// <summary>
-    /// Цвет в формате с плавающей точкой.
-    /// </summary>
+
     public struct ColorF
     {
         public ColorF(float r, float g, float b, float a)

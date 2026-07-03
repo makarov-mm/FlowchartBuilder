@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection;
@@ -11,23 +11,18 @@ namespace Makarov.FlowchartBuilder.Forms
 {
     public partial class SheetsForm : Form
     {
-        /// <summary>
-        /// Конструктор формы.
-        /// </summary>
+
         public SheetsForm()
         {
-            // Создаём контролы на форме.
+
             InitializeComponent();
 
-            // Задаём переводы контролам.
             btnOk.Text = Core.Instance.CurrentTranslator["OK"];
             btnCancel.Text = Core.Instance.CurrentTranslator["Cancel"];
 
-            // Чекбокс Show On Startup.
             string showOnStartup = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.NewSheetDialog.ShowOnStartup];
             cbShowOnStartup.Checked = string.IsNullOrEmpty(showOnStartup) || bool.Parse(showOnStartup);
 
-            // Список картинок для ListView.
             lstView.LargeImageList = new ImageList
             {
                 ImageSize = new Size(Sheet.ThumbnailWidth, Sheet.ThumbnailHeight),
@@ -35,13 +30,11 @@ namespace Makarov.FlowchartBuilder.Forms
             };
             lstView.ForeColor = Settings.Colors.ThumbnailText;
 
-            // Создаём коллекцию (семейство - имя, тип).
             var list = new List<KeyValuePair<string, List<KeyValuePair<string, Sheet>>>>();
             var asm = Assembly.GetExecutingAssembly();
 
-            // Перебираем все типы в данной сборке.
             foreach (var cls in asm.GetTypes())
-                // Если текущий тип - подходящий класс...
+
                 if (cls.IsClass && cls.IsSubclassOf(typeof(Sheet)) && !cls.IsAbstract)
                 {
                     var obj = (Sheet)Activator.CreateInstance(cls);
@@ -69,7 +62,6 @@ namespace Makarov.FlowchartBuilder.Forms
                             kvp.Value.Add(new KeyValuePair<string, Sheet>(name, obj));
                 }
 
-            // Сортируем семейства.
             var sortedList = new List<KeyValuePair<string, List<KeyValuePair<string, Sheet>>>>();
             while (list.Count > 0)
             {
@@ -83,7 +75,6 @@ namespace Makarov.FlowchartBuilder.Forms
                 list.Remove(curr);
             }
 
-            // Сортируем листы в семействах.
             foreach (var kvp in sortedList)
             {
                 var sortedSheetsList = new List<KeyValuePair<string, Sheet>>();
@@ -104,7 +95,6 @@ namespace Makarov.FlowchartBuilder.Forms
                     kvp.Value.Add(kvpSh);
             }
 
-            // Выводим все элементы в ListView.
             var groups = new List<string>();
             foreach (var kvp in sortedList)
             {
@@ -143,92 +133,65 @@ namespace Makarov.FlowchartBuilder.Forms
             }
         }
 
-        /// <summary>
-        /// Обработчик кнопки Cancel.
-        /// </summary>
         private void btnCancel_Click(object sender, EventArgs e)
         {
             Close();
         }
 
-        /// <summary>
-        /// Список типов листов.
-        /// </summary>
         public ListView SheetTypesListView
         {
             get { return lstView; }
         }
 
-        /// <summary>
-        /// Обработчик кнопки Ok.
-        /// </summary>
         private void btnOk_Click(object sender, EventArgs e)
         {
-            // Блокируем окно.
+
             Enabled = false;
 
-            // Если выбран не один элемент, то выходим и разблокируем окно.
             if (lstView.SelectedItems.Count != 1)
             {
                 Enabled = true;
                 return;
             }
 
-            // Создаём лист выбранного типа и перерисовываем окно.
             var item = lstView.SelectedItems[0];
             Core.Instance.AddDocument(new Document((Sheet)Activator.CreateInstance((Type)item.Tag)));
             Command.GetInstance("ActualSizeCommand").Run();
             Core.Instance.Redraw();
 
-            // Закрываем окно.
             Close();
         }
 
-        /// <summary>
-        /// Обработчик изменения состояния списка доступных листов.
-        /// </summary>
         private void lstView_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Если выбран один элемент, то разрешаем применить его -
-            // активируем кнопку Ok.
+
             btnOk.Enabled = lstView.SelectedItems.Count == 1;
         }
 
-        /// <summary>
-        /// Обработчик изменения состояния флага "Show On Startup".
-        /// </summary>
         private void cbShowOnStartup_CheckStateChanged(object sender, EventArgs e)
         {
-            // Сохраняем значение флага в реестр.
+
             Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.NewSheetDialog.ShowOnStartup] =
                 cbShowOnStartup.Checked.ToString();
         }
 
-        /// <summary>
-        /// Обработчик закрытия окна.
-        /// </summary>
         private void FBNew_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // Сохраняем значение флага "Show On Startup" в реестр - 
-            // нужно ли показывать данное окно при старте программы.
+
             Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.NewSheetDialog.ShowOnStartup] =
                 cbShowOnStartup.Checked.ToString();
         }
 
-        /// <summary>
-        /// Обработчик двойного клика мышью по списку доступных листов.
-        /// </summary>
         private void lstView_DoubleClick(object sender, EventArgs e)
         {
-            // Если есть выбранный элемент, то применяем его,
-            // вызывая обработчик нажатия кнопки Ok.
+
             if (lstView.SelectedItems.Count == 1)
                 btnOk_Click(sender, e);
         }
 
         private void SheetsForm_Shown(object sender, EventArgs e)
         {
-            // Если это первый запуск программы, устанавливаем стандартное расположение окон.
+
             if (Core.Instance.IsFirstRun)
                 Core.Instance.SetDefaultWindowsPos();
         }

@@ -1,4 +1,4 @@
-﻿namespace Makarov.Framework.Launcher
+namespace Makarov.Framework.Launcher
 {
     public sealed class Program
     {

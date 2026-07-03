@@ -1,20 +1,10 @@
-﻿// <copyright file="StackGlyph.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2011 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2011-03-20</date>
-// <summary>Стек.</summary>
-
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Containers
 {
-    /// <summary>
-    /// Стек.
-    /// </summary>
+
     [GlyphName("Stack")]
     public sealed class StackGlyph : AbstractContainerGlyph
     {

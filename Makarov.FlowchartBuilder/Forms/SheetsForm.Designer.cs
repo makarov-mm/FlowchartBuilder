@@ -1,16 +1,10 @@
-﻿namespace Makarov.FlowchartBuilder.Forms
+namespace Makarov.FlowchartBuilder.Forms
 {
     partial class SheetsForm
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
+
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -22,10 +16,6 @@
 
         #region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
             this.lstView = new System.Windows.Forms.ListView();
@@ -33,9 +23,7 @@
             this.btnOk = new System.Windows.Forms.Button();
             this.cbShowOnStartup = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
-            // 
-            // lstView
-            // 
+
             this.lstView.BackColor = System.Drawing.SystemColors.Control;
             this.lstView.Location = new System.Drawing.Point(12, 12);
             this.lstView.MultiSelect = false;
@@ -45,9 +33,7 @@
             this.lstView.UseCompatibleStateImageBehavior = false;
             this.lstView.SelectedIndexChanged += new System.EventHandler(this.lstView_SelectedIndexChanged);
             this.lstView.DoubleClick += new System.EventHandler(this.lstView_DoubleClick);
-            // 
-            // btnCancel
-            // 
+
             this.btnCancel.Location = new System.Drawing.Point(547, 419);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
@@ -55,9 +41,7 @@
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
-            // 
-            // btnOk
-            // 
+
             this.btnOk.Enabled = false;
             this.btnOk.Location = new System.Drawing.Point(466, 419);
             this.btnOk.Name = "btnOk";
@@ -66,9 +50,7 @@
             this.btnOk.Text = "Ok";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
-            // cbShowOnStartup
-            // 
+
             this.cbShowOnStartup.AutoSize = true;
             this.cbShowOnStartup.Checked = true;
             this.cbShowOnStartup.CheckState = System.Windows.Forms.CheckState.Checked;
@@ -79,9 +61,7 @@
             this.cbShowOnStartup.Text = "Show On Startup";
             this.cbShowOnStartup.UseVisualStyleBackColor = true;
             this.cbShowOnStartup.CheckStateChanged += new System.EventHandler(this.cbShowOnStartup_CheckStateChanged);
-            // 
-            // SheetsForm
-            // 
+
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(634, 454);

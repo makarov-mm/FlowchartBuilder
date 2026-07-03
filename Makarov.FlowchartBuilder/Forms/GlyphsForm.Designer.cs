@@ -1,18 +1,12 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 
 namespace Makarov.FlowchartBuilder.Forms
 {
     partial class GlyphsForm
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
+
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -24,17 +18,11 @@ namespace Makarov.FlowchartBuilder.Forms
 
         #region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
             this.lstView = new System.Windows.Forms.ListView();
             this.SuspendLayout();
-            // 
-            // lstView
-            // 
+
             this.lstView.BackColor = System.Drawing.SystemColors.Control;
             this.lstView.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.lstView.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -46,9 +34,7 @@ namespace Makarov.FlowchartBuilder.Forms
             this.lstView.UseCompatibleStateImageBehavior = false;
             this.lstView.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.lstView_ItemSelectionChanged);
             this.lstView.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lstView_MouseDoubleClick);
-            // 
-            // GlyphsForm
-            // 
+
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(234, 417);

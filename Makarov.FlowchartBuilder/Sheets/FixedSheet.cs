@@ -1,11 +1,3 @@
-﻿// <copyright file="FixedSheet.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2008 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2009-03-29</date>
-// <summary>Лист фиксированного размера.</summary>
-
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -21,9 +13,7 @@ namespace Makarov.FlowchartBuilder.Sheets
     public abstract class FixedSheet : Sheet, ISize, IScaledSize
     {
         #region Constructors
-        /// <summary>
-        /// Конструктор.
-        /// </summary>
+
         protected FixedSheet()
         {
             if (DefaultWidthInMM <= 0 || DefaultHeightInMM <= 0)
@@ -44,21 +34,14 @@ namespace Makarov.FlowchartBuilder.Sheets
         #endregion
 
         #region Private members
-        /// <summary>
-        /// Ширина в миллиметрах.
-        /// </summary>
+
         private float _width;
 
-        /// <summary>
-        /// Высота в миллиметрах.
-        /// </summary>
         private float _height;
         #endregion
 
         #region Properties
-        /// <summary>
-        /// Дефолтная ширина в миллиметрах.
-        /// </summary>
+
         public float DefaultWidthInMM
         {
             get
@@ -67,9 +50,6 @@ namespace Makarov.FlowchartBuilder.Sheets
             }
         }
 
-        /// <summary>
-        /// Дефолтная высота в миллиметрах.
-        /// </summary>
         public float DefaultHeightInMM
         {
             get
@@ -78,9 +58,6 @@ namespace Makarov.FlowchartBuilder.Sheets
             }
         }
 
-        /// <summary>
-        /// Иконка.
-        /// </summary>
         public override Bitmap Thumbnail
         {
             get
@@ -89,31 +66,15 @@ namespace Makarov.FlowchartBuilder.Sheets
 
                 using (Graphics gfx = Graphics.FromImage(bmp))
                 {
-                    // Область для рисования.
+
                     const int innerOffsetX = 8;
                     const int innerOffsetY = 8;
                     int innerWidth = bmp.Width - innerOffsetX * 2;
                     int innerHeight = bmp.Height - innerOffsetY * 2;
 
-                    // Размеры листа на иконке.
-                    //float w = innerWidth / DefaultWidthInMM;
-                    //float h = innerHeight / DefaultHeightInMM;
-
-                    //if (w < h)
-                    //{
-                    //    h = DefaultHeightInMM * w;
-                    //    w = DefaultWidthInMM * w;
-                    //}
-                    //else
-                    //{
-                    //    w = DefaultWidthInMM * h;
-                    //    h = DefaultHeightInMM * h;
-                    //}
-
                     float w = DefaultWidthInMM/500f*innerWidth;
                     float h = DefaultHeightInMM/500f*innerHeight;
 
-                    // Рисуем тень.
                     const int shadowOffset = 2;
 
                     using (var brush = new SolidBrush(Settings.Colors.ThumbnailBorder))
@@ -123,7 +84,6 @@ namespace Makarov.FlowchartBuilder.Sheets
                             shadowOffset + (innerHeight - h) / 2f + innerOffsetY,
                             w, h);
 
-                    // Рисуем лист.
                     using (var brush = new LinearGradientBrush(
                         new PointF((innerWidth - w) / 2f + innerOffsetX, (innerHeight - h) / 2f + innerOffsetY),
                         new PointF((innerWidth - w) / 2f + innerOffsetX + w, (innerHeight - h) / 2f + innerOffsetY + h),
@@ -143,19 +103,6 @@ namespace Makarov.FlowchartBuilder.Sheets
                         (innerHeight - h) / 2f + innerOffsetY,
                         w, h);
 
-                    // Пишем текст.
-                    //string text = string.Format("{0} x {1}", DefaultWidthInMM, DefaultHeightInMM);
-
-                    //using (var font = "Arial".SafeCreateFont(5))
-                    //{
-                    //    Size size = text.CalcSize(gfx, font);
-                    //    gfx.DrawString(
-                    //        text,
-                    //        font,
-                    //        Settings.Brushes.ThumbnailText,
-                    //        (ThumbnailWidth - size.Width) >> 1,
-                    //        (ThumbnailHeight - size.Height) >> 1);
-                    //}
                 }
 
                 bmp.DrawBorder(Settings.Colors.ThumbnailBorder);
@@ -165,9 +112,7 @@ namespace Makarov.FlowchartBuilder.Sheets
         #endregion
 
         #region ISize
-        /// <summary>
-        /// Ширина в миллиметрах.
-        /// </summary>
+
         public float Width
         {
             get { return _width; }
@@ -181,9 +126,6 @@ namespace Makarov.FlowchartBuilder.Sheets
             }
         }
 
-        /// <summary>
-        /// Высота в миллиметрах.
-        /// </summary>
         public float Height
         {
             get { return _height; }
@@ -199,18 +141,13 @@ namespace Makarov.FlowchartBuilder.Sheets
         #endregion
 
         #region IScaledSize
-        /// <summary>
-        /// Масштабированная ширина в миллиметрах.
-        /// </summary>
+
         public float ScaledWidth
         {
             get { return Width.Scale(); }
             set { Width = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная высота в миллиметрах.
-        /// </summary>
         public float ScaledHeight
         {
             get { return Height.Scale(); }
@@ -219,11 +156,7 @@ namespace Makarov.FlowchartBuilder.Sheets
         #endregion
 
         #region Public methods
-        /// <summary>
-        /// Отрисовать лист.
-        /// </summary>
-        /// <param name="scaled">Нужно ли применять масштабирование.</param>
-        /// <returns>Отрисованный лист.</returns>
+
         public override Bitmap Draw(bool scaled)
         {
             float tmpScaleFactor = ScaleFactor;
@@ -231,14 +164,13 @@ namespace Makarov.FlowchartBuilder.Sheets
             if (!scaled)
                 ScaleFactor = 1f;
 
-            // Битмап для отрисовки листа.
             var bmp = scaled
                           ? new Bitmap(ScaledWidth.MMToPx(), ScaledHeight.MMToPx())
                           : new Bitmap(Width.MMToPx(), Height.MMToPx());
 
             using (Graphics gfx = Graphics.FromImage(bmp))
             {
-                // Заливаем лист градиентом.
+
                 using (var brush = new LinearGradientBrush(
                     new Point(0, 0),
                     scaled
@@ -254,7 +186,6 @@ namespace Makarov.FlowchartBuilder.Sheets
                         scaled ? ScaledHeight.MMToPx() : Height.MMToPx());
                 }
 
-                // Рисуем сетку.
                 if (Settings.Environment.Grid)
                     using (var pen = (Pen) Settings.Pens.SheetGrid.Clone())
                     {
@@ -270,13 +201,11 @@ namespace Makarov.FlowchartBuilder.Sheets
                             gfx.DrawLine(pen, 0, i, scaled ? ScaledWidth.MMToPx() : Width.MMToPx(), i);
                     }
 
-                // Рисуем глифы в обратном порядке.
                 var glyphs = new List<AbstractGlyph>(Glyphs);
                 glyphs.Reverse();
                 foreach (AbstractGlyph glyph in glyphs)
                     glyph.Draw(gfx);
 
-                // Рисуем рамку выделения.
                 if (_selectionStart.HasValue)
                 {
                     int x = _selectionStart.Value.X <= _selectionEnd.X
@@ -295,19 +224,31 @@ namespace Makarov.FlowchartBuilder.Sheets
 
                     gfx.DrawRectangle(Settings.Pens.SelectionBorder, x, y, width, height);
                 }
+
+                if (_connectorSource != null && _connectorCurrent.HasValue)
+                {
+                    PointF start = _connectorSource.LinkPointsScaled[_connectorSourcePort];
+                    Point end = _connectorCurrent.Value;
+
+                    using (var pen = new Pen(Color.DodgerBlue, 1.5f))
+                    {
+                        pen.DashStyle = DashStyle.Dash;
+
+                        using (var cap = new AdjustableArrowCap(4f, 5f, true))
+                        {
+                            pen.CustomEndCap = cap;
+                            gfx.DrawLine(pen, start.X, start.Y, end.X, end.Y);
+                        }
+                    }
+                }
             }
 
             if (!scaled)
                 ScaleFactor = tmpScaleFactor;
 
-            // Возвращаем отрисованный лист.
             return bmp;
         }
 
-        /// <summary>
-        /// Клонирует лист.
-        /// </summary>
-        /// <returns>Клон листа.</returns>
         public override object Clone()
         {
             var tmp = (FixedSheet) Activator.CreateInstance(GetType());

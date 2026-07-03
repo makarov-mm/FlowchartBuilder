@@ -1,11 +1,3 @@
-﻿// <copyright file="TranslatorsManager.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2008 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2009-02-12</date>
-// <summary>Менеджер переводчиков.</summary>
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,49 +6,30 @@ using System.Threading.Tasks;
 
 namespace Makarov.Framework.Core.Managers
 {
-    /// <summary>
-    /// Менеджер переводчиков.
-    /// </summary>
+
     public sealed class TranslatorsManager : ICloneable, IDisposable, IComparable<TranslatorsManager>
     {
         #region Exceptions
-        /// <summary>
-        /// Исключение менеджера переводчиков.
-        /// </summary>
+
         public class TranslatorsManagerException : MakarovFrameworkException
         {
-            /// <summary>
-            /// Конструктор.
-            /// </summary>
-            /// <param name="message">Сообщение.</param>
+
             public TranslatorsManagerException(string message)
                 : base(message)
             { }
         }
 
-        /// <summary>
-        /// Перевод языка не найден.
-        /// </summary>
         public sealed class LanguageNotExistsException : TranslatorsManagerException
         {
-            /// <summary>
-            /// Конструктор.
-            /// </summary>
-            /// <param name="language">Язык.</param>
+
             public LanguageNotExistsException(string language)
                 : base($"Language '{language}' not exists.")
             { }
         }
 
-        /// <summary>
-        /// Язык уже существует.
-        /// </summary>
         public sealed class LanguageAlreadyExistsException : TranslatorsManagerException
         {
-            /// <summary>
-            /// Конструктор.
-            /// </summary>
-            /// <param name="language">Язык.</param>
+
             public LanguageAlreadyExistsException(string language)
                 : base($"Language '{language}' already exists.")
             { }
@@ -64,33 +37,20 @@ namespace Makarov.Framework.Core.Managers
         #endregion
 
         #region Private members
-        /// <summary>
-        /// Список переводчиков.
-        /// </summary>
+
         private readonly List<Translator> _translators = new List<Translator>();
         #endregion
 
         #region Constructors
-        /// <summary>
-        /// Конструктор.
-        /// </summary>
+
         public TranslatorsManager()
         { }
 
-        /// <summary>
-        /// Конструктор.
-        /// </summary>
-        /// <param name="t">Переводчик.</param>
         public TranslatorsManager(Translator t)
         {
             Add(t);
         }
 
-        /// <summary>
-        /// Конструктор.
-        /// </summary>
-        /// <param name="folder">Папка с переводами.</param>
-        /// <param name="schemaFile">Файл схемы переводов.</param>
         public TranslatorsManager(string folder, string schemaFile)
         {
             Task.WaitAll((from file in Directory.GetFiles(folder)
@@ -99,10 +59,6 @@ namespace Makarov.Framework.Core.Managers
                           select Task.Factory.StartNew(() => Add(new Translator(file, schemaFile)))).ToArray());
         }
 
-        /// <summary>
-        /// Конструктор (создаёт клон существующего менеджера).
-        /// </summary>
-        /// <param name="other">Менеджер переводов.</param>
         public TranslatorsManager(TranslatorsManager other)
         {
             foreach (var t in other._translators)
@@ -111,29 +67,18 @@ namespace Makarov.Framework.Core.Managers
         #endregion
 
         #region Public methods
-        /// <summary>
-        /// Создать клон менеджера.
-        /// </summary>
-        /// <returns>Клон менеджера.</returns>
+
         public object Clone()
         {
             return new TranslatorsManager(this);
         }
 
-        /// <summary>
-        /// Освободить ресурсы.
-        /// </summary>
         public void Dispose()
         {
             lock (_translators)
                 _translators.Clear();
         }
 
-        /// <summary>
-        /// Сравнить два менеджера переводчиков.
-        /// </summary>
-        /// <param name="tm">Менеджер переводчиков.</param>
-        /// <returns>Результат сравнения.</returns>
         public int CompareTo(TranslatorsManager tm)
         {
             if (((object) tm) == null) return 1;
@@ -153,22 +98,11 @@ namespace Makarov.Framework.Core.Managers
             return 0;
         }
 
-        /// <summary>
-        /// Загрузить переводы из указанной директории.
-        /// </summary>
-        /// <param name="folder">Директория с файлами.</param>
-        /// <param name="schemaFile">Файл схемы переводов.</param>
-        /// <returns>Менеджер переводчиков.</returns>
         public static TranslatorsManager LoadFromFolder(string folder, string schemaFile)
         {
             return new TranslatorsManager(folder, schemaFile);
         }
 
-        /// <summary>
-        /// Есть ли перевод для данного языка.
-        /// </summary>
-        /// <param name="language">Язык.</param>
-        /// <returns>Есть ли перевод для данного языка.</returns>
         public bool IsLanguageExists(string language)
         {
             lock (_translators)
@@ -178,11 +112,6 @@ namespace Makarov.Framework.Core.Managers
             return false;
         }
 
-        /// <summary>
-        /// Получить переводчик.
-        /// </summary>
-        /// <param name="language">Язык.</param>
-        /// <returns>Переводчик.</returns>
         public Translator GetTranslator(string language)
         {
             if (language == null)
@@ -196,10 +125,6 @@ namespace Makarov.Framework.Core.Managers
             throw new LanguageNotExistsException(language);
         }
 
-        /// <summary>
-        /// Добавить переводчик в менеджер.
-        /// </summary>
-        /// <param name="t">Переводчик.</param>
         public void Add(Translator t)
         {
             if (IsLanguageExists(t.Language))
@@ -209,10 +134,6 @@ namespace Makarov.Framework.Core.Managers
                 _translators.Add(t);
         }
 
-        /// <summary>
-        /// Удалить язык.
-        /// </summary>
-        /// <param name="language">Язык.</param>
         public void Delete(string language)
         {
             lock (_translators)
@@ -226,11 +147,6 @@ namespace Makarov.Framework.Core.Managers
             throw new LanguageNotExistsException(language);
         }
 
-        /// <summary>
-        /// Эквивалентны ли объекты.
-        /// </summary>
-        /// <param name="o">Объект.</param>
-        /// <returns>Эквивалентны ли объекты.</returns>
         public override bool Equals(Object o)
         {
             if (o == null) return false;
@@ -238,10 +154,6 @@ namespace Makarov.Framework.Core.Managers
             return CompareTo((TranslatorsManager)o) == 0;
         }
 
-        /// <summary>
-        /// Хеш-код.
-        /// </summary>
-        /// <returns>Хеш-код.</returns>
         public override int GetHashCode()
         {
             unchecked
@@ -251,9 +163,6 @@ namespace Makarov.Framework.Core.Managers
             }
         }
 
-        /// <summary>
-        /// Удалить все переводчики.
-        /// </summary>
         public void Clear()
         {
             lock (_translators)
@@ -263,9 +172,7 @@ namespace Makarov.Framework.Core.Managers
         #endregion
 
         #region Properties
-        /// <summary>
-        /// Количество загруженных переводчиков.
-        /// </summary>
+
         public int Count
         {
             get
@@ -275,27 +182,16 @@ namespace Makarov.Framework.Core.Managers
             }
         }
 
-        /// <summary>
-        /// Получить переводчик.
-        /// </summary>
-        /// <param name="language">Язык.</param>
-        /// <returns>Переводчик.</returns>
         public Translator this[string language]
         {
             get { return GetTranslator(language); }
         }
 
-        /// <summary>
-        /// Все доступные языки.
-        /// </summary>
         public IEnumerable<string> Languages
         {
             get { return Translators.Select(t => t.Language); }
         }
 
-        /// <summary>
-        /// Все доступные переводчики.
-        /// </summary>
         public IEnumerable<Translator> Translators
         {
             get
@@ -308,12 +204,7 @@ namespace Makarov.Framework.Core.Managers
         #endregion
 
         #region Operators
-        /// <summary>
-        /// Сравнить содержимое двух менеджеров переводчиков.
-        /// </summary>
-        /// <param name="tm1">Менеджер переводчиков.</param>
-        /// <param name="tm2">Менеджер переводчиков.</param>
-        /// <returns>Равно ли содержимое менеджеров переводчиков.</returns>
+
         public static bool operator ==(TranslatorsManager tm1, TranslatorsManager tm2)
         {
             if (((object)tm1) == null && ((object)tm2) == null) return true;
@@ -321,23 +212,11 @@ namespace Makarov.Framework.Core.Managers
             return tm1.CompareTo(tm2) == 0;
         }
 
-        /// <summary>
-        /// Сравнить содержимое двух менеджеров переводчиков.
-        /// </summary>
-        /// <param name="tm1">Менеджер переводчиков.</param>
-        /// <param name="tm2">Менеджер переводчиков.</param>
-        /// <returns>Не равно ли содержимое менеджеров переводчиков.</returns>
         public static bool operator !=(TranslatorsManager tm1, TranslatorsManager tm2)
         {
             return !(tm1 == tm2);
         }
 
-        /// <summary>
-        /// Добавить переводчик в менджер.
-        /// </summary>
-        /// <param name="tm">Менеджер переводчиков.</param>
-        /// <param name="t">Переводчик.</param>
-        /// <returns>Менеджер переводчиков.</returns>
         public static TranslatorsManager operator +(TranslatorsManager tm, Translator t)
         {
             tm.Add(t);

@@ -1,11 +1,3 @@
-﻿// <copyright file="WindowsManager.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2011 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2011-IV-01</date>
-// <summary>Менеджер окон.</summary>
-
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -13,15 +5,11 @@ using System.Windows.Forms;
 
 namespace Makarov.Framework.Core.Managers
 {
-    /// <summary>
-    /// Менеджер окон.
-    /// </summary>
+
     public sealed class WindowsManager : IDisposable
     {
         #region Exceptions
-        /// <summary>
-        /// Базовое исключение менеджера окон.
-        /// </summary>
+
         public abstract class WindowsManagerException : MakarovFrameworkException
         {
             protected WindowsManagerException(string message)
@@ -29,9 +17,6 @@ namespace Makarov.Framework.Core.Managers
             { }
         }
 
-        /// <summary>
-        /// Менеджер окон уже освобождён.
-        /// </summary>
         public sealed class WindowsManagerAlreadyDisposedException : WindowsManagerException
         {
             public WindowsManagerAlreadyDisposedException()
@@ -39,53 +24,56 @@ namespace Makarov.Framework.Core.Managers
             { }
         }
 
-        /// <summary>
-        /// Тип окна не найден.
-        /// </summary>
         public sealed class WindowTypeNotFoundException : WindowsManagerException
         {
-            /// <param name="type">Тип окна.</param>
+
             public WindowTypeNotFoundException(Type type)
                 : base($@"Window type '{type.Name}' not found.")
+            { }
+
+            public WindowTypeNotFoundException(Type type, string details)
+                : base($@"Window type '{type.Name}' not found. {details}")
             { }
         }
         #endregion
 
         #region Private members
 
-        /// <summary>
-        /// Освобождён ли менеджер окон.
-        /// </summary>
         private bool _disposed;
 
-        /// <summary>
-        /// Типы окон.
-        /// </summary>
         private List<Type> _formTypes;
 
-        /// <summary>
-        /// Экземпляры окон.
-        /// </summary>
         private List<Form> _windows;
+
+        private string _scannedAssembly;
         #endregion
 
         #region Constructors
-        /// <param name="assembly">Сборка, в которой нужно искать классы окон.</param>
+
         public WindowsManager(Assembly assembly)
         {
             _formTypes = new List<Type>();
             _windows = new List<Form>();
+            _scannedAssembly = assembly.GetName().Name;
 
-            foreach (Type type in assembly.GetTypes())
+            Type[] types;
+            try
+            {
+                types = assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                types = Array.FindAll(ex.Types, t => t != null);
+            }
+
+            foreach (Type type in types)
                 if (type.IsClass && type.IsSubclassOf(typeof(Form)))
                     _formTypes.Add(type);
         }
         #endregion
 
         #region Properties
-        /// <summary>
-        /// Типы окон.
-        /// </summary>
+
         public IEnumerable<Type> Forms
         {
             get
@@ -97,9 +85,6 @@ namespace Makarov.Framework.Core.Managers
             }
         }
 
-        /// <summary>
-        /// Экземпляры окон.
-        /// </summary>
         public IEnumerable<Form> Windows
         {
             get
@@ -113,9 +98,7 @@ namespace Makarov.Framework.Core.Managers
         #endregion
 
         #region Public methods
-        /// <summary>
-        /// Возвращает окно заданного типа.
-        /// </summary>
+
         public T GetWindow<T>() where T: Form
         {
             if (_disposed)
@@ -134,12 +117,14 @@ namespace Makarov.Framework.Core.Managers
                     return frm;
                 }
 
-            throw new WindowTypeNotFoundException(typeof (T));
+            var known = _formTypes.Count == 0
+                ? "(none)"
+                : string.Join(", ", _formTypes.ConvertAll(t => t.Name));
+            throw new WindowTypeNotFoundException(
+                typeof(T),
+                $"Scanned assembly: '{_scannedAssembly}'. Registered form types: {known}.");
         }
 
-        /// <summary>
-        /// Освобождает ресурсы.
-        /// </summary>
         public void Dispose()
         {
             if (_disposed)

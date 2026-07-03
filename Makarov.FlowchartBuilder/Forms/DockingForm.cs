@@ -1,4 +1,5 @@
-﻿using System;
+using System.ComponentModel;
+using System;
 using System.Windows.Forms;
 using BaseSettings = Makarov.Framework.Core.Settings;
 
@@ -11,9 +12,6 @@ namespace Makarov.FlowchartBuilder.Forms
             InitializeComponent();
         }
 
-        /// <summary>
-        /// Имя данного класса.
-        /// </summary>
         public string ClassName
         {
             get
@@ -23,9 +21,6 @@ namespace Makarov.FlowchartBuilder.Forms
             }
         }
 
-        /// <summary>
-        /// Часть имени ключа реестра, хранящего настройки данного окна.
-        /// </summary>
         protected string RegistrySettingsKey
         {
             get
@@ -34,9 +29,6 @@ namespace Makarov.FlowchartBuilder.Forms
             }
         }
 
-        /// <summary>
-        /// Имя окна (для хранения настроек в реестре).
-        /// </summary>
         protected virtual string RegistrySettingsName
         {
             get { throw new NotImplementedException(); }
@@ -60,36 +52,28 @@ namespace Makarov.FlowchartBuilder.Forms
             Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockBottom"] = DockBottom.ToString();
         }
 
-        /// <summary>
-        /// Прилеплено ли окно к левому краю.
-        /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DockLeft
         {
             get;
             set;
         }
 
-        /// <summary>
-        /// Прилеплено ли окно к правому краю.
-        /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DockRight
         {
             get;
             set;
         }
 
-        /// <summary>
-        /// Прилеплено ли окно к верхнему краю.
-        /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DockTop
         {
             get;
             set;
         }
 
-        /// <summary>
-        /// Прилеплено ли окно к нижнему краю.
-        /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DockBottom
         {
             get;
@@ -100,13 +84,11 @@ namespace Makarov.FlowchartBuilder.Forms
         {
             if (Settings.Environment.InDesignTime) return;
 
-            // Размеры окна.
             string x = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Left"];
             string y = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Top"];
             string width = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Width"];
             string height = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Height"];
 
-            // Устанавливаем координату X окна.
             if (!string.IsNullOrEmpty(x))
             {
                 int ix = int.Parse(x);
@@ -118,7 +100,6 @@ namespace Makarov.FlowchartBuilder.Forms
                 Left = ix;
             }
 
-            // Устанавливаем координату Y окна.
             if (!string.IsNullOrEmpty(y))
             {
                 int iy = int.Parse(y);
@@ -130,7 +111,6 @@ namespace Makarov.FlowchartBuilder.Forms
                 Top = iy;
             }
 
-            // Устанавливаем координату ширину окна.
             if (!string.IsNullOrEmpty(width))
             {
                 int iwidth = int.Parse(width);
@@ -142,7 +122,6 @@ namespace Makarov.FlowchartBuilder.Forms
                 Width = iwidth;
             }
 
-            // Устанавливаем координату высоту окна.
             if (!string.IsNullOrEmpty(height))
             {
                 int iheight = int.Parse(height);
@@ -154,35 +133,27 @@ namespace Makarov.FlowchartBuilder.Forms
                 Height = iheight;
             }
 
-            // Прилипание окна.
             string dockLeft = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockLeft"];
             string dockRight = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockRight"];
             string dockTop = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockTop"];
             string dockBottom = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockBottom"];
 
-            // Прилипание к левому краю.
             if (!string.IsNullOrEmpty(dockLeft))
                 DockLeft = bool.Parse(dockLeft);
 
-            // Прилипание к правому краю.
             if (!string.IsNullOrEmpty(dockRight))
                 DockRight = bool.Parse(dockRight);
 
-            // Прилипание к верхнему краю.
             if (!string.IsNullOrEmpty(dockTop))
                 DockTop = bool.Parse(dockTop);
 
-            // Прилипание к нижнему краю.
             if (!string.IsNullOrEmpty(dockBottom))
                 DockBottom = bool.Parse(dockBottom);
         }
 
-        /// <summary>
-        /// Прилипание окна при движении.
-        /// </summary>
         public void UpdateDockingWindowOnMove()
         {
-            // Прилипание к левому краю.
+
             if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Left - Left) <= Settings.Environment.Docking.DockDistance)
             {
                 Left = Core.Instance.MainWindow.WorkRectangle.Left;
@@ -191,7 +162,6 @@ namespace Makarov.FlowchartBuilder.Forms
             else if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Left - Left) >= Settings.Environment.Docking.UndockDistance)
                 DockLeft = false;
 
-            // Прилипание к верхнему краю.
             if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Top - Top) <= Settings.Environment.Docking.DockDistance)
             {
                 Top = Core.Instance.MainWindow.WorkRectangle.Top;
@@ -201,12 +171,9 @@ namespace Makarov.FlowchartBuilder.Forms
                 DockTop = false;
         }
 
-        /// <summary>
-        /// Прилипание окна при изменении размеров.
-        /// </summary>
         public void UpdateDockingWindowOnResize()
         {
-            // Прилипание к правому краю.
+
             if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Right - (Left + Width)) <= Settings.Environment.Docking.DockDistance)
             {
                 Width += Core.Instance.MainWindow.WorkRectangle.Right - (Left + Width);
@@ -215,7 +182,6 @@ namespace Makarov.FlowchartBuilder.Forms
             else if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Right - (Left + Width)) >= Settings.Environment.Docking.UndockDistance)
                 DockRight = false;
 
-            // Прилипание к нижнему краю.
             if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Bottom - (Top + Height)) <= Settings.Environment.Docking.DockDistance)
             {
                 Height += Core.Instance.MainWindow.WorkRectangle.Bottom - (Top + Height);
@@ -225,9 +191,6 @@ namespace Makarov.FlowchartBuilder.Forms
                 DockBottom = false;
         }
 
-        /// <summary>
-        /// Обновление размеров и координат прилепленного окна.
-        /// </summary>
         public void UpdateDockedWindowPosition()
         {
             if (DockLeft)

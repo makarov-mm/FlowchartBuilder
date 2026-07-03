@@ -1,28 +1,15 @@
-﻿// <copyright file="AbstractContainerGlyph.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2011 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2011-03-20</date>
-// <summary>Абстрактный контейнер.</summary>
-
 using System.Drawing;
 using Makarov.FlowchartBuilder.API.Attributes;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Containers
 {
-    /// <summary>
-    /// Абстрактный контейнер.
-    /// </summary>
+
     [GlyphFamily("Containers")]
     [GlyphDefaultWidth(60)]
     [GlyphDefaultHeight(40)]
     public abstract class AbstractContainerGlyph : ContainerGlyph
     {
-        /// <summary>
-        /// Отрисовать картинку глифа.
-        /// </summary>
-        /// <param name="gfx">Graphics.</param>
+
         protected override void DrawGlyph(Graphics gfx)
         {
             using (Brush brush = new SolidBrush(Color.FromArgb(5, Color.Blue)))
@@ -34,10 +21,6 @@ namespace Makarov.FlowchartBuilder.Glyphs.Containers
             }
         }
 
-        /// <summary>
-        /// Отрисовать картинку выделенного глифа.
-        /// </summary>
-        /// <param name="gfx">Graphics.</param>
         protected override void DrawSelectedGlyph(Graphics gfx)
         {
             using (Brush brush = new SolidBrush(Color.FromArgb(15, Color.Blue)))

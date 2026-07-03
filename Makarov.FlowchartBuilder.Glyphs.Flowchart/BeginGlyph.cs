@@ -1,28 +1,16 @@
-﻿// <copyright file="BeginEndGlyph.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2011 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2011-II-17</date>
-// <summary>Глиф начала.</summary>
-
 using System;
 using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Flowchart
 {
-    /// <summary>
-    /// Глиф начала.
-    /// </summary>
+
     [GlyphName("Begin")]
     [GlyphDefaultWidth(30)]
     [GlyphDefaultHeight(15)]
     public class BeginGlyph : AbstractFlowchartGlyph
     {
-        /// <summary>
-        /// Центрированный путь для шейпа.
-        /// </summary>
+
         protected override GraphicsPath CenteredPath
         {
             get
@@ -35,9 +23,6 @@ namespace Makarov.FlowchartBuilder.Glyphs.Flowchart
             }
         }
 
-        /// <summary>
-        /// Путь для шейпа.
-        /// </summary>
         protected override GraphicsPath Path
         {
             get

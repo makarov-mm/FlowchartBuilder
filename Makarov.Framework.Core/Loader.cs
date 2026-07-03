@@ -1,94 +1,70 @@
-﻿// <copyright file="Loader.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2009 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2009-IV-28</date>
-// <summary>Загрузчик типов из сборок.</summary>
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using static System.Net.WebRequestMethods;
 
 namespace Makarov.Framework.Core
 {
-    /// <summary>
-    /// Загрузчик типов из сборок.
-    /// </summary>
+
     public sealed class Loader
     {
         #region Constructors
-        /// <param name="directory">Папка, в которой нужно искать сборки.</param>
+
         public Loader(string directory)
         {
-            // Получаем список сборок, находящихся в указанной папке.
-            string[] files = Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories);
 
-            // Заполняем словарь найденных сборок.
-            _assemblies = new Dictionary<string, string>(files.Length);
-            foreach (string file in files)
+            try
             {
-                // Имя сборки.
-                string name = Path.GetFileNameWithoutExtension(file) ?? string.Empty;
+                string[] files = Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories);
 
-                // Если такое имя уже есть, сгенерируем уникальное.
-                if (_assemblies.ContainsKey(name))
+                _assemblies = new Dictionary<string, string>(files.Length);
+                foreach (string file in files)
                 {
-                    int i = -1;
-                    string uniqName;
-                    do
+
+                    string name = Path.GetFileNameWithoutExtension(file) ?? string.Empty;
+
+                    if (_assemblies.ContainsKey(name))
                     {
-                        uniqName = name + "_" + (++i);
-                    } while (_assemblies.ContainsKey(uniqName));
+                        int i = -1;
+                        string uniqName;
+                        do
+                        {
+                            uniqName = name + "_" + (++i);
+                        } while (_assemblies.ContainsKey(uniqName));
 
-                    name = uniqName;
+                        name = uniqName;
+                    }
+
+                    _assemblies.Add(name, file);
                 }
-
-                // Добавляем в словарь.
-                _assemblies.Add(name, file);
+            }
+            catch
+            {
             }
         }
         #endregion
 
         #region Private members
-        /// <summary>
-        /// Найденные осборки.
-        /// <remarks>Пары (полное имя, путь и имя файла с расширением).</remarks>
-        /// </summary>
-        private readonly Dictionary<string, string> _assemblies;
 
-        /// <summary>
-        /// Загруженные сборки.
-        /// <remarks>Пары (полное имя, сборка).</remarks>
-        /// </summary>
+        private Dictionary<string, string> _assemblies;
+
         private Dictionary<string, Assembly> _loadedAssemblies;
         #endregion
 
         #region Public methods
-        /// <summary>
-        /// Существует ли сборка с заданным именем.
-        /// </summary>
-        /// <param name="name">Имя сборки.</param>
+
         public bool IsAssemblyExists(string name)
         {
             return _assemblies.ContainsKey(name ?? string.Empty);
         }
 
-        /// <summary>
-        /// Загружена ли сборка с заданным именем.
-        /// </summary>
-        /// <param name="name">Имя сборки.</param>
         public bool IsAssemblyLoaded(string name)
         {
             return _loadedAssemblies.ContainsKey(name ?? string.Empty);
         }
 
-        /// <summary>
-        /// Возвращает сборку по имени.
-        /// </summary>
-        /// <param name="name">Имя сборки.</param>
         public Assembly GetAssembly(string name)
         {
             if (_loadedAssemblies.ContainsKey(name))
@@ -107,47 +83,38 @@ namespace Makarov.Framework.Core
             return null;
         }
 
-        /// <summary>
-        /// Список найденных сборок.
-        /// </summary>
         public IEnumerable<string> Assemblies
         {
             get { return _assemblies.Select(kvp => kvp.Key); }
         }
 
-        /// <summary>
-        /// Список загруженных сборок.
-        /// </summary>
         public IDictionary<string, Assembly> LoadedAssemblies
         {
             get
             {
-                // Если ничего ещё не загружено...
+                if (_assemblies is null)
+                {
+                    _assemblies = new Dictionary<string, string>();
+                }
+
                 if (_loadedAssemblies is null)
                 {
-                    // Создаём словарь пар (имя сборки, сборка).
+
                     _loadedAssemblies = new Dictionary<string, Assembly>(_assemblies.Count);
                 }
 
-                // Проходим по всем найденным сборкам и догружаем то, что ещё не загружено...
                 foreach (KeyValuePair<string, string> kvp in _assemblies)
                     if (!_loadedAssemblies.ContainsKey(kvp.Key))
                         _loadedAssemblies.Add(kvp.Key, Assembly.LoadFile(kvp.Value));
 
-                // Возвращаем загруженные сборки.
                 return _loadedAssemblies;
             }
         }
 
-        /// <summary>
-        /// Получить список классов, дочерних заданному, из загруженных сборок.
-        /// </summary>
-        /// <typeparam name="T">Тип, наследников которого нужно искать.</typeparam>
-        /// <returns>Список найденных классов.</returns>
         public IEnumerable<Type> GetTypes<T>()
         {
-            return from kvp in LoadedAssemblies 
-                   from type in kvp.Value.GetTypes() 
+            return from kvp in LoadedAssemblies
+                   from type in kvp.Value.GetTypes()
                    where type is T || type.IsSubclassOf(typeof(T))
                    select type;
         }

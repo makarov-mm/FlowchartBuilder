@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using BaseSettings = Makarov.Framework.Core.Settings;
 
@@ -56,12 +56,12 @@ namespace Makarov.FlowchartBuilder.Forms
 
         private void cbLimitedHistory_MouseUp(object sender, MouseEventArgs e)
         {
-            
+
         }
 
         private void cbLimitedHistory_Leave(object sender, EventArgs e)
         {
-            
+
         }
     }
 }

@@ -1,28 +1,16 @@
-﻿// <copyright file="SubroutineGlyph.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2010 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2010-06-12</date>
-// <summary>Глиф вызов процедуры.</summary>
-
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Flowchart
 {
-    /// <summary>
-    /// Глиф вызов процедуры.
-    /// </summary>
+
     [GlyphName("Subroutine")]
     [GlyphDefaultWidth(30)]
     [GlyphDefaultHeight(20)]
     public class SubroutineGlyph : AbstractFlowchartGlyph
     {
-        /// <summary>
-        /// Центрированный путь для шейпа.
-        /// </summary>
+
         protected override GraphicsPath CenteredPath
         {
             get
@@ -33,9 +21,6 @@ namespace Makarov.FlowchartBuilder.Glyphs.Flowchart
             }
         }
 
-        /// <summary>
-        /// Путь для шейпа.
-        /// </summary>
         protected override GraphicsPath Path
         {
             get
@@ -49,10 +34,6 @@ namespace Makarov.FlowchartBuilder.Glyphs.Flowchart
             }
         }
 
-        /// <summary>
-        /// Отрисовать картинку глифа.
-        /// </summary>
-        /// <param name="gfx">Graphics.</param>
         protected override void DrawGlyph(Graphics gfx)
         {
             base.DrawGlyph(gfx);
@@ -71,9 +52,6 @@ namespace Makarov.FlowchartBuilder.Glyphs.Flowchart
             }
         }
 
-        /// <summary>
-        /// Иконка.
-        /// </summary>
         public override Bitmap Thumbnail
         {
             get

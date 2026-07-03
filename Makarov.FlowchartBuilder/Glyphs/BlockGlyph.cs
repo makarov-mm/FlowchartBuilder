@@ -1,11 +1,3 @@
-﻿// <copyright file="BlockGlyph.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2008 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2009-03-15</date>
-// <summary>Визуальный глиф.</summary>
-
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -18,21 +10,16 @@ using Makarov.Framework.Core;
 
 namespace Makarov.FlowchartBuilder.Glyphs
 {
-    /// <summary>
-    /// Глиф, имеющий размер и координаты.
-    /// </summary>
+
     [GlyphDefaultWidth(30f)]
     [GlyphDefaultHeight(20f)]
     [GlyphMinimalWidth(15f)]
     [GlyphMinimalHeight(15f)]
     public class BlockGlyph : AbstractGlyph
     {
-        // ReSharper disable InconsistentNaming
+
         #region Constructors
-        /// <param name="x">Координата центра X в миллиметрах.</param>
-        /// <param name="y">Координата центра Y в миллиметрах.</param>
-        /// <param name="width">Ширина в миллиметрах.</param>
-        /// <param name="height">Высота в миллиметрах.</param>
+
         protected BlockGlyph(int x, int y, int width, int height)
         {
             XInMM = x;
@@ -66,26 +53,15 @@ namespace Makarov.FlowchartBuilder.Glyphs
         #endregion
 
         #region Private members
-        /// <summary>
-        /// Угол вращения.
-        /// </summary>
+
         private float _angle;
 
-        /// <summary>
-        /// Ширина в миллиметрах.
-        /// </summary>
         private float _width;
 
-        /// <summary>
-        /// Высота в миллиметрах.
-        /// </summary>
         private float _height;
         #endregion
 
         #region Minimal size properties
-        /// <summary>
-        /// Минимальная ширина в миллиметрах.
-        /// </summary>
 
         protected float MinimalWidthInMM
         {
@@ -95,33 +71,21 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Минимальная ширина в пикселях.
-        /// </summary>
         protected int MinimalWidth
         {
             get { return UnitsConverter.MMToPx(MinimalWidthInMM); }
         }
 
-        /// <summary>
-        /// Минимальная ширина в дюймах.
-        /// </summary>
         protected float MinimalWidthInInches
         {
             get { return UnitsConverter.MMToInch(MinimalWidthInMM); }
         }
 
-        /// <summary>
-        /// Минимальная ширина в текущих единицах.
-        /// </summary>
         protected float MinimalWidthInCurr
         {
             get { return UnitsConverter.MMToCurr(MinimalWidthInMM); }
         }
 
-        /// <summary>
-        /// Минимальная высота в миллиметрах.
-        /// </summary>
         protected float MinimalHeightInMM
         {
             get
@@ -130,25 +94,16 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Минимальная высота в пикселях.
-        /// </summary>
         protected int MinimalHeight
         {
             get { return UnitsConverter.MMToPx(MinimalHeightInMM); }
         }
 
-        /// <summary>
-        /// Минимальная высота в дюймах.
-        /// </summary>
         protected float MinimalHeightInInches
         {
             get { return UnitsConverter.MMToInch(MinimalHeightInMM); }
         }
 
-        /// <summary>
-        /// Минимальная высота в текущих единицах.
-        /// </summary>
         protected float MinimalHeightInCurr
         {
             get { return UnitsConverter.MMToCurr(MinimalHeightInMM); }
@@ -156,44 +111,33 @@ namespace Makarov.FlowchartBuilder.Glyphs
         #endregion
 
         #region InnerRegion
-        /// <summary>
-        /// Внутренний регион в пикселях.
-        /// </summary>
-        /// <remarks>Масштабированный, в нецентрированных координатах.</remarks>
+
         protected virtual Rectangle InnerRegion
         {
-            get 
-            { 
+            get
+            {
                 return new Rectangle(
-                    ScaledX - (ScaledWidth >> 1), 
-                    ScaledY - (ScaledHeight >> 1), 
-                    ScaledWidth, 
+                    ScaledX - (ScaledWidth >> 1),
+                    ScaledY - (ScaledHeight >> 1),
+                    ScaledWidth,
                     ScaledHeight);
             }
         }
         #endregion
 
         #region Properties
-        /// <summary>
-        /// Коэффициент масштабирования.
-        /// </summary>
+
         public float ScaleFactor
         {
             get { return Core.Instance.CurrentDocument.DocumentSheet.ScaleFactor; }
         }
 
-        /// <summary>
-        /// Владелец данного глифа.
-        /// </summary>
         public ContainerGlyph Owner
         {
             get;
             set;
         }
 
-        /// <summary>
-        /// Шрифт.
-        /// </summary>
         [Description(@"Text font.")]
         [Category(@"Appearance")]
         [DisplayName(@"Font")]
@@ -204,27 +148,18 @@ namespace Makarov.FlowchartBuilder.Glyphs
             set;
         }
 
-        /// <summary>
-        /// Толщина рамки в пикселях.
-        /// </summary>
         public int BorderWidth
         {
             get { return BorderWidthInMM.MMToPx(); }
             set { BorderWidthInMM = value.PxToMM(); }
         }
 
-        /// <summary>
-        /// Масштабированная толщина рамки в пикселях.
-        /// </summary>
         public int ScaledBorderWidth
         {
             get { return (BorderWidthInMM * ScaleFactor).MMToPx(); }
             set { BorderWidthInMM = value.PxToMM() / ScaleFactor; }
         }
 
-        /// <summary>
-        /// Толщина рамки в миллиметрах.
-        /// </summary>
         [Description(@"Border width in mm.")]
         [Category(@"Appearance")]
         [DisplayName(@"Border Width")]
@@ -234,9 +169,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             get; set;
         }
 
-        /// <summary>
-        /// Цвет рамки.
-        /// </summary>
         [Description(@"Border color.")]
         [Category(@"Appearance")]
         [DisplayName(@"Border Color")]
@@ -246,9 +178,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             get; set;
         }
 
-        /// <summary>
-        /// Фоновый цвет.
-        /// </summary>
         [Description(@"Background glyph color.")]
         [Category(@"Appearance")]
         [DisplayName(@"Background Color")]
@@ -258,9 +187,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             get; set;
         }
 
-        /// <summary>
-        /// Передний цвет.
-        /// </summary>
         [Description(@"Foreground glyph color.")]
         [Category(@"Appearance")]
         [DisplayName(@"Foreground Color")]
@@ -270,17 +196,11 @@ namespace Makarov.FlowchartBuilder.Glyphs
             get; set;
         }
 
-        /// <summary>
-        /// Принадлежит ли глиф какой-либо группе.
-        /// </summary>
         public bool InGroup
         {
             get { return Group != null; }
         }
 
-        /// <summary>
-        /// Группа, к которой принадлежит глиф.
-        /// </summary>
         public List<BlockGlyph> Group
         {
             get
@@ -289,25 +209,20 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Левая граница группы в миллиметрах.
-        /// </summary>
         public float GroupLeft
         {
             get
             {
-                // Если глиф не принадлежит группе, бросаем исключение.
+
                 if (!InGroup)
                     throw new InvalidContextException();
 
                 Sheet sheet = Core.Instance.CurrentDocument.DocumentSheet;
 
-                // Левая граница группы.
                 float left = sheet is FixedSheet
                                ? ((FixedSheet)sheet).Width
                                : Core.Instance.MainWindow.Width.PxToMM();
 
-                // Находим новые границы.
                 foreach (var glyph in Group)
                     if (glyph.XInMM - glyph.WidthInMM / 2 < left)
                         left = glyph.XInMM - glyph.WidthInMM / 2;
@@ -316,21 +231,16 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Правая граница группы в миллиметрах.
-        /// </summary>
         public float GroupRight
         {
             get
             {
-                // Если глиф не принадлежит группе, бросаем исключение.
+
                 if (!InGroup)
                     throw new InvalidContextException();
 
-                // Правая граница группы.
                 float right = 0;
 
-                // Находим новые границы.
                 foreach (var glyph in Group)
                     if (glyph.XInMM + glyph.WidthInMM / 2 > right)
                         right = glyph.XInMM + glyph.WidthInMM / 2;
@@ -339,25 +249,20 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Верхняя граница группы в миллиметрах.
-        /// </summary>
         public float GroupTop
         {
             get
             {
-                // Если глиф не принадлежит группе, бросаем исключение.
+
                 if (!InGroup)
                     throw new InvalidContextException();
 
                 Sheet sheet = Core.Instance.CurrentDocument.DocumentSheet;
 
-                // Верхняя граница группы.
                 float top = sheet is FixedSheet
                                ? ((FixedSheet)sheet).Height
                                : Core.Instance.MainWindow.Height.PxToMM();
 
-                // Находим новые границы.
                 foreach (var glyph in Group)
                     if (glyph.YInMM - glyph.HeightInMM / 2 < top)
                         top = glyph.YInMM - glyph.HeightInMM / 2;
@@ -366,21 +271,16 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Нижняя граница группы в миллиметрах.
-        /// </summary>
         public float GroupBottom
         {
             get
             {
-                // Если глиф не принадлежит группе, бросаем исключение.
+
                 if (!InGroup)
                     throw new InvalidContextException();
 
-                // Правая граница группы.
                 float bottom = 0;
 
-                // Находим новые границы.
                 foreach (var glyph in Group)
                     if (glyph.YInMM + glyph.HeightInMM / 2 > bottom)
                         bottom = glyph.YInMM + glyph.HeightInMM / 2;
@@ -389,45 +289,34 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Координата X центра группы в миллиметрах.
-        /// </summary>
         public float GroupX
         {
             get { return (GroupRight + GroupLeft) / 2; }
 
             set
             {
-                // Разница нового значения и текущего.
+
                 float dx = value - GroupX;
 
-                // Смещаем все глифы на разницу.
                 foreach (var glyph in Group)
                     glyph.XInMM += dx;
             }
         }
 
-        /// <summary>
-        /// Координата Y центра группы в миллиметрах.
-        /// </summary>
         public float GroupY
         {
             get { return (GroupBottom + GroupTop) / 2; }
 
             set
             {
-                // Разница нового значения и текущего.
+
                 float dy = value - GroupY;
 
-                // Смещаем все глифы на разницу.
                 foreach (var glyph in Group)
                     glyph.YInMM += dy;
             }
         }
 
-        /// <summary>
-        /// Координаты центра группы в миллиметрах.
-        /// </summary>
         public PointF GroupCenter
         {
             get { return new PointF(GroupX, GroupY); }
@@ -439,17 +328,11 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Ширина группы в миллиметрах.
-        /// </summary>
         public float GroupWidth
         {
             get { return GroupRight - GroupLeft; }
         }
 
-        /// <summary>
-        /// Высота группы в миллиметрах.
-        /// </summary>
         public float GroupHeight
         {
             get { return GroupBottom - GroupTop; }
@@ -457,51 +340,34 @@ namespace Makarov.FlowchartBuilder.Glyphs
         #endregion
 
         #region Manipulation properties
-        /// <summary>
-        /// Куда можно двигать в данный момент.
-        /// </summary>
+
         public MoveDirection Direction
         {
             get;
             set;
         }
 
-        /// <summary>
-        /// Угол между направлением движения и направлением стрелок.
-        /// </summary>
         public float DirectionsAngle
         {
             get;
             set;
         }
 
-        /// <summary>
-        /// Размер точки манипулирования в пикселях.
-        /// </summary>
         public virtual float ManipulationPointSize
         {
             get { return 7f; }
         }
 
-        /// <summary>
-        /// Размер точки вращения в пикселях.
-        /// </summary>
         public virtual float RotationPointSize
         {
             get { return ManipulationPointSize * 1.5f; }
         }
 
-        /// <summary>
-        /// Смещение точки вращения от глифа в пикселях.
-        /// </summary>
         public virtual float RotationPointOffset
         {
             get { return 40f; }
         }
 
-        /// <summary>
-        /// Точка вращения.
-        /// </summary>
         public PointF[] RotationPoints
         {
             get
@@ -546,9 +412,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Точки манипулирования.
-        /// </summary>
         public virtual IEnumerable<ManipPoint> ManipulationPoints
         {
             get
@@ -558,42 +421,35 @@ namespace Makarov.FlowchartBuilder.Glyphs
 
                 var pts = new[]
                               {
-                                  // Up
+
                                   new PointF(
                                       ScaledX,
                                       ScaledY - halfScaledHeight),
 
-                                  // Up-Right
                                   new PointF(
                                       ScaledX + halfScaledWidth,
                                       ScaledY - halfScaledHeight),
 
-                                  // Right
                                   new PointF(
                                       ScaledX + halfScaledWidth,
                                       ScaledY),
 
-                                  // Bottom-Right
                                   new PointF(
                                       ScaledX + halfScaledWidth,
                                       ScaledY + halfScaledHeight),
 
-                                  // Bottom
                                   new PointF(
                                       ScaledX,
                                       ScaledY + halfScaledHeight),
 
-                                  // Bottom-Left
                                   new PointF(
                                       ScaledX - halfScaledWidth,
                                       ScaledY + halfScaledHeight),
 
-                                  // Left
                                   new PointF(
                                       ScaledX - halfScaledWidth,
                                       ScaledY),
 
-                                  // Up-Left
                                   new PointF(
                                       ScaledX - halfScaledWidth,
                                       ScaledY - halfScaledHeight)
@@ -601,7 +457,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
 
                 var directions = MoveDirectionHelper.GetDirectionsArray();
 
-                // Применяем вращение.
                 float angle = Angle;
                 float radians = angle.DegToRad();
                 var cos = (float) System.Math.Cos(radians);
@@ -632,17 +487,12 @@ namespace Makarov.FlowchartBuilder.Glyphs
         #endregion
 
         #region Link properties
-        /// <summary>
-        /// Размер точки соединения в пикселях.
-        /// </summary>
+
         public virtual float LinkPointSize
         {
             get { return 7f; }
         }
 
-        /// <summary>
-        /// Точки соединения.
-        /// </summary>
         public virtual IEnumerable<LinkPoint> LinkPoints
         {
             get { return new List<LinkPoint>(); }
@@ -650,9 +500,7 @@ namespace Makarov.FlowchartBuilder.Glyphs
         #endregion
 
         #region Default values properties
-        /// <summary>
-        /// Дефолтная координата X в миллиметрах.
-        /// </summary>
+
         protected float DefaultXInMM
         {
             get
@@ -668,33 +516,21 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Дефолтная координта X в пикселях.
-        /// </summary>
         protected int DefaultX
         {
             get { return UnitsConverter.MMToPx(DefaultXInMM); }
         }
 
-        /// <summary>
-        /// Дефолтная координата X в дюймах.
-        /// </summary>
         protected float DefaultXInInches
         {
             get { return UnitsConverter.MMToInch(DefaultXInMM); }
         }
 
-        /// <summary>
-        /// Дефолтная координата X в текущих единицах.
-        /// </summary>
         protected float DefaultXInCurr
         {
             get { return UnitsConverter.MMToCurr(DefaultXInMM); }
         }
 
-        /// <summary>
-        /// Дефолтная координата Y в миллиметрах.
-        /// </summary>
         protected float DefaultYInMM
         {
             get
@@ -710,33 +546,21 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Дефолтная координта Y в пикселях.
-        /// </summary>
         protected int DefaultY
         {
             get { return UnitsConverter.MMToPx(DefaultYInMM); }
         }
 
-        /// <summary>
-        /// Дефолтная координата Y в дюймах.
-        /// </summary>
         protected float DefaultYInInches
         {
             get { return UnitsConverter.MMToInch(DefaultYInMM); }
         }
 
-        /// <summary>
-        /// Дефолтная координата Y в текущих единицах.
-        /// </summary>
         protected float DefaultYInCurr
         {
             get { return UnitsConverter.MMToCurr(DefaultYInMM); }
         }
 
-        /// <summary>
-        /// Дефолтная ширина в миллиметрах.
-        /// </summary>
         public float DefaultWidthInMM
         {
             get
@@ -745,33 +569,21 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Дефолтная ширина в пикселях.
-        /// </summary>
         protected int DefaultWidth
         {
             get { return UnitsConverter.MMToPx(DefaultWidthInMM); }
         }
 
-        /// <summary>
-        /// Дефолтная ширина в дюймах.
-        /// </summary>
         protected float DefaultWidthInInches
         {
             get { return UnitsConverter.MMToInch(DefaultWidthInMM); }
         }
 
-        /// <summary>
-        /// Дефолтная ширина в текущих единицах.
-        /// </summary>
         protected float DefaultWidthInCurr
         {
             get { return UnitsConverter.MMToCurr(DefaultWidthInMM); }
         }
 
-        /// <summary>
-        /// Дефолтная высота в миллиметрах.
-        /// </summary>
         public float DefaultHeightInMM
         {
             get
@@ -780,25 +592,16 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Дефолтная высота в пикселях.
-        /// </summary>
         protected int DefaultHeight
         {
             get { return UnitsConverter.MMToPx(DefaultHeightInMM); }
         }
 
-        /// <summary>
-        /// Дефолтная высота в дюймах.
-        /// </summary>
         protected float DefaultHeightInInches
         {
             get { return UnitsConverter.MMToInch(DefaultHeightInMM); }
         }
 
-        /// <summary>
-        /// Дефолтная высота в текущих единицах.
-        /// </summary>
         protected float DefaultHeightInCurr
         {
             get { return UnitsConverter.MMToCurr(DefaultHeightInMM); }
@@ -806,10 +609,7 @@ namespace Makarov.FlowchartBuilder.Glyphs
         #endregion
 
         #region Draw methods
-        /// <summary>
-        /// Отрисовать картинку глифа.
-        /// </summary>
-        /// <param name="gfx">Graphics.</param>
+
         protected override void DrawGlyph(Graphics gfx)
         {
             using (Brush brush = new SolidBrush(Color.FromArgb(10, Color.Blue)))
@@ -832,20 +632,16 @@ namespace Makarov.FlowchartBuilder.Glyphs
             const int crossWidth = 40;
 
             gfx.DrawLine(
-                Pens.Silver, 
-                ScaledX - (crossWidth >> 2), ScaledY, 
+                Pens.Silver,
+                ScaledX - (crossWidth >> 2), ScaledY,
                 ScaledX + (crossWidth >> 2), ScaledY);
 
             gfx.DrawLine(
-                Pens.Silver, 
-                ScaledX, ScaledY - (crossWidth >> 2), 
+                Pens.Silver,
+                ScaledX, ScaledY - (crossWidth >> 2),
                 ScaledX, ScaledY + (crossWidth >> 2));
         }
 
-        /// <summary>
-        /// Отрисовать заголовок.
-        /// </summary>
-        /// <param name="gfx">Graphics.</param>
         protected override void DrawText(Graphics gfx)
         {
             using (var font = "Arial".SafeCreateFont(8))
@@ -853,10 +649,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
                 gfx.DrawString(Caption, font, brush, InnerRegion);
         }
 
-        /// <summary>
-        /// Отрисовать точки манипулирования.
-        /// </summary>
-        /// <param name="gfx">Graphics.</param>
         protected override void DrawDots(Graphics gfx)
         {
             Pen pen;
@@ -876,7 +668,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             var halfManipulationPointSize = (float)System.Math.Ceiling(ManipulationPointSize / 2f);
             float angle = Angle;
 
-            // Рисуем точки масштабирования.
             foreach (var pt in ManipulationPoints)
             {
                 Matrix mx = gfx.Transform;
@@ -902,7 +693,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
                 gfx.Transform = mx;
             }
 
-            // Рисуем точку вращения.
             if (CanRotate)
             {
                 var pts = RotationPoints;
@@ -929,10 +719,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Отрисовать точки связи.
-        /// </summary>
-        /// <param name="gfx">Graphics.</param>
         protected override void DrawLinkPoints(Graphics gfx)
         {
             if (Core.Instance.CurrGlyphTypeSelected &&
@@ -961,9 +747,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Отрисовать вспомогательные элементы.
-        /// </summary>
         protected override void DrawHelpers(Graphics gfx)
         {
             Color color = InGroup
@@ -1006,11 +789,7 @@ namespace Makarov.FlowchartBuilder.Glyphs
         #endregion
 
         #region Public methods
-        /// <summary>
-        /// Попадает ли глиф в регион.
-        /// </summary>
-        /// <param name="rect">Регион в пикселях.</param>
-        /// <returns>Попадает ли глиф в регион.</returns>
+
         public bool InRegion(Rectangle rect)
         {
             int ix = ScaledX - (ScaledWidth >> 1);
@@ -1027,27 +806,19 @@ namespace Makarov.FlowchartBuilder.Glyphs
         #endregion
 
         #region ISize
-        /// <summary>
-        /// Ширина в пикселях.
-        /// </summary>
+
         public int Width
         {
             get { return WidthInMM.MMToPx(); }
             set { WidthInMM = value.PxToMM(); }
         }
 
-        /// <summary>
-        /// Высота в пикселях.
-        /// </summary>
         public int Height
         {
             get { return HeightInMM.MMToPx(); }
             set { HeightInMM = value.PxToMM(); }
         }
 
-        /// <summary>
-        /// Ширина в миллиметрах.
-        /// </summary>
         [Description(@"Width in mm.")]
         [Category(@"Layout")]
         [DisplayName(@"Width")]
@@ -1068,9 +839,6 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Высота в миллиметрах.
-        /// </summary>
         [Description(@"Height in mm.")]
         [Category(@"Layout")]
         [DisplayName(@"Height")]
@@ -1091,36 +859,24 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Ширина в дюймах.
-        /// </summary>
         public float WidthInInches
         {
             get { return WidthInMM.MMToInch(); }
             set { WidthInMM = value.InchToMM(); }
         }
 
-        /// <summary>
-        /// Высота в дюймах.
-        /// </summary>
         public float HeightInInches
         {
             get { return HeightInMM.MMToInch(); }
             set { HeightInMM = value.InchToMM(); }
         }
 
-        /// <summary>
-        /// Ширина в текущих единицах.
-        /// </summary>
         public float WidthInCurr
         {
             get { return WidthInMM.MMToCurr(); }
             set { WidthInMM = value.CurrToMM(); }
         }
 
-        /// <summary>
-        /// Высота в текущих единицах.
-        /// </summary>
         public float HeightInCurr
         {
             get { return HeightInMM.MMToCurr(); }
@@ -1129,72 +885,49 @@ namespace Makarov.FlowchartBuilder.Glyphs
         #endregion
 
         #region IScaledSize
-        /// <summary>
-        /// Масштабированная ширина в пикселях.
-        /// </summary>
+
         public int ScaledWidth
         {
             get { return Width.Scale(); }
             set { Width = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная высота в пикселях.
-        /// </summary>
         public int ScaledHeight
         {
             get { return Height.Scale(); }
             set { Height = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная ширина в миллиметрах.
-        /// </summary>
         public float ScaledWidthInMM
         {
             get { return WidthInMM.Scale(); }
             set { WidthInMM = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная высота в миллиметрах.
-        /// </summary>
         public float ScaledHeightInMM
         {
             get { return HeightInMM.Scale(); }
             set { HeightInMM = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная ширина в дюймах.
-        /// </summary>
         public float ScaledWidthInInches
         {
             get { return WidthInInches.Scale(); }
             set { WidthInInches = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная высота в дюймах.
-        /// </summary>
         public float ScaledHeightInInches
         {
             get { return HeightInInches.Scale(); }
             set { HeightInInches = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная ширина в текущих единицах.
-        /// </summary>
         public float ScaledWidthInCurr
         {
             get { return WidthInCurr.Scale(); }
             set { WidthInCurr = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная высота в текущих единицах.
-        /// </summary>
         public float ScaledHeightInCurr
         {
             get { return HeightInCurr.Scale(); }
@@ -1203,72 +936,49 @@ namespace Makarov.FlowchartBuilder.Glyphs
         #endregion
 
         #region ILocation
-        /// <summary>
-        /// Координата X в пикселях.
-        /// </summary>
+
         public int X
         {
             get { return XInMM.MMToPx(); }
             set { XInMM = value.PxToMM(); }
         }
 
-        /// <summary>
-        /// Координата Y в пикселях.
-        /// </summary>
         public int Y
         {
             get { return YInMM.MMToPx(); }
             set { YInMM = value.PxToMM(); }
         }
 
-        /// <summary>
-        /// Координата X в миллиметрах.
-        /// </summary>
         [Description(@"X coordinate in mm.")]
         [Category(@"Layout")]
         [DisplayName(@"X")]
         [ActiveProperty]
         public float XInMM { get; set; }
 
-        /// <summary>
-        /// Координата Y в миллиметрах.
-        /// </summary>
         [Description(@"Y coordinate in mm.")]
         [Category(@"Layout")]
         [DisplayName(@"Y")]
         [ActiveProperty]
         public float YInMM { get; set; }
 
-        /// <summary>
-        /// Координата X в дюймах.
-        /// </summary>
         public float XInInches
         {
             get { return XInMM.MMToInch(); }
             set { XInMM = value.InchToMM(); }
         }
 
-        /// <summary>
-        /// Координата Y в дюймах.
-        /// </summary>
         public float YInInches
         {
             get { return YInMM.MMToInch(); }
             set { YInMM = value.InchToMM(); }
         }
 
-        /// <summary>
-        /// Координата X в текущих единицах.
-        /// </summary>
         public float XInCurr
         {
             get { return XInMM.MMToCurr(); }
             set { XInMM = value.CurrToMM(); }
         }
 
-        /// <summary>
-        /// Координата Y в текущих единицах.
-        /// </summary>
         public float YInCurr
         {
             get { return YInMM.MMToCurr(); }
@@ -1277,72 +987,49 @@ namespace Makarov.FlowchartBuilder.Glyphs
         #endregion
 
         #region IScaledLocation
-        /// <summary>
-        /// Масштабированная координата X в пикселях.
-        /// </summary>
+
         public int ScaledX
         {
             get { return X.Scale(); }
             set { X = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная координата Y в пикселях.
-        /// </summary>
         public int ScaledY
         {
             get { return Y.Scale(); }
             set { Y = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная координата X в миллиметрах.
-        /// </summary>
         public float ScaledXInMM
         {
             get { return XInMM.Scale(); }
             set { XInMM = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная координата Y в миллиметрах.
-        /// </summary>
         public float ScaledYInMM
         {
             get { return YInMM.Scale(); }
             set { YInMM = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная координата X в дюймах.
-        /// </summary>
         public float ScaledXInInches
         {
             get { return XInInches.Scale(); }
             set { XInInches = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная координата Y в дюймах.
-        /// </summary>
         public float ScaledYInInches
         {
             get { return YInInches.Scale(); }
             set { YInInches = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная координата X в текущих единицах.
-        /// </summary>
         public float ScaledXInCurr
         {
             get { return XInCurr.Scale(); }
             set { XInCurr = value.Unscale(); }
         }
 
-        /// <summary>
-        /// Масштабированная координата Y в текущих единицах.
-        /// </summary>
         public float ScaledYInCurr
         {
             get { return YInCurr.Scale(); }
@@ -1351,9 +1038,7 @@ namespace Makarov.FlowchartBuilder.Glyphs
         #endregion
 
         #region Rotation
-        /// <summary>
-        /// Угол вращения.
-        /// </summary>
+
         [Description(@"Angle.")]
         [Category(@"Layout")]
         [DisplayName(@"Angle")]
@@ -1377,18 +1062,40 @@ namespace Makarov.FlowchartBuilder.Glyphs
             }
         }
 
-        /// <summary>
-        /// Можно ли вращать глиф.
-        /// </summary>
-        public bool CanRotate
+        public virtual bool CanRotate
         {
             get
             {
-                // TODO
+
                 return true;
             }
         }
         #endregion
-        // ReSharper restore InconsistentNaming
+
+        #region Connection points
+
+        public virtual bool SupportsLinks
+        {
+            get { return false; }
+        }
+
+        public PointF[] LinkPointsScaled
+        {
+            get
+            {
+                int halfWidth = ScaledWidth >> 1;
+                int halfHeight = ScaledHeight >> 1;
+
+                return new[]
+                {
+                    new PointF(ScaledX, ScaledY - halfHeight),
+                    new PointF(ScaledX + halfWidth, ScaledY),
+                    new PointF(ScaledX, ScaledY + halfHeight),
+                    new PointF(ScaledX - halfWidth, ScaledY)
+                };
+            }
+        }
+        #endregion
+
     }
 }

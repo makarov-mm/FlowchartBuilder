@@ -1,11 +1,3 @@
-﻿// <copyright file="LoadImageCommand.cs" company="Michael Makarov">
-// Copyright Michael Makarov (c) 2009 All Right Reserved
-// </copyright>
-// <author>Michael Makarov</author>
-// <email>m.m.makarov@gmail.com</email>
-// <date>2009-II-06</date>
-// <summary>Команда - загрузка изображения в качестве глифа.</summary>
-
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -13,17 +5,13 @@ using Makarov.FlowchartBuilder.Glyphs;
 
 namespace Makarov.FlowchartBuilder.Commands
 {
-    /// <summary>
-    /// Команда - загрузка изображения в качестве глифа.
-    /// </summary>
+
     public sealed class LoadImageCommand : CommandedGlyphCommand
     {
-        /// <summary>
-        /// Выполнить команду.
-        /// </summary>
+
         public override void Run()
         {
-            // Если документа не существует, бросаем исключение.
+
             if (!Core.Instance.IsDocumentsExists)
                 throw new InvalidContextException(@"Document not exists.");
 
