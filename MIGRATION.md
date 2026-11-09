@@ -67,8 +67,9 @@ All drawing now goes through Direct2D and DirectWrite.
   when a document or the application is closed. Tabs have a close button (middle click works too).
 - Page Setup and Print: one page, at real size when the sheet fits in the margins.
 - Connectors: curved, straight or orthogonal routes that leave and enter the blocks at right angles
-  to their sides, with an optional arrowhead, color, width and caption. The Arrow, Broken Arrow and
-  Link glyphs of the Simple plugin are now link tools for these three styles.
+  to their sides, with an optional arrowhead, color, width and caption. The ends of a selected
+  connector can be dragged to other ports or blocks. The Arrow, Broken Arrow and Link glyphs of the
+  Simple plugin are now link tools for these three styles.
 - Flowchart blocks show their caption, centered. Flowchart blocks and containers can no longer be
   rotated, and their Angle property is hidden.
 - The mouse wheel scrolls the sheet (Shift: horizontally), Ctrl+wheel zooms.

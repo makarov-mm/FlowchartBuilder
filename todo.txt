@@ -3,7 +3,6 @@ FlowchartBuilder - TODO
 Pending:
 - Image and Text glyphs (Simple plugin)
 - Print preview; printing large sheets over several pages
-- Move the end points of a connector to other ports or blocks with the mouse
 - Snap the mouse to the manipulation point
 - Proper About dialog
 - Finish translations
@@ -38,3 +37,4 @@ Done:
 - Page Setup and Print
 - Connectors as curved, straight and orthogonal arrows (Arrow, Broken Arrow and Link tools)
 - Direct2D rendering instead of GDI+
+- Drag the ends of a connector to other ports or blocks

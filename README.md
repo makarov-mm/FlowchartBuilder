@@ -68,8 +68,9 @@ names stay the same. Properties the current version does not know are skipped wi
 **Connectors.** Flowchart blocks show four link points. Drag from a link point to another block to
 connect them with a curved arrow, or pick a link tool in the palette (Arrow, Broken Arrow, Link) and
 drag from block to block. The route leaves and enters the blocks at right angles to their sides and
-follows them when they move. Routing, arrowhead, color, width and a caption shown in the middle of
-the line can be changed in the Properties window.
+follows them when they move. To move an end, select the connector and drag the square handle at
+that end to another port of the same block or to another block. Routing, arrowhead, color, width
+and a caption shown in the middle of the line can be changed in the Properties window.
 
 **Undo.** Every change (mouse edits, menu commands, property edits) is one undo step. A step is a
 snapshot of the document XML, so undo is exact for any operation; the last 100 steps are kept.

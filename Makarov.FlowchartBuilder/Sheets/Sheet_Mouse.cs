@@ -10,9 +10,18 @@ public abstract partial class Sheet
     private BlockGlyph? _connectorSource;
     private int _connectorSourcePort;
     private ConnectorGlyph? _connectorPrototype;
-    private BlockGlyph? _connectorTarget;
-    private int _connectorTargetPort;
+    private ConnectorGlyph? _draggedConnector;
+    private ConnectorEnd _draggedEnd;
+    private BlockGlyph? _hoveredBlock;
+    private int _hoveredPort;
     private Point? _connectorCurrent;
+
+    /// <summary>
+    /// The block at the fixed end of the connector being created or edited; a connector never links a block to itself.
+    /// </summary>
+    private BlockGlyph? AnchorBlock => _draggedConnector is { } connector
+        ? connector.BlockAt(_draggedEnd == ConnectorEnd.Source ? ConnectorEnd.Target : ConnectorEnd.Source)
+        : _connectorSource;
 
     public void MouseDown(Point point)
     {
@@ -35,7 +44,7 @@ public abstract partial class Sheet
                 PlaceNewGlyph(glyphType, point);
         }
 
-        if (TryStartConnector(point) || TryHitBlock(point) || TrySelectConnector(point))
+        if (TryStartEndDrag(point) || TryStartConnector(point) || TryHitBlock(point) || TrySelectConnector(point))
             return;
 
         _selectionStart = point;
@@ -46,11 +55,11 @@ public abstract partial class Sheet
 
     public void MouseMove(Point point)
     {
-        if (_connectorSource is not null)
+        if (_connectorSource is not null || _draggedConnector is not null)
         {
             _connectorCurrent = point;
-            _connectorTarget = FindLinkableBlock(point, except: _connectorSource);
-            _connectorTargetPort = _connectorTarget is null ? 0 : NearestLinkPoint(_connectorTarget, point);
+            _hoveredBlock = FindLinkableBlock(point, except: AnchorBlock);
+            _hoveredPort = _hoveredBlock is null ? 0 : NearestLinkPoint(_hoveredBlock, point);
             _lastMousePosition = point;
             Core.Instance.Redraw();
             return;
@@ -81,6 +90,10 @@ public abstract partial class Sheet
         if (_connectorSource is not null)
         {
             FinishConnector();
+        }
+        else if (_draggedConnector is not null)
+        {
+            FinishEndDrag();
         }
         else if (_selectionStart is { } start)
         {
@@ -133,7 +146,7 @@ public abstract partial class Sheet
         _connectorSource = source;
         _connectorSourcePort = port;
         _connectorPrototype = (ConnectorGlyph)Activator.CreateInstance(connectorType)!;
-        _connectorTarget = null;
+        _hoveredBlock = null;
         _connectorCurrent = point;
 
         DeselectAllGlyphs();
@@ -158,7 +171,45 @@ public abstract partial class Sheet
 
         _connectorSource = null;
         _connectorPrototype = null;
-        _connectorTarget = null;
+        _hoveredBlock = null;
+        _connectorCurrent = null;
+    }
+
+    /// <summary>Starts moving an end of a selected connector when its handle is pressed.</summary>
+    private bool TryStartEndDrag(Point point)
+    {
+        foreach (ConnectorGlyph connector in SelectedGlyphs.OfType<ConnectorGlyph>())
+        {
+            ConnectorEnd end = connector.HitEnd(point);
+
+            // A selected block keeps its resize handles, which lie on the ports.
+            if (end == ConnectorEnd.None || connector.BlockAt(end) is not { Selected: false })
+                continue;
+
+            _draggedConnector = connector;
+            _draggedEnd = end;
+            _hoveredBlock = null;
+            _connectorCurrent = point;
+
+            Core.Instance.MainWindow.Cursor = Cursors.Cross;
+            Core.Instance.Redraw();
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>Released over a block, the end moves to the nearest port; anywhere else the connector stays as it was.</summary>
+    private void FinishEndDrag()
+    {
+        ConnectorGlyph connector = _draggedConnector!;
+
+        if (_connectorCurrent is { } release && FindLinkableBlock(release, except: AnchorBlock) is { } block)
+            connector.Reconnect(_draggedEnd, block, NearestLinkPoint(block, release));
+
+        _draggedConnector = null;
+        _draggedEnd = ConnectorEnd.None;
+        _hoveredBlock = null;
         _connectorCurrent = null;
     }
 

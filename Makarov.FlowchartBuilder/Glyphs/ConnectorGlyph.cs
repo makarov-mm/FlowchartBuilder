@@ -111,18 +111,29 @@ public class ConnectorGlyph : AbstractGlyph
 
     public static PointF PortLocation(BlockGlyph glyph, int port) => glyph.LinkPointsScaled[Math.Clamp(port, 0, PortCount - 1)];
 
-    /// <summary>Route from a port of <paramref name="source"/> to any point, at the zoom of the current document.</summary>
+    /// <summary>Route between two points with outward normals, at the zoom of the current document.</summary>
     public static ConnectorRoute CreateRoute(
-        ConnectorRouting routing, BlockGlyph source, int sourcePort, PointF end, PointF endNormal, RectangleF endBounds) =>
+        ConnectorRouting routing,
+        PointF start,
+        PointF startNormal,
+        RectangleF startBounds,
+        PointF end,
+        PointF endNormal,
+        RectangleF endBounds) =>
         ConnectorRoute.Create(
             routing,
-            PortLocation(source, sourcePort),
-            PortNormal(sourcePort),
-            source.ScaledBounds,
+            start,
+            startNormal,
+            startBounds,
             end,
             endNormal,
             endBounds,
             Math.Max(8f, UnitsConverter.MMToPxExact(SpacingInMM * ScaleFactor)));
+
+    /// <summary>Route from a port of <paramref name="source"/> to any point, at the zoom of the current document.</summary>
+    public static ConnectorRoute CreateRoute(
+        ConnectorRouting routing, BlockGlyph source, int sourcePort, PointF end, PointF endNormal, RectangleF endBounds) =>
+        CreateRoute(routing, PortLocation(source, sourcePort), PortNormal(sourcePort), source.ScaledBounds, end, endNormal, endBounds);
 
     /// <summary>Arrowhead length in pixels for a line of the given width, at the zoom of the current document.</summary>
     public static float ArrowLength(float lineWidth) =>
@@ -138,6 +149,17 @@ public class ConnectorGlyph : AbstractGlyph
         {
             using Geometry head = route.CreateArrowhead(arrowLength, arrowLength * ArrowWidthRatio);
             canvas.FillGeometry(head, stroke.Color);
+        }
+    }
+
+    /// <summary>Square handles on both ends of a selected connector; they can be dragged to other ports.</summary>
+    public static void DrawEndHandles(Canvas canvas, PointF start, PointF end)
+    {
+        foreach (PointF point in (ReadOnlySpan<PointF>)[start, end])
+        {
+            var handle = new RectangleF(point.X - HandleSize / 2f, point.Y - HandleSize / 2f, HandleSize, HandleSize);
+            canvas.FillRectangle(handle, Settings.Colors.Selection);
+            canvas.DrawRectangle(handle, Settings.Strokes.SelectionBorder);
         }
     }
 
@@ -172,6 +194,43 @@ public class ConnectorGlyph : AbstractGlyph
 
             if (_target is null && block.Id == TargetGlyphId)
                 _target = block;
+        }
+    }
+
+    /// <summary>The block attached at <paramref name="end"/>.</summary>
+    public BlockGlyph? BlockAt(ConnectorEnd end) => end switch
+    {
+        ConnectorEnd.Source => _source,
+        ConnectorEnd.Target => _target,
+        _ => null,
+    };
+
+    /// <summary>The end whose handle is under <paramref name="point"/>; the arrowhead end wins when both are close.</summary>
+    public ConnectorEnd HitEnd(PointF point)
+    {
+        if (_source is null || _target is null)
+            return ConnectorEnd.None;
+
+        if (IsNear(point, PortLocation(_target, TargetPort)))
+            return ConnectorEnd.Target;
+
+        return IsNear(point, PortLocation(_source, SourcePort)) ? ConnectorEnd.Source : ConnectorEnd.None;
+    }
+
+    /// <summary>Attaches <paramref name="end"/> to another port, of the same block or of another one.</summary>
+    public void Reconnect(ConnectorEnd end, BlockGlyph block, int port)
+    {
+        switch (end)
+        {
+            case ConnectorEnd.Source:
+                Source = block;
+                SourcePort = port;
+                break;
+
+            case ConnectorEnd.Target:
+                Target = block;
+                TargetPort = port;
+                break;
         }
     }
 
@@ -214,18 +273,10 @@ public class ConnectorGlyph : AbstractGlyph
         canvas.DrawText(Caption, style, box, LineColor, TextAlignment.Center, ParagraphAlignment.Center, wrap: false);
     }
 
-    /// <summary>Handles on both ends of a selected connector.</summary>
     protected override void DrawDots(Canvas canvas)
     {
-        if (CreateRoute() is not { } route)
-            return;
-
-        foreach (PointF end in (ReadOnlySpan<PointF>)[route.Start, route.End])
-        {
-            var handle = new RectangleF(end.X - HandleSize / 2f, end.Y - HandleSize / 2f, HandleSize, HandleSize);
-            canvas.FillRectangle(handle, Settings.Colors.Selection);
-            canvas.DrawRectangle(handle, Settings.Strokes.SelectionBorder);
-        }
+        if (_source is not null && _target is not null)
+            DrawEndHandles(canvas, PortLocation(_source, SourcePort), PortLocation(_target, TargetPort));
     }
 
     protected override void DrawThumbnail(Canvas canvas)
@@ -245,6 +296,12 @@ public class ConnectorGlyph : AbstractGlyph
         var stroke = new Stroke(Settings.Colors.ThumbnailBorder, 1.5f) { Join = StrokeJoin.Round, Cap = StrokeCap.Round };
         DrawRoute(canvas, route, stroke, ArrowHead, arrowLength: 8f);
         DrawThumbnailBorder(canvas);
+    }
+
+    private static bool IsNear(PointF point, PointF handle)
+    {
+        const float reach = HandleSize / 2f + 2f;
+        return Math.Abs(point.X - handle.X) <= reach && Math.Abs(point.Y - handle.Y) <= reach;
     }
 
     private ConnectorRoute? CreateRoute()

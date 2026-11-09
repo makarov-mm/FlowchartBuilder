@@ -102,7 +102,11 @@ public abstract partial class Sheet
     private void RenderGlyphs(Canvas canvas, bool adornments)
     {
         for (int i = _glyphs.Count - 1; i >= 0; i--)
-            _glyphs[i].Draw(canvas, adornments);
+        {
+            // A connector whose end is being dragged is drawn by RenderInteraction in its new shape.
+            if (!ReferenceEquals(_glyphs[i], _draggedConnector))
+                _glyphs[i].Draw(canvas, adornments);
+        }
     }
 
     private void RenderInteraction(Canvas canvas)
@@ -116,7 +120,10 @@ public abstract partial class Sheet
 
         if (_connectorSource is { } source && _connectorCurrent is { } current && _connectorPrototype is { } prototype)
         {
-            ConnectorRoute route = CreateConnectorPreview(source, current, prototype.Routing);
+            PointF from = ConnectorGlyph.PortLocation(source, _connectorSourcePort);
+            var (end, endNormal, endBounds) = GetMovingEnd(current, towards: from);
+            ConnectorRoute route = ConnectorGlyph.CreateRoute(prototype.Routing, source, _connectorSourcePort, end, endNormal, endBounds);
+
             Stroke stroke = ConnectorGlyph.CreateStroke(Settings.Colors.SelectedConnector, prototype.LineWidthInMM) with
             {
                 Dash = new DashPattern(3f, 2f),
@@ -125,29 +132,46 @@ public abstract partial class Sheet
 
             ConnectorGlyph.DrawRoute(canvas, route, stroke, prototype.ArrowHead, ConnectorGlyph.ArrowLength(stroke.Width));
         }
+
+        if (_draggedConnector is { Source: { } sourceBlock, Target: { } targetBlock } connector && _connectorCurrent is { } point)
+            RenderDraggedConnector(canvas, connector, sourceBlock, targetBlock, point);
     }
 
-    /// <summary>Route from the source port to the hovered port, or towards the mouse when no block is under it.</summary>
-    private ConnectorRoute CreateConnectorPreview(BlockGlyph source, Point current, ConnectorRouting routing)
+    /// <summary>The connector whose end is being dragged, attached to the hovered port or following the mouse.</summary>
+    private void RenderDraggedConnector(Canvas canvas, ConnectorGlyph connector, BlockGlyph source, BlockGlyph target, Point point)
     {
-        if (_connectorTarget is { } target)
-        {
-            return ConnectorGlyph.CreateRoute(
-                routing,
-                source,
-                _connectorSourcePort,
-                ConnectorGlyph.PortLocation(target, _connectorTargetPort),
-                ConnectorGlyph.PortNormal(_connectorTargetPort),
-                target.ScaledBounds);
-        }
+        PointF sourcePort = ConnectorGlyph.PortLocation(source, connector.SourcePort);
+        PointF targetPort = ConnectorGlyph.PortLocation(target, connector.TargetPort);
 
-        // Arrive at the mouse along the main axis of the movement, as if it were a port facing the source.
-        PointF from = ConnectorGlyph.PortLocation(source, _connectorSourcePort);
-        float dx = from.X - current.X;
-        float dy = from.Y - current.Y;
+        var (start, startNormal, startBounds) = _draggedEnd == ConnectorEnd.Source
+            ? GetMovingEnd(point, towards: targetPort)
+            : (sourcePort, ConnectorGlyph.PortNormal(connector.SourcePort), source.ScaledBounds);
+
+        var (end, endNormal, endBounds) = _draggedEnd == ConnectorEnd.Target
+            ? GetMovingEnd(point, towards: sourcePort)
+            : (targetPort, ConnectorGlyph.PortNormal(connector.TargetPort), target.ScaledBounds);
+
+        ConnectorRoute route = ConnectorGlyph.CreateRoute(connector.Routing, start, startNormal, startBounds, end, endNormal, endBounds);
+        Stroke stroke = ConnectorGlyph.CreateStroke(Settings.Colors.SelectedConnector, connector.LineWidthInMM * 1.5f);
+
+        ConnectorGlyph.DrawRoute(canvas, route, stroke, connector.ArrowHead, ConnectorGlyph.ArrowLength(stroke.Width));
+        ConnectorGlyph.DrawEndHandles(canvas, route.Start, route.End);
+    }
+
+    /// <summary>
+    /// The dragged end of a connector: the nearest port of the hovered block, or the mouse position, entered along the
+    /// main axis of the direction <paramref name="towards"/> the other end.
+    /// </summary>
+    private (PointF Location, PointF Normal, RectangleF Bounds) GetMovingEnd(Point point, PointF towards)
+    {
+        if (_hoveredBlock is { } block)
+            return (ConnectorGlyph.PortLocation(block, _hoveredPort), ConnectorGlyph.PortNormal(_hoveredPort), block.ScaledBounds);
+
+        float dx = towards.X - point.X;
+        float dy = towards.Y - point.Y;
         PointF normal = Math.Abs(dx) >= Math.Abs(dy) ? new PointF(Math.Sign(dx), 0f) : new PointF(0f, Math.Sign(dy));
 
-        return ConnectorGlyph.CreateRoute(routing, source, _connectorSourcePort, current, normal, new RectangleF(current, Size.Empty));
+        return (point, normal, new RectangleF(point, SizeF.Empty));
     }
 
     private static Rectangle Normalize(Point a, Point b) =>
