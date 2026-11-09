@@ -1,188 +1,183 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Windows.Forms;
+using System.Globalization;
 using System.Xml;
 using Makarov.FlowchartBuilder.Glyphs;
 using Makarov.FlowchartBuilder.Sheets;
 
-namespace Makarov.FlowchartBuilder
+namespace Makarov.FlowchartBuilder;
+
+/// <summary>
+/// File format (*.mfb):
+/// <code>
+/// &lt;fb:FlowchartBuilderDocument Version="x.y.z.w"&gt;
+///   &lt;fb:Sheet fb:ClassName="sheet type" Width="mm" Height="mm"&gt; fb:Glyph elements, front-most first &lt;/fb:Sheet&gt;
+///   &lt;fb:Groups&gt; &lt;fb:Group&gt; &lt;fb:Member id="glyph id" /&gt; ... &lt;/fb:Group&gt; &lt;/fb:Groups&gt;
+/// &lt;/fb:FlowchartBuilderDocument&gt;
+/// </code>
+/// Width and Height are present for fixed-size sheets only. Groups are optional and ignored by older versions.
+/// </summary>
+public sealed partial class Document
 {
-
-    public sealed partial class Document
+    /// <exception cref="IOException">The file cannot be read.</exception>
+    /// <exception cref="XmlException">The file is not well-formed XML.</exception>
+    /// <exception cref="InvalidDataException">The file is not a valid document or uses glyph types that are not installed.</exception>
+    public static Document Load(string fileName)
     {
+        var xml = new XmlDocument();
+        xml.Load(fileName);
 
-        public void Load(string fileName)
+        try
         {
-
-            Name = Path.GetFileNameWithoutExtension(fileName);
-
-            var doc = new XmlDocument();
-
-            doc.Load(fileName);
-
-            var mainNode = doc.DocumentElement;
-
-            if (mainNode == null)
-                throw new MainDocumentNodeNotFoundException();
-
-            var docVersionAttrib = mainNode.GetAttribute(Settings.Xml.Attributes.ProgramVersion);
-            var version = new Version(docVersionAttrib);
-
-            XmlElement sheetNode = null;
-
-            foreach (XmlNode node in mainNode.ChildNodes)
-                if (node.Name == Settings.Xml.Tags.Sheet && node is XmlElement)
-                {
-                    sheetNode = (XmlElement)node;
-                    break;
-                }
-
-            if (sheetNode == null)
-                throw new SheetNodeNotFoundException();
-
-            var sheetClassAttrib = sheetNode.Attributes[Settings.Xml.Attributes.SheetClassName];
-
-            var sheetWidthAttrib = sheetNode.Attributes[Settings.Xml.Attributes.SheetWidth];
-            var sheetHeightAttrib = sheetNode.Attributes[Settings.Xml.Attributes.SheetHeight];
-
-            var sheetType = Type.GetType(sheetClassAttrib.Value);
-
-            DocumentSheet = null;
-
-            if (sheetType.IsSubclassOf(typeof(Sheet)))
-            {
-
-                if (sheetWidthAttrib != null && sheetHeightAttrib != null)
-                {
-                    var fixedSheet = (FixedSheet)Activator.CreateInstance(sheetType);
-                    fixedSheet.Width = float.Parse(sheetWidthAttrib.Value);
-                    fixedSheet.Height = float.Parse(sheetHeightAttrib.Value);
-                    DocumentSheet = fixedSheet;
-                }
-                else
-                    DocumentSheet = (Sheet)Activator.CreateInstance(sheetType);
-            }
-
-            if (DocumentSheet == null)
-                throw new SheetNotLoadedException();
-
-            foreach (XmlNode glyphNode in sheetNode)
-            {
-
-                var glyphTypeAttrib = glyphNode.Attributes[Settings.Xml.Attributes.GlyphClassName];
-
-                var glyphType = Type.GetType(glyphTypeAttrib.Value);
-
-                if (glyphType is null)
-                {
-                    bool found = false;
-
-                    foreach (var kvp in Core.Instance.PluginsLoader.LoadedAssemblies)
-                    {
-                        Assembly asm = kvp.Value;
-
-                        foreach (var asmType in asm.GetTypes())
-                        {
-
-                            if (asmType.FullName == glyphTypeAttrib.Value)
-                            {
-                                glyphType = asmType;
-                                found = true;
-                            }
-                        }
-
-                        if (found)
-                            break;
-                    }
-                }
-
-                if (glyphType is null)
-                    throw new GlyphTypeNotFoundException(glyphTypeAttrib.Value);
-
-                if (glyphType.IsSubclassOf(typeof(AbstractGlyph)))
-                {
-                    var glyph = (AbstractGlyph)Activator.CreateInstance(glyphType);
-                    if (glyph.Deserialize(glyphNode).ToList().Count > 0)
-                        MessageBox.Show(@"Document upgraded.");
-                    DocumentSheet.Add(glyph);
-                }
-                else
-                    throw new GlyphTypeNotFoundException(glyphTypeAttrib.Value);
-            }
-
-            foreach (AbstractGlyph glyph in DocumentSheet.Glyphs)
-            {
-                var connector = glyph as ConnectorGlyph;
-
-                if (connector != null)
-                    connector.Relink(DocumentSheet.Glyphs);
-            }
-
-            DocumentSheet.RemoveOrphanConnectors();
-
-            var historyEvents = new List<HistoryEvent>();
-
-            foreach (AbstractGlyph glyph in DocumentSheet.Glyphs)
-            {
-                var snapshot = new GlyphSnapshot(glyph);
-                historyEvents.Add(new HistoryEventCreateGlyph(snapshot));
-            }
-
-            DocumentHistory = new History(historyEvents);
-
+            return Load(xml, fileName);
         }
-
-        public void Save(string fileName)
+        catch (Exception e) when (e is FormatException or OverflowException or ArgumentException or KeyNotFoundException)
         {
-
-            var doc = new XmlDocument();
-
-            var mainNode = (XmlElement)doc.CreateNode(
-                XmlNodeType.Element,
-                Settings.Xml.Tags.FlowchartBuilderDocument,
-                Settings.Xml.Namespaces.Base);
-
-            var versionAttrib = doc.CreateAttribute(Settings.Xml.Attributes.ProgramVersion);
-            versionAttrib.Value = Assembly.GetEntryAssembly().GetName().Version.ToString();
-            mainNode.Attributes.Append(versionAttrib);
-
-            var sheetNode = (XmlElement)doc.CreateNode(
-                XmlNodeType.Element,
-                Settings.Xml.Tags.Sheet,
-                Settings.Xml.Namespaces.Base);
-
-            var sheet = DocumentSheet;
-
-            var sheetClassAttrib = doc.CreateAttribute(
-                Settings.Xml.Attributes.SheetClassName,
-                Settings.Xml.Namespaces.Base);
-            sheetClassAttrib.Value = sheet.GetType().ToString();
-            sheetNode.Attributes.Append(sheetClassAttrib);
-
-            if (sheet is FixedSheet fixedSheet)
-            {
-                var sheetWidthAttrib = doc.CreateAttribute(Settings.Xml.Attributes.SheetWidth);
-                sheetWidthAttrib.Value = fixedSheet.Width.ToString();
-                sheetNode.Attributes.Append(sheetWidthAttrib);
-
-                var sheetHeightAttrib = doc.CreateAttribute(Settings.Xml.Attributes.SheetHeight);
-                sheetHeightAttrib.Value = fixedSheet.Height.ToString();
-                sheetNode.Attributes.Append(sheetHeightAttrib);
-            }
-
-            foreach (var glyph in sheet.Glyphs)
-                sheetNode.AppendChild(glyph.Serialize(doc));
-
-            mainNode.AppendChild(sheetNode);
-
-            doc.AppendChild(mainNode);
-
-            doc.Save(fileName);
-
-            SaveSnapshots(GetSnapshotsFromSheet());
+            throw Invalid(fileName, e.Message, e);
         }
     }
+
+    private static Document Load(XmlDocument xml, string fileName)
+    {
+        XmlElement root = xml.DocumentElement ?? throw Invalid(fileName, "the document element is missing");
+        XmlElement sheetNode = ChildElements(root, Settings.Xml.Tags.Sheet).FirstOrDefault()
+            ?? throw Invalid(fileName, "the sheet element is missing");
+
+        Sheet sheet = CreateSheet(sheetNode, fileName);
+        var document = new Document(sheet)
+        {
+            Name = Path.GetFileNameWithoutExtension(fileName),
+            FileName = fileName,
+        };
+
+        var glyphs = new List<AbstractGlyph>();
+        foreach (XmlElement glyphNode in sheetNode.ChildNodes.OfType<XmlElement>())
+        {
+            AbstractGlyph glyph = CreateInstance<AbstractGlyph>(glyphNode.GetAttribute(Settings.Xml.Attributes.ClassName), fileName);
+            document.HasSkippedProperties |= glyph.Deserialize(glyphNode).Count > 0;
+            glyphs.Add(glyph);
+        }
+
+        sheet.AddToBack(glyphs);
+
+        foreach (ConnectorGlyph connector in glyphs.OfType<ConnectorGlyph>())
+            connector.Relink(glyphs);
+
+        sheet.RemoveOrphanConnectors();
+        LoadGroups(root, sheet);
+
+        return document;
+    }
+
+    public void Save(string fileName)
+    {
+        var xml = new XmlDocument();
+
+        XmlElement root = xml.CreateElement(Settings.Xml.Tags.FlowchartBuilderDocument, Settings.Xml.Namespace);
+        root.SetAttribute(Settings.Xml.Attributes.ProgramVersion, typeof(Document).Assembly.GetName().Version?.ToString());
+        xml.AppendChild(root);
+
+        XmlElement sheetNode = xml.CreateElement(Settings.Xml.Tags.Sheet, Settings.Xml.Namespace);
+        XmlAttribute className = xml.CreateAttribute(Settings.Xml.Attributes.ClassName, Settings.Xml.Namespace);
+        className.Value = DocumentSheet.GetType().FullName;
+        sheetNode.Attributes.Append(className);
+
+        if (DocumentSheet is FixedSheet fixedSheet)
+        {
+            sheetNode.SetAttribute(Settings.Xml.Attributes.SheetWidth, fixedSheet.Width.ToString(CultureInfo.InvariantCulture));
+            sheetNode.SetAttribute(Settings.Xml.Attributes.SheetHeight, fixedSheet.Height.ToString(CultureInfo.InvariantCulture));
+        }
+
+        foreach (AbstractGlyph glyph in DocumentSheet.Glyphs)
+            sheetNode.AppendChild(glyph.Serialize(xml));
+
+        root.AppendChild(sheetNode);
+        SaveGroups(xml, root);
+
+        xml.Save(fileName);
+        FileName = fileName;
+    }
+
+    private static Sheet CreateSheet(XmlElement sheetNode, string fileName)
+    {
+        Sheet sheet = CreateInstance<Sheet>(sheetNode.GetAttribute(Settings.Xml.Attributes.ClassName), fileName);
+
+        if (sheet is FixedSheet fixedSheet &&
+            sheetNode.HasAttribute(Settings.Xml.Attributes.SheetWidth) &&
+            sheetNode.HasAttribute(Settings.Xml.Attributes.SheetHeight))
+        {
+            fixedSheet.Width = ParseSize(sheetNode.GetAttribute(Settings.Xml.Attributes.SheetWidth), fileName);
+            fixedSheet.Height = ParseSize(sheetNode.GetAttribute(Settings.Xml.Attributes.SheetHeight), fileName);
+        }
+
+        return sheet;
+    }
+
+    /// <summary>Instantiates a type stored by its full name; it may live in this program or in a plugin.</summary>
+    private static T CreateInstance<T>(string typeName, string fileName)
+        where T : class
+    {
+        Type? type = string.IsNullOrEmpty(typeName)
+            ? null
+            : Type.GetType(typeName) ?? Core.Instance.Plugins.FindType(typeName);
+
+        if (type is null || type.IsAbstract || !type.IsAssignableTo(typeof(T)))
+            throw Invalid(fileName, $"type '{typeName}' is not installed");
+
+        return (T)Activator.CreateInstance(type)!;
+    }
+
+    /// <summary>Sizes are written with the invariant culture; older versions used the regional settings.</summary>
+    private static float ParseSize(string text, string fileName) =>
+        float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out float size) ||
+        float.TryParse(text, NumberStyles.Float, CultureInfo.CurrentCulture, out size)
+            ? size
+            : throw Invalid(fileName, $"invalid sheet size '{text}'");
+
+    private static void LoadGroups(XmlElement root, Sheet sheet)
+    {
+        Dictionary<string, BlockGlyph> blocks = sheet.Glyphs.OfType<BlockGlyph>().DistinctBy(glyph => glyph.Id).ToDictionary(glyph => glyph.Id);
+
+        foreach (XmlElement groupNode in ChildElements(root, Settings.Xml.Tags.Groups).SelectMany(groups => ChildElements(groups, Settings.Xml.Tags.Group)))
+        {
+            List<BlockGlyph> group =
+            [
+                .. ChildElements(groupNode, Settings.Xml.Tags.GroupMember)
+                    .Select(member => blocks.GetValueOrDefault(member.GetAttribute(Settings.Xml.Attributes.Id)))
+                    .OfType<BlockGlyph>()
+                    .Distinct(),
+            ];
+
+            if (group.Count >= 2)
+                sheet.Groups.Add(group);
+        }
+    }
+
+    private void SaveGroups(XmlDocument xml, XmlElement root)
+    {
+        if (DocumentSheet.Groups.Count == 0)
+            return;
+
+        XmlElement groupsNode = xml.CreateElement(Settings.Xml.Tags.Groups, Settings.Xml.Namespace);
+
+        foreach (List<BlockGlyph> group in DocumentSheet.Groups)
+        {
+            XmlElement groupNode = xml.CreateElement(Settings.Xml.Tags.Group, Settings.Xml.Namespace);
+
+            foreach (BlockGlyph member in group)
+            {
+                XmlElement memberNode = xml.CreateElement(Settings.Xml.Tags.GroupMember, Settings.Xml.Namespace);
+                memberNode.SetAttribute(Settings.Xml.Attributes.Id, member.Id);
+                groupNode.AppendChild(memberNode);
+            }
+
+            groupsNode.AppendChild(groupNode);
+        }
+
+        root.AppendChild(groupsNode);
+    }
+
+    private static IEnumerable<XmlElement> ChildElements(XmlElement parent, string name) =>
+        parent.ChildNodes.OfType<XmlElement>().Where(element => element.Name == name);
+
+    private static InvalidDataException Invalid(string fileName, string reason, Exception? innerException = null) =>
+        new($"'{fileName}' is not a valid FlowchartBuilder document: {reason.TrimEnd('.')}.", innerException);
 }

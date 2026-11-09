@@ -1,51 +1,26 @@
-using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace Makarov.Framework.Graphics.Primitives
+namespace Makarov.Framework.Graphics.Primitives;
+
+/// <summary>Four-pointed star.</summary>
+public sealed class Star(int x, int y, int width, int height) : Primitive(x, y, width, height)
 {
-
-    public class Star : Primitive
+    protected override GraphicsPath CreatePath(int left, int top, int width, int height)
     {
-        #region Constructors
+        int cx = left + width / 2;
+        int cy = top + height / 2;
+        int dx = width / 8;
+        int dy = height / 8;
 
-        public Star(int x, int y, int width, int height)
-            : base(x, y, width, height)
-        { }
-
-        public Star(Point coords, Size size)
-            : base(coords.X, coords.Y, size.Width, size.Height)
-        { }
-
-        public Star(System.Drawing.Rectangle rect)
-            : base(rect.X, rect.Y, rect.Width, rect.Height)
-        { }
-        #endregion
-
-        #region Protected methods
-
-        protected override GraphicsPath CreatePath(int x, int y, int width, int height)
-        {
-            var path = new GraphicsPath();
-
-            path.StartFigure();
-            path.AddLines(
-                new[]
-                    {
-                        new PointF(x + (width >> 1), y),
-                        new PointF(x + (width >> 1) + (width >> 3), y + (height >> 1) - (height >> 3)),
-                        new PointF(x + width, y + (height >> 1)),
-                        new PointF(x + (width >> 1) + (width >> 3), y + (height >> 1) + (height >> 3)),
-                        new PointF(x + (width >> 1), y + height),
-                        new PointF(x + (width >> 1) - (width >> 3), y + (height >> 1) + (height >> 3)),
-                        new PointF(x, y + (height >> 1)),
-                        new PointF(x + (width >> 1) - (width >> 3), y + (height >> 1) - (height >> 3)),
-                        new PointF(x + (width >> 1), y)
-                    }
-                );
-            path.CloseFigure();
-
-            return path;
-        }
-        #endregion
+        return Polygon(
+            new PointF(cx, top),
+            new PointF(cx + dx, cy - dy),
+            new PointF(left + width, cy),
+            new PointF(cx + dx, cy + dy),
+            new PointF(cx, top + height),
+            new PointF(cx - dx, cy + dy),
+            new PointF(left, cy),
+            new PointF(cx - dx, cy - dy),
+            new PointF(cx, top));
     }
 }

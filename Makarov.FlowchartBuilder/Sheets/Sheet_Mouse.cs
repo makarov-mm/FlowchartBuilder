@@ -1,530 +1,346 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Windows.Forms;
 using Makarov.FlowchartBuilder.Glyphs;
 
-namespace Makarov.FlowchartBuilder.Sheets
+namespace Makarov.FlowchartBuilder.Sheets;
+
+/// <summary>
+/// Mouse interaction in sheet pixel coordinates: placing new glyphs, selecting, moving, resizing,
+/// rotating and connecting glyphs.
+/// </summary>
+public abstract partial class Sheet
 {
-    public abstract partial class Sheet
+    private const float ConnectorHitTolerance = 4f;
+
+    private Point _lastMousePosition;
+    private Point? _selectionStart;
+    private Point _selectionEnd;
+    private BlockGlyph? _connectorSource;
+    private int _connectorSourcePort;
+    private Point? _connectorCurrent;
+
+    public void MouseDown(Point point)
     {
+        if (Core.Instance.CurrentGlyphType is { } glyphType && glyphType.IsAssignableTo(typeof(BlockGlyph)))
+            PlaceNewGlyph(glyphType, point);
 
-        public void MouseDown(Point pt)
+        _selectionStart = null;
+        _lastMousePosition = point;
+        UnlockGlyphs();
+
+        if (TryStartConnector(point) || TryHitBlock(point) || TrySelectConnector(point))
+            return;
+
+        _selectionStart = point;
+        _selectionEnd = point;
+        DeselectAllGlyphs();
+        OnSelectionChanged();
+    }
+
+    public void MouseMove(Point point)
+    {
+        if (_connectorSource is not null)
         {
+            _connectorCurrent = point;
+            _lastMousePosition = point;
+            Core.Instance.Redraw();
+            return;
+        }
 
-            if (Core.Instance.CurrGlyphTypeSelected && Core.Instance.CurrentGlyphType != null)
-            {
+        if (_selectionStart.HasValue)
+        {
+            _selectionEnd = point;
+            Core.Instance.Redraw();
+            return;
+        }
 
-                if (Core.Instance.CurrentGlyphType == typeof(BlockGlyph) ||
-                    Core.Instance.CurrentGlyphType.IsSubclassOf(typeof(BlockGlyph)))
-                {
+        bool changed = false;
+        foreach (BlockGlyph glyph in NonFixedGlyphs.OfType<BlockGlyph>().Where(glyph => glyph.Direction != MoveDirection.None))
+        {
+            DragGlyph(glyph, point);
+            changed = true;
+        }
 
-                    var glyph = (BlockGlyph)Activator.CreateInstance(Core.Instance.CurrentGlyphType);
+        _lastMousePosition = point;
 
-                    Core.Instance.CurrentGlyphType = null;
+        if (changed)
+            Core.Instance.Redraw();
+    }
 
-                    glyph.ScaledX = pt.X;
-                    glyph.ScaledY = pt.Y;
-
-                    DeselectAllGlyphs();
-
-                    glyph.Selected = true;
-
-                    Add(glyph);
-
-                    Core.Instance.Redraw();
-                }
-                else
-                {
-
-                }
-            }
-
+    public void MouseUp()
+    {
+        if (_connectorSource is not null)
+        {
+            FinishConnector();
+        }
+        else if (_selectionStart is { } start)
+        {
+            SelectInRectangle(Normalize(start, _selectionEnd));
             _selectionStart = null;
+        }
 
-            _oldPt = pt;
+        Core.Instance.MainWindow.Cursor = Cursors.Arrow;
+        UnlockGlyphs();
+        OnSelectionChanged();
+    }
 
-            UnlockGlyphs();
+    private void PlaceNewGlyph(Type glyphType, Point point)
+    {
+        var glyph = (BlockGlyph)Activator.CreateInstance(glyphType)!;
+        Core.Instance.CurrentGlyphType = null;
 
-            foreach (var glyph in NonFixedGlyphs)
-            {
-                var linkable = glyph as BlockGlyph;
+        glyph.ScaledX = point.X;
+        glyph.ScaledY = point.Y;
 
-                if (linkable == null || !linkable.SupportsLinks || linkable.Selected)
-                    continue;
+        DeselectAllGlyphs();
+        glyph.Selected = true;
+        Add(glyph);
+    }
 
-                int port = HitLinkPoint(linkable, pt);
+    /// <summary>A press on a link port of an unselected glyph starts dragging a new connector.</summary>
+    private bool TryStartConnector(Point point)
+    {
+        foreach (BlockGlyph glyph in NonFixedGlyphs.OfType<BlockGlyph>())
+        {
+            if (!glyph.SupportsLinks || glyph.Selected)
+                continue;
 
-                if (port >= 0)
-                {
-                    _connectorSource = linkable;
-                    _connectorSourcePort = port;
-                    _connectorCurrent = pt;
+            int port = HitLinkPoint(glyph, point);
+            if (port < 0)
+                continue;
 
-                    DeselectAllGlyphs();
-
-                    Core.Instance.MainWindow.Cursor = Cursors.Cross;
-
-                    Core.Instance.Redraw();
-                    return;
-                }
-            }
-
-            foreach (var nonFixedGlyph in NonFixedGlyphs)
-            {
-
-                if (nonFixedGlyph is BlockGlyph)
-                {
-                    var blockGlyph = (BlockGlyph)nonFixedGlyph;
-
-                    if (blockGlyph.Selected)
-                    {
-                        float halfManipPointSize = blockGlyph.ManipulationPointSize / 2f;
-
-                        foreach (var mpt in blockGlyph.ManipulationPoints)
-                            if (pt.X >= mpt.Coords.X - halfManipPointSize &&
-                                pt.X <= mpt.Coords.X + halfManipPointSize &&
-                                pt.Y >= mpt.Coords.Y - halfManipPointSize &&
-                                pt.Y <= mpt.Coords.Y + halfManipPointSize)
-                            {
-
-                                blockGlyph.DirectionsAngle = mpt.ArrowDirection.CalculateAngle(mpt.MoveDirection);
-                                blockGlyph.Direction = mpt.MoveDirection;
-
-                                DeselectAllGlyphs(new AbstractGlyph[] { blockGlyph });
-
-                                switch (mpt.ArrowDirection)
-                                {
-                                    case MoveDirection.Up:
-                                    case MoveDirection.Down:
-                                        Core.Instance.MainWindow.Cursor = Cursors.SizeNS;
-                                        break;
-
-                                    case MoveDirection.Left:
-                                    case MoveDirection.Right:
-                                        Core.Instance.MainWindow.Cursor = Cursors.SizeWE;
-                                        break;
-
-                                    case MoveDirection.DownAndLeft:
-                                    case MoveDirection.UpAndRight:
-                                        Core.Instance.MainWindow.Cursor = Cursors.SizeNESW;
-                                        break;
-
-                                    case MoveDirection.DownAndRight:
-                                    case MoveDirection.UpAndLeft:
-                                        Core.Instance.MainWindow.Cursor = Cursors.SizeNWSE;
-                                        break;
-                                }
-
-                                Core.Instance.Redraw();
-                                return;
-                            }
-
-                        PointF rotPt = blockGlyph.RotationPoints[3];
-                        float halfRotationPointSize = blockGlyph.RotationPointSize / 2f;
-
-                        if (blockGlyph.CanRotate &&
-                            pt.X >= rotPt.X - halfRotationPointSize &&
-                            pt.X <= rotPt.X + halfRotationPointSize &&
-                            pt.Y >= rotPt.Y - halfRotationPointSize &&
-                            pt.Y <= rotPt.Y + halfRotationPointSize)
-                        {
-
-                            blockGlyph.Direction = MoveDirection.Rotate;
-
-                            DeselectAllGlyphs(new AbstractGlyph[] { blockGlyph });
-
-                            Core.Instance.MainWindow.Cursor = Cursors.Hand;
-
-                            Core.Instance.Redraw();
-                            return;
-                        }
-                    }
-
-                    int halfScaledWidth = blockGlyph.ScaledWidth / 2;
-                    int haltScaledHeight = blockGlyph.ScaledHeight / 2;
-
-                    if (pt.X >= blockGlyph.ScaledX - halfScaledWidth &&
-                        pt.X <= blockGlyph.ScaledX + halfScaledWidth &&
-                        pt.Y >= blockGlyph.ScaledY - haltScaledHeight &&
-                        pt.Y <= blockGlyph.ScaledY + haltScaledHeight)
-                    {
-
-                        if (!blockGlyph.Selected)
-                        {
-                            if (blockGlyph.InGroup)
-                            {
-
-                                foreach (var g in blockGlyph.Group)
-                                    _glyphs.Remove(g);
-
-                                foreach (var g in blockGlyph.Group)
-                                    _glyphs.Insert(0, g);
-                            }
-                            else
-                            {
-
-                                _glyphs.Remove(nonFixedGlyph);
-                                _glyphs.Insert(0, nonFixedGlyph);
-                            }
-                        }
-
-                        if (blockGlyph.InGroup)
-                        {
-
-                            if (blockGlyph.Selected)
-                            {
-
-                                foreach (var g in SelectedGlyphs)
-                                    if (!g.Fixed && g is BlockGlyph)
-                                    {
-                                        var bg = (BlockGlyph)g;
-                                        bg.Direction = MoveDirection.Move;
-                                    }
-
-                                foreach (var g in blockGlyph.Group)
-                                {
-                                    g.Selected = true;
-                                    g.Direction = MoveDirection.Move;
-                                }
-                            }
-                            else
-                            {
-
-                                foreach (var g in blockGlyph.Group)
-                                {
-                                    g.Selected = true;
-                                    g.Direction = MoveDirection.Move;
-                                }
-
-                                DeselectAllGlyphs(blockGlyph.Group);
-                            }
-                        }
-                        else
-                        {
-
-                            if (blockGlyph.Selected)
-                            {
-                                foreach (var g in SelectedGlyphs)
-                                    if (!g.Fixed && g is BlockGlyph)
-                                    {
-                                        var bg = (BlockGlyph)g;
-                                        bg.Direction = MoveDirection.Move;
-                                    }
-                            }
-                            else
-                            {
-
-                                blockGlyph.Selected = true;
-
-                                blockGlyph.Direction = MoveDirection.Move;
-
-                                DeselectAllGlyphs(new AbstractGlyph[] { blockGlyph });
-                            }
-                        }
-
-                        Core.Instance.MainWindow.Cursor = Cursors.SizeAll;
-
-                        ShowProperties();
-
-                        Core.Instance.Redraw();
-                        UpdateGlyphsCommands();
-                        return;
-                    }
-                }
-            }
-
-            foreach (var glyph in _glyphs)
-            {
-                var connector = glyph as ConnectorGlyph;
-
-                if (connector != null && connector.HitTest(pt, 4f))
-                {
-                    DeselectAllGlyphs();
-
-                    connector.Selected = true;
-
-                    UpdateGlyphsCommands();
-
-                    Core.Instance.Redraw();
-                    return;
-                }
-            }
-
-            _selectionStart = pt;
-
-            _selectionEnd = pt;
+            _connectorSource = glyph;
+            _connectorSourcePort = port;
+            _connectorCurrent = point;
 
             DeselectAllGlyphs();
-
-            UpdateGlyphsCommands();
-
-            Core.Instance.Redraw();
+            Core.Instance.MainWindow.Cursor = Cursors.Cross;
+            OnSelectionChanged();
+            return true;
         }
 
-        public void MouseUp()
+        return false;
+    }
+
+    /// <summary>
+    /// Front to back: a selected glyph reacts to its resize and rotation handles first, then any glyph to its body.
+    /// </summary>
+    private bool TryHitBlock(Point point)
+    {
+        foreach (BlockGlyph glyph in NonFixedGlyphs.OfType<BlockGlyph>().ToList())
         {
+            if (glyph.Selected && (TryStartResize(glyph, point) || TryStartRotation(glyph, point)))
+                return true;
 
-            if (_connectorSource != null)
+            if (glyph.Contains(point))
             {
-                BlockGlyph target = null;
-                int targetPort = 0;
-
-                if (_connectorCurrent.HasValue)
-                {
-                    Point releasePt = _connectorCurrent.Value;
-
-                    foreach (var glyph in NonFixedGlyphs)
-                    {
-                        var linkable = glyph as BlockGlyph;
-
-                        if (linkable == null || !linkable.SupportsLinks || ReferenceEquals(linkable, _connectorSource))
-                            continue;
-
-                        if (PointInBlock(linkable, releasePt))
-                        {
-                            target = linkable;
-                            targetPort = NearestLinkPoint(linkable, releasePt);
-                            break;
-                        }
-                    }
-                }
-
-                if (target != null)
-                    Add(new ConnectorGlyph(_connectorSource, _connectorSourcePort, target, targetPort));
-
-                _connectorSource = null;
-                _connectorCurrent = null;
-
-                Core.Instance.MainWindow.Cursor = Cursors.Arrow;
-
-                UpdateGlyphsCommands();
-
-                Core.Instance.Redraw();
-                return;
+                SelectForMove(glyph);
+                return true;
             }
-
-            if (SelectionExists)
-            {
-
-                DeselectAllGlyphs();
-
-                int x = _selectionStart.Value.X > _selectionEnd.X
-                            ? _selectionEnd.X
-                            : _selectionStart.Value.X;
-                int y = _selectionStart.Value.Y > _selectionEnd.Y
-                            ? _selectionEnd.Y
-                            : _selectionStart.Value.Y;
-
-                int width = Math.Abs(_selectionEnd.X - _selectionStart.Value.X);
-                int height = Math.Abs(_selectionEnd.Y - _selectionStart.Value.Y);
-
-                foreach (var glyph in NonFixedGlyphs)
-                    if (glyph is BlockGlyph)
-                    {
-                        var vg = (BlockGlyph)glyph;
-                        if (vg.InRegion(new Rectangle(x, y, width, height)))
-                            vg.Selected = true;
-                    }
-
-                var addGlyphs = new List<BlockGlyph>();
-                foreach (var glyph in SelectedGlyphs)
-                    if (glyph is BlockGlyph && !glyph.Fixed)
-                    {
-                        var bg = (BlockGlyph)glyph;
-                        if (bg.InGroup)
-                        {
-                            foreach (var glyphInGroup in bg.Group)
-                                if (!addGlyphs.Contains(glyphInGroup))
-                                {
-                                    addGlyphs.Add(glyphInGroup);
-                                    glyphInGroup.Selected = true;
-                                }
-                        }
-                    }
-            }
-
-            _selectionStart = null;
-            Core.Instance.MainWindow.Cursor = Cursors.Arrow;
-
-            UnlockGlyphs();
-
-            UpdateGlyphsCommands();
-
-            Core.Instance.Redraw();
         }
 
-        public void MouseMove(Point pt)
+        return false;
+    }
+
+    private bool TryStartResize(BlockGlyph glyph, Point point)
+    {
+        float half = glyph.ManipulationPointSize / 2f;
+
+        foreach (ManipPoint handle in glyph.ManipulationPoints)
         {
+            if (!IsNear(point, handle.Coords, half))
+                continue;
 
-            if (_connectorSource != null)
+            glyph.DirectionsAngle = handle.ArrowDirection.AngleTo(handle.MoveDirection);
+            glyph.Direction = handle.MoveDirection;
+            DeselectAllGlyphs([glyph]);
+
+            Core.Instance.MainWindow.Cursor = handle.ArrowDirection switch
             {
-                _connectorCurrent = pt;
-                _oldPt = pt;
-                Core.Instance.Redraw();
-                return;
-            }
+                MoveDirection.Up or MoveDirection.Down => Cursors.SizeNS,
+                MoveDirection.Left or MoveDirection.Right => Cursors.SizeWE,
+                MoveDirection.DownAndLeft or MoveDirection.UpAndRight => Cursors.SizeNESW,
+                _ => Cursors.SizeNWSE,
+            };
 
-            if (_selectionStart.HasValue)
+            OnSelectionChanged();
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryStartRotation(BlockGlyph glyph, Point point)
+    {
+        if (!glyph.CanRotate || !IsNear(point, glyph.RotationPoints[3], glyph.RotationPointSize / 2f))
+            return false;
+
+        glyph.Direction = MoveDirection.Rotate;
+        DeselectAllGlyphs([glyph]);
+
+        Core.Instance.MainWindow.Cursor = Cursors.Hand;
+        OnSelectionChanged();
+        return true;
+    }
+
+    /// <summary>
+    /// Brings the glyph (or its whole group) to the front, selects it and starts moving it together
+    /// with everything else that is selected.
+    /// </summary>
+    private void SelectForMove(BlockGlyph glyph)
+    {
+        List<BlockGlyph> unit = glyph.Group ?? [glyph];
+
+        if (!glyph.Selected)
+        {
+            BringToFront(unit);
+            DeselectAllGlyphs(unit);
+        }
+
+        foreach (BlockGlyph selected in SelectedBlockGlyphs)
+            selected.Direction = MoveDirection.Move;
+
+        foreach (BlockGlyph member in unit.Where(member => !member.Fixed))
+        {
+            member.Selected = true;
+            member.Direction = MoveDirection.Move;
+        }
+
+        Core.Instance.MainWindow.Cursor = Cursors.SizeAll;
+        OnSelectionChanged();
+    }
+
+    private bool TrySelectConnector(Point point)
+    {
+        ConnectorGlyph? connector = NonFixedGlyphs.OfType<ConnectorGlyph>()
+            .FirstOrDefault(candidate => candidate.HitTest(point, ConnectorHitTolerance));
+        if (connector is null)
+            return false;
+
+        DeselectAllGlyphs();
+        connector.Selected = true;
+        OnSelectionChanged();
+        return true;
+    }
+
+    private void DragGlyph(BlockGlyph glyph, Point point)
+    {
+        int dxPixels = point.X - _lastMousePosition.X;
+        int dyPixels = point.Y - _lastMousePosition.Y;
+
+        switch (glyph.Direction)
+        {
+            case MoveDirection.Move:
+                glyph.ScaledXInMM += UnitsConverter.PxToMM(dxPixels);
+                glyph.ScaledYInMM += UnitsConverter.PxToMM(dyPixels);
+                break;
+
+            case MoveDirection.Rotate:
+                float angle = float.DegreesToRadians(glyph.Angle);
+                glyph.Angle += dxPixels * MathF.Cos(angle) + dyPixels * MathF.Sin(angle);
+                break;
+
+            default:
+                // The glyph grows symmetrically around its center, hence the doubled movement, which is
+                // projected onto the rotated axes of the glyph.
+                float radians = float.DegreesToRadians(glyph.DirectionsAngle);
+                float cos = MathF.Cos(radians);
+                float sin = MathF.Sin(radians);
+                float dx = UnitsConverter.PxToMM(dxPixels << 1);
+                float dy = UnitsConverter.PxToMM(dyPixels << 1);
+                float alongHeight = dx * sin - dy * cos;
+                float alongWidth = dx * cos + dy * sin;
+
+                if (glyph.Direction.HasFlag(MoveDirection.Up))
+                    glyph.ScaledHeightInMM += alongHeight;
+                if (glyph.Direction.HasFlag(MoveDirection.Down))
+                    glyph.ScaledHeightInMM -= alongHeight;
+                if (glyph.Direction.HasFlag(MoveDirection.Left))
+                    glyph.ScaledWidthInMM -= alongWidth;
+                if (glyph.Direction.HasFlag(MoveDirection.Right))
+                    glyph.ScaledWidthInMM += alongWidth;
+                break;
+        }
+    }
+
+    private void FinishConnector()
+    {
+        BlockGlyph source = _connectorSource!;
+
+        if (_connectorCurrent is { } release)
+        {
+            BlockGlyph? target = NonFixedGlyphs.OfType<BlockGlyph>()
+                .FirstOrDefault(glyph => glyph.SupportsLinks && !ReferenceEquals(glyph, source) && glyph.Contains(release));
+
+            if (target is not null)
+                Add(new ConnectorGlyph(source, _connectorSourcePort, target, NearestLinkPoint(target, release)));
+        }
+
+        _connectorSource = null;
+        _connectorCurrent = null;
+    }
+
+    /// <summary>Selects the block glyphs touching <paramref name="area"/>, extended to whole groups.</summary>
+    private void SelectInRectangle(Rectangle area)
+    {
+        DeselectAllGlyphs();
+
+        foreach (BlockGlyph glyph in NonFixedGlyphs.OfType<BlockGlyph>().Where(glyph => glyph.InRegion(area)))
+            glyph.Selected = true;
+
+        var groups = SelectedBlockGlyphs.Select(glyph => glyph.Group).OfType<List<BlockGlyph>>().Distinct().ToList();
+        foreach (BlockGlyph member in groups.SelectMany(group => group).Where(member => !member.Fixed))
+            member.Selected = true;
+    }
+
+    private void BringToFront(List<BlockGlyph> glyphs)
+    {
+        _glyphs.RemoveAll(glyph => glyph is BlockGlyph block && glyphs.Contains(block));
+        _glyphs.InsertRange(0, glyphs);
+    }
+
+    private void OnSelectionChanged()
+    {
+        UpdateGlyphsCommands();
+        ShowProperties();
+        Core.Instance.Redraw();
+    }
+
+    private static bool IsNear(Point point, PointF target, float half) =>
+        point.X >= target.X - half && point.X <= target.X + half &&
+        point.Y >= target.Y - half && point.Y <= target.Y + half;
+
+    private static int HitLinkPoint(BlockGlyph glyph, Point point)
+    {
+        PointF[] ports = glyph.LinkPointsScaled;
+        float half = glyph.LinkPointSize / 2f + 1f;
+
+        for (int i = 0; i < ports.Length; i++)
+        {
+            if (IsNear(point, ports[i], half))
+                return i;
+        }
+
+        return -1;
+    }
+
+    private static int NearestLinkPoint(BlockGlyph glyph, Point point)
+    {
+        PointF[] ports = glyph.LinkPointsScaled;
+        int nearest = 0;
+        float nearestDistance = float.MaxValue;
+
+        for (int i = 0; i < ports.Length; i++)
+        {
+            float dx = point.X - ports[i].X;
+            float dy = point.Y - ports[i].Y;
+            float distance = dx * dx + dy * dy;
+
+            if (distance < nearestDistance)
             {
-                _selectionEnd = pt;
-                Core.Instance.Redraw();
-                return;
+                nearestDistance = distance;
+                nearest = i;
             }
-
-            bool needRedraw = false;
-
-            foreach (AbstractGlyph glyph in NonFixedGlyphs)
-                if (glyph is BlockGlyph)
-                {
-                    var vg = (BlockGlyph)glyph;
-
-                    if (vg.Direction == MoveDirection.Move)
-                    {
-                        vg.ScaledXInMM += UnitsConverter.PxToMM(pt.X - _oldPt.X);
-                        vg.ScaledYInMM += UnitsConverter.PxToMM(pt.Y - _oldPt.Y);
-                        needRedraw = true;
-                    }
-                    else if (vg.Direction != MoveDirection.None)
-                    {
-                        float angle = vg.DirectionsAngle;
-                        float radians = Framework.Core.Math.DegToRad(angle);
-                        var cos = (float) Math.Cos(radians);
-                        var sin = (float) Math.Sin(radians);
-
-                        switch (vg.Direction)
-                        {
-                            case MoveDirection.Up:
-                                vg.ScaledHeightInMM +=
-                                    UnitsConverter.PxToMM((pt.X - _oldPt.X) << 1) * sin -
-                                    UnitsConverter.PxToMM((pt.Y - _oldPt.Y) << 1) * cos;
-                                break;
-
-                            case MoveDirection.Down:
-                                vg.ScaledHeightInMM -=
-                                    UnitsConverter.PxToMM((pt.X - _oldPt.X) << 1) * sin -
-                                    UnitsConverter.PxToMM((pt.Y - _oldPt.Y) << 1) * cos;
-                                break;
-
-                            case MoveDirection.Left:
-                                vg.ScaledWidthInMM -=
-                                    UnitsConverter.PxToMM((pt.X - _oldPt.X) << 1) * cos +
-                                    UnitsConverter.PxToMM((pt.Y - _oldPt.Y) << 1) * sin;
-                                break;
-
-                            case MoveDirection.Right:
-                                vg.ScaledWidthInMM +=
-                                    UnitsConverter.PxToMM((pt.X - _oldPt.X) << 1) * cos +
-                                    UnitsConverter.PxToMM((pt.Y - _oldPt.Y) << 1) * sin;
-                                break;
-
-                            case MoveDirection.DownAndLeft:
-                                vg.ScaledHeightInMM -=
-                                    UnitsConverter.PxToMM((pt.X - _oldPt.X) << 1) * sin -
-                                    UnitsConverter.PxToMM((pt.Y - _oldPt.Y) << 1) * cos;
-
-                                vg.ScaledWidthInMM -=
-                                    UnitsConverter.PxToMM((pt.X - _oldPt.X) << 1) * cos +
-                                    UnitsConverter.PxToMM((pt.Y - _oldPt.Y) << 1) * sin;
-                                break;
-
-                            case MoveDirection.UpAndRight:
-                                vg.ScaledHeightInMM +=
-                                    UnitsConverter.PxToMM((pt.X - _oldPt.X) << 1) * sin -
-                                    UnitsConverter.PxToMM((pt.Y - _oldPt.Y) << 1) * cos;
-
-                                vg.ScaledWidthInMM +=
-                                    UnitsConverter.PxToMM((pt.X - _oldPt.X) << 1) * cos +
-                                    UnitsConverter.PxToMM((pt.Y - _oldPt.Y) << 1) * sin;
-                                break;
-
-                            case MoveDirection.DownAndRight:
-                                vg.ScaledHeightInMM -=
-                                    UnitsConverter.PxToMM((pt.X - _oldPt.X) << 1) * sin -
-                                    UnitsConverter.PxToMM((pt.Y - _oldPt.Y) << 1) * cos;
-
-                                vg.ScaledWidthInMM +=
-                                    UnitsConverter.PxToMM((pt.X - _oldPt.X) << 1) * cos +
-                                    UnitsConverter.PxToMM((pt.Y - _oldPt.Y) << 1) * sin;
-                                break;
-
-                            case MoveDirection.UpAndLeft:
-                                vg.ScaledHeightInMM +=
-                                    UnitsConverter.PxToMM((pt.X - _oldPt.X) << 1) * sin -
-                                    UnitsConverter.PxToMM((pt.Y - _oldPt.Y) << 1) * cos;
-
-                                vg.ScaledWidthInMM -=
-                                    UnitsConverter.PxToMM((pt.X - _oldPt.X) << 1) * cos +
-                                    UnitsConverter.PxToMM((pt.Y - _oldPt.Y) << 1) * sin;
-                                break;
-
-                            case MoveDirection.Rotate:
-                                vg.Angle += (float)(
-                                    (pt.X - _oldPt.X) * Math.Cos(Framework.Core.Math.DegToRad(vg.Angle)) +
-                                    (pt.Y - _oldPt.Y) * Math.Sin(Framework.Core.Math.DegToRad(vg.Angle)));
-                                break;
-                        }
-
-                        needRedraw = true;
-                    }
-                }
-                else
-                {
-
-                }
-
-            _oldPt = pt;
-
-            if (needRedraw)
-                Core.Instance.Redraw();
         }
 
-        private static int HitLinkPoint(BlockGlyph glyph, Point pt)
-        {
-            PointF[] points = glyph.LinkPointsScaled;
-            float half = glyph.LinkPointSize / 2f + 1f;
-
-            for (int i = 0; i < points.Length; i++)
-                if (pt.X >= points[i].X - half &&
-                    pt.X <= points[i].X + half &&
-                    pt.Y >= points[i].Y - half &&
-                    pt.Y <= points[i].Y + half)
-                    return i;
-
-            return -1;
-        }
-
-        private static bool PointInBlock(BlockGlyph glyph, Point pt)
-        {
-            int halfWidth = glyph.ScaledWidth >> 1;
-            int halfHeight = glyph.ScaledHeight >> 1;
-
-            return pt.X >= glyph.ScaledX - halfWidth &&
-                   pt.X <= glyph.ScaledX + halfWidth &&
-                   pt.Y >= glyph.ScaledY - halfHeight &&
-                   pt.Y <= glyph.ScaledY + halfHeight;
-        }
-
-        private static int NearestLinkPoint(BlockGlyph glyph, Point pt)
-        {
-            PointF[] points = glyph.LinkPointsScaled;
-            int best = 0;
-            float bestDistance = float.MaxValue;
-
-            for (int i = 0; i < points.Length; i++)
-            {
-                float dx = pt.X - points[i].X;
-                float dy = pt.Y - points[i].Y;
-                float distance = dx * dx + dy * dy;
-
-                if (distance < bestDistance)
-                {
-                    bestDistance = distance;
-                    best = i;
-                }
-            }
-
-            return best;
-        }
+        return nearest;
     }
 }

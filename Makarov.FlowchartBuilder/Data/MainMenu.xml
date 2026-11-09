@@ -7,7 +7,7 @@
     <fb:Command Class="OpenCommand" Caption="Command_Open" Icon="Open" Shortcut="Ctrl+O" />
     <fb:Command Class="ExportImageCommand" Caption="Command_ExportImage" Enabled="false" />
     <fb:Separator />
-    <fb:Command Class="SaveCommand" Caption="Command_Save" Icon="Save" Shortcut="Ctrl+S" />
+    <fb:Command Class="SaveCommand" Caption="Command_Save" Icon="Save" Enabled="false" Shortcut="Ctrl+S" />
     <fb:Command Class="SaveAllCommand" Caption="Command_SaveAll" Icon="SaveAll" Enabled="false" />
     <fb:Separator />
     <fb:Command Class="CloseCommand" Caption="Command_Close" Enabled="false" />
@@ -16,11 +16,6 @@
     <fb:Command Class="PageSetupCommand" Caption="Command_PageSetup" Icon="PageSetup" Enabled="false" />
     <fb:Command Class="PrintCommand" Caption="Command_Print" Icon="Print" Enabled="false" />
     <fb:Separator />
-    <fb:Menu Caption="Menu_Debug">
-      <fb:Command Class="GCCollectCommand" Caption="Command_ForceGarbageCollection" />
-      <fb:Command Class="GCCollectAllCommand" Caption="Command_ForceFullGarbageCollection" />
-    </fb:Menu>
-    <fb:Separator/>
     <fb:Command Class="ExitCommand" Caption="Command_Exit" />
   </fb:Menu>
   <fb:Menu Caption="Menu_Edit">
@@ -50,7 +45,7 @@
       <fb:Command Class="AlignTopCommand" Caption="Command_AlignTop" Icon="AlignTop" />
       <fb:Command Class="AlignBottomCommand" Caption="Command_AlignBottom" Icon="AlignBottom" />
     </fb:Menu>
-      <fb:Menu Caption="Menu_AlignOnSheet">
+    <fb:Menu Caption="Menu_AlignOnSheet">
       <fb:Command Class="AlignLeftSheetCommand" Caption="Command_AlignLeftSheet" Icon="AlignLeftSheet" />
       <fb:Command Class="AlignRightSheetCommand" Caption="Command_AlignRightSheet" Icon="AlignRightSheet" />
       <fb:Command Class="AlignCenterHorizontalSheetCommand" Caption="Command_AlignCenterHorizontalSheet" Icon="AlignCenterHorizontalSheet" />
@@ -64,14 +59,12 @@
     <fb:Command Class="ZoomOutCommand" Caption="Command_ZoomOut" Icon="ZoomOut" />
     <fb:Command Class="ZoomToWindowCommand" Caption="Command_ZoomToWindow" Icon="ZoomToWindow" />
     <fb:Command Class="ActualSizeCommand" Caption="Command_ActualSize" Icon="ActualSize" />
-    <fb:Command Class="@ZoomCommand" Caption="Command_Zoom" Icon="Zoom"/>
+    <fb:Command Class="@ZoomCommand" Caption="Command_Zoom" Icon="Zoom" />
     <fb:Separator />
     <fb:Command Class="GridCommand" Caption="Command_Grid" Icon="Grid" Checked="true" />
     <fb:Command Class="RulersCommand" Caption="Command_Rulers" Icon="Rulers"  Checked="true" />
     <fb:Command Class="SizeLocationLabelCommand" Caption="Command_SizeLocationLabel" Icon="SizeLocationLabel" Checked="true" />
   </fb:Menu>
-  <!--fb:Menu Caption="Menu_Tools">
-  </fb:Menu-->
   <fb:Menu Caption="Menu_Window">
     <fb:Command Class="ResetWindowLocationsCommand" Caption="Command_ResetWindowLocations" />
     <fb:Separator />
@@ -89,7 +82,6 @@
     </fb:Menu>
   </fb:Menu>
   <fb:Menu Caption="Menu_Help">
-    <!--fb:Command Class="HelpTopicsCommand" Caption="Command_HelpTopics" Icon="HelpTopics" Enabled="false" /-->
     <fb:Command Class="AboutCommand" Caption="Command_About" Shortcut="F1" />
   </fb:Menu>
 </fb:MainMenu>

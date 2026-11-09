@@ -1,149 +1,110 @@
 # FlowchartBuilder
 
-A modular WinForms diagram editor with a custom .NET framework underneath.
+A modular WinForms diagram editor built on a small custom .NET framework.
 
-Developed 2008–2011 as a deep exploration of plugin architecture, declarative
-metadata, and pluggable rendering — well before MEF, modern DI containers, or `System.Text.Json` were available in the .NET ecosystem.
+I wrote it in 2008-2011 to explore plugin architecture and declarative metadata, back when MEF,
+modern DI containers and `System.Text.Json` were not part of .NET yet. In 2026 the code was moved
+to .NET 10 and C# 14 and cleaned up (see `MIGRATION.md`).
 
 ![Screenshot](screenshot.png)
 
-## Context
+## Solution layout
 
-This was a personal multi-year project written entirely in .NET Framework /
-WinForms / GDI+, with optional OpenGL rendering. Most of the patterns it
-explores — attribute-based plugin discovery, pluggable graphics backends,
-declarative metadata for extensions — were not yet standard practice in
-.NET tooling at the time. The codebase reflects the conventions of its era
-(manual reflection-based loaders, custom serialization) and is preserved as-is.
+`FlowchartBuilder.slnx` contains 11 projects.
 
-## Solution Layout
-
-The repository contains **21 projects** split into two layers:
-
-### Makarov Framework (10 projects) — a small custom application framework
+### Framework
 
 | Project | Role |
 |---|---|
-| `Makarov.Framework.Core` | Reflection-based assembly loader, i18n translator with XML Schema, settings (Registry + XML fallback), managers, caching |
-| `Makarov.Framework.Serialization` | 16 typed serializers (`Bool`, `Int`, `Float`, `Color`, `Font`, `Version`, …) over an extensible `AbstractSerializer` base |
-| `Makarov.Framework.Graphics` | Abstract rendering layer — `IFog`, `ILight`, `ILighting`, `ITexture`, `VertexBuffer`, `CompiledVertexBuffer`, primitives |
-| `Makarov.Framework.Graphics.OpenGL` | OpenGL backend implementation |
-| `Makarov.Framework.Math` | Math utilities |
-| `Makarov.Framework.Components` | Custom UI components |
-| `Makarov.Framework.Collections` | Collection extensions |
-| `Makarov.Framework.Instance` | Single-instance application pattern via `Mutex` + named-pipe IPC |
-| `Makarov.Framework.Launcher` | Generic launcher |
-| `Makarov.Framework.VersionUpdater` | Auto-updater (separate process to bypass file-locks on the main executable) |
+| `Makarov.Framework.Core` | Plugin loader, XML translations validated against an XML Schema, settings storages (registry, XML file, memory), image cache, window manager, serializer registry, critical error dialog |
+| `Makarov.Framework.Serialization` | Culture-invariant string serializers for numbers, `bool`, `string`, `Color`, `Font` and `Version` |
+| `Makarov.Framework.Graphics` | Geometric primitives that build `GraphicsPath` outlines: rhombus, star, trapezoid, rounded rectangle and others |
+| `Makarov.Framework.Components` | `TabsPanel`, the strip of document tabs |
+| `Makarov.Framework.Instance` | Single instance: a named mutex plus a named pipe that passes the command line to the running copy |
 
-### FlowchartBuilder (11 projects on top of the framework)
+### FlowchartBuilder
 
 | Project | Role |
 |---|---|
-| `Makarov.FlowchartBuilder.API` | Declarative attributes for extensions: `[GlyphName]`, `[GlyphDefaultWidth]`, `[GlyphFamilyAttribute]`, `[GlyphGroupOrderAttribute]`, `[CommandGlyphAttribute]`, `[VisibleGlyphAttribute]`, `[SheetName]`, `[SheetWidth]`, … |
-| `Makarov.FlowchartBuilder` | Application core with `Core` split across partial classes by concern; **60 command classes** in a clean Command pattern |
-| `Makarov.FlowchartBuilder.Box` | Glyph palette helper |
-| `Makarov.FlowchartBuilder.Glyphs.Flowchart` | If, Operation, Begin, End, InOut, Subroutine |
-| `Makarov.FlowchartBuilder.Glyphs.Shapes` | 16 geometric shapes (Rhombus, Ellipse, Trapezoid, Star, Hourglass, Pie, Triangle, Rounded Rectangle, …) |
-| `Makarov.FlowchartBuilder.Glyphs.Simple` | Arrow, BrokenArrow, Link, Image, Text |
+| `Makarov.FlowchartBuilder` | The application: documents, 28 sheet formats (ISO, ANSI, other paper sizes and an infinite sheet), glyph base classes, 53 menu commands, windows |
+| `Makarov.FlowchartBuilder.API` | Attributes that describe glyphs and sheets: `[GlyphName]`, `[GlyphFamily]`, `[GlyphDefaultWidth]`, `[VisibleGlyph]`, `[CommandGlyph]`, `[ActiveProperty]`, `[SheetName]`, `[SheetWidth]` and others |
+| `Makarov.FlowchartBuilder.Glyphs.Flowchart` | Begin, End, If, In/Out, Operation, Subroutine |
+| `Makarov.FlowchartBuilder.Glyphs.Shapes` | 14 geometric shapes |
 | `Makarov.FlowchartBuilder.Glyphs.Containers` | Group, Panel, Stack, Table |
-| `Makarov.FlowchartBuilder.Sheets.Iso` | ISO paper formats |
-| `Makarov.FlowchartBuilder.Sheets.Ansi` | ANSI paper formats |
-| `Makarov.FlowchartBuilder.Sheets.Other` | Other paper formats |
-| `MakeFlowchartBuilder` | Build pipeline + InnoSetup installer script + Mono compatibility script |
+| `Makarov.FlowchartBuilder.Glyphs.Simple` | Arrow, Broken Arrow and Link (placeholders for now), Image and Text (hidden, not implemented) |
 
-Glyphs and sheets are independent plugin assemblies — drop a new DLL into the
-plugins folder and it becomes a new shape or paper format. No host
-recompilation required.
+Glyph libraries are plugins. On startup the application loads every assembly from the `Plugins`
+folder next to the executable and puts every non-abstract glyph type into the palette, so a new DLL
+in that folder adds new glyphs without rebuilding the application.
 
-## Architecture Highlights
+## How it works
 
-**Attribute-based plugin discovery.** Each extension declares its metadata
-through attributes:
+**Metadata in attributes.** A glyph describes itself with attributes and only draws its outline:
 
 ```csharp
 [GlyphName("If")]
 [GlyphDefaultWidth(30)]
 [GlyphDefaultHeight(20)]
-public class IfGlyph : AbstractFlowchartGlyph { ... }
+public sealed class IfGlyph : AbstractFlowchartGlyph
+{
+    protected override Primitive CreatePrimitive(int x, int y, int width, int height) => new Rhombus(x, y, width, height);
+}
 ```
 
-The host enumerates plugin assemblies, reflects over their types, reads the
-attributes, and builds the palette dynamically. The same mechanism applies
-to sheet formats. Conceptually similar to MEF — predates the team's adoption
-of it.
+Properties marked with `[ActiveProperty]` are saved to the document, copied on paste and shown in
+the Properties window; everything else stays out of the property grid.
 
-**Pluggable graphics backends.** The `Makarov.Framework.Graphics` project
-defines a backend-agnostic rendering interface; `Graphics.OpenGL` provides
-one concrete implementation, with GDI+ available through the WinForms host.
-The architectural split anticipates patterns later standardized in graphics
-abstraction layers.
+**Documents.** A document is an XML file (`*.mfb`) with the sheet, the glyphs, the connectors and
+the glyph groups. Glyphs are stored by class name, so documents keep loading as long as the class
+names stay the same. Properties the current version does not know are skipped with a warning.
 
-**Custom serialization framework.** 16 typed serializers over an extensible
-`AbstractSerializer`, written years before `System.Text.Json` (2019) became
-part of the runtime. Registered through a `SerializerManager`.
+**Connectors.** Flowchart blocks show four link points. Drag from a link point to another block to
+connect them; connectors follow the blocks when they move.
 
-**Command pattern at full scale.** 60 command classes — Undo/Redo, Cut/Copy/
-Paste, alignment (6 directions × {glyph, sheet}), Group/Ungroup, Fix/Unfix,
-Zoom, PageSetup, Print, ExportImage, language switching, units of
-measurement — all sharing one `Command` base, all decoupled from UI.
+**Menus.** Menus and the toolbar are defined in `Data\MainMenu.xml` and `Data\SecondaryMenu.xml`.
+Each item names a command class; commands are created on first use and shared by all items bound
+to them.
 
-**Single-instance pattern via Mutex + named pipes.** `InstanceHelper` acquires a named `Mutex` to detect the primary instance and
-exposes it through a background named-pipe listener; subsequent instances hand
-off their command-line arguments over the pipe.
+**Settings.** Settings live in the registry under `HKCU\Software\MakarovFlowchartBuilder`. If the
+registry is not available they go to `%AppData%\FlowchartBuilderSettings.xml`, and as a last resort
+they are kept in memory. They can be exported to and imported from a `*.fbsettings` file.
 
-**Settings with graceful fallback.** Primary storage is the Windows Registry;
-if access is denied, the layer falls back to an XML file transparently
-(`RegistryStorage`, `XmlStorage`, `FakeStorage`).
+**Translations.** English, Russian and Ukrainian dictionaries in `Translations\*.xml`. A new
+language is used after a restart.
 
-**Internationalization.** Custom `Translator` with XML-based dictionaries
-validated against XML Schema, runtime language switching, typed exceptions.
-
-**Mono compatibility target.** `runOnMono.cmd` in the build pipeline — the
-project was already conscious of cross-platform .NET five years before
-.NET Core 1.0.
-
-**Auto-updater.** Separate `VersionUpdater` executable invoked to bypass
-file-locks on the main process during updates.
-
-**Code conventions.** XML doc comments on public APIs, copyright headers with
-authorship and date, partial classes for separation of concerns, named
-regions, typed exceptions per domain.
-
-## Tech
-
-- C# (latest language version) / .NET 10
-- WinForms + GDI+
-- OpenGL (optional rendering backend)
-- Named pipes + `Mutex` (single-instance IPC)
-- `System.Reflection` / `System.Reflection.Emit` (plugin discovery, runtime proxies)
-- InnoSetup (installer)
+**Single instance.** Starting the application again (for example by opening a document from
+Explorer) passes the file names to the running copy and brings it to the front.
 
 ## Building
 
-Open `FlowchartBuilder.sln` in Visual Studio 2022 (17.12+) or build from the
-command line with the .NET 10 SDK:
+You need Windows and Visual Studio 2026 or the .NET 10 SDK.
 
 ```
-dotnet build FlowchartBuilder.sln -c Release
+dotnet build FlowchartBuilder.slnx -c Release
 ```
 
-The application is a Windows desktop app (`net10.0-windows`, WinForms), so it
-builds and runs on Windows. Runtime assets (`Data`, `Icons`, `Graphics`,
-`Translations`) are copied next to the executable on build; glyph and sheet
-plugin assemblies are loaded at runtime from the `Plugins` folder.
+The application is built into `Build\<Configuration>` and the glyph plugins into
+`Build\<Configuration>\Plugins`. Menus, icons, images and translations are copied next to the
+executable, so the build output runs as is.
 
-## Project Status
+`MakeFlowchartBuilder\Make.cmd` builds the Release configuration and, if Inno Setup is installed,
+packs it into an installer in `MakeFlowchartBuilder\Output`. The installed application needs the
+.NET 10 Desktop Runtime.
 
-Originally developed 2008-2011 on .NET Framework / C# 3. Modernized in 2026 to
-.NET 10 and the latest C# language version: all 19 projects converted to
-SDK-style, .NET Remoting replaced with a `Mutex` + named-pipe single-instance
-mechanism, `AppDomain.DefineDynamicAssembly` migrated to
-`AssemblyBuilder.DefineDynamicAssembly`, legacy CAS attributes removed, and the
-solution stripped of commentary. See `MIGRATION.md` for details.
+To move to a newer .NET, change `TargetFramework` in `Directory.Build.props`.
+
+## Status
+
+Working: documents (new, open, save, export to an image), all glyph families, connectors, grouping,
+locking, alignment, cut, copy and paste, zoom, rulers, grid, units of measurement, languages,
+settings import and export.
+
+Not implemented yet, so the menu items stay disabled: Undo, Redo, Close, Close All, Save All,
+Page Setup and Print. Open items are listed in `todo.txt`.
 
 ## License
 
-Copyright © 2008–2011 Mykhailo Makarov. All rights reserved.
+Copyright © 2008-2026 Mykhailo Makarov. All rights reserved.
 
 ## Support
 

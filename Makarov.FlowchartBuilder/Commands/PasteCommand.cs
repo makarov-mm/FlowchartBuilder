@@ -1,43 +1,35 @@
-using System.Collections.Generic;
 using Makarov.FlowchartBuilder.Glyphs;
 
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+/// <summary>Adds copies of the buffer to the current sheet; the buffer is kept, so it can be pasted again.</summary>
+public sealed class PasteCommand : Command
 {
+    /// <summary>Each further paste of the same buffer is shifted by this distance, so copies do not hide each other.</summary>
+    private const float RepeatOffsetInMM = 5f;
 
-    public sealed class PasteCommand : Command
+    public override void Run()
     {
+        if (Core.Instance.ActiveSheet is not { } sheet || Core.Instance.Buffer.Count == 0)
+            return;
 
-        public override void Run()
+        List<AbstractGlyph> pasted = GlyphCloner.Clone(Core.Instance.Buffer);
+
+        sheet.DeselectAllGlyphs();
+        for (int i = pasted.Count - 1; i >= 0; i--)
         {
-
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            if (Core.Instance.Buffer.Count == 0)
-                throw new InvalidContextException();
-
-            Enabled = false;
-
-            var lst = new List<AbstractGlyph>();
-
-            Core.Instance.CurrentDocument.DocumentSheet.DeselectAllGlyphs();
-            foreach (var glyph in Core.Instance.Buffer)
-            {
-                glyph.Selected = true;
-                Core.Instance.CurrentDocument.DocumentSheet.Add(glyph);
-                lst.Add(glyph);
-            }
-
-            Core.Instance.CurrentDocument.DocumentSheet.DeselectAllGlyphs(lst);
-            foreach (var glyph in lst)
-                if (!glyph.Selected)
-                    glyph.Selected = true;
-
-            Core.Instance.Buffer.Clear();
-
-            Core.Instance.CurrentDocument.DocumentSheet.UpdateGlyphsCommands();
-
-            Core.Instance.Redraw();
+            sheet.Add(pasted[i]);
+            pasted[i].Selected = true;
         }
+
+        foreach (BlockGlyph glyph in Core.Instance.Buffer.OfType<BlockGlyph>())
+        {
+            glyph.XInMM += RepeatOffsetInMM;
+            glyph.YInMM += RepeatOffsetInMM;
+        }
+
+        sheet.UpdateGlyphsCommands();
+        sheet.ShowProperties();
+        Core.Instance.Redraw();
     }
 }

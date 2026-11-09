@@ -42,11 +42,10 @@ namespace Makarov.FlowchartBuilder.Forms
             this.Name = "GlyphsForm";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.Text = "FBGlyphs";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FBGlyphs_FormClosing);
-            this.Load += new System.EventHandler(this.FBGlyphs_Load);
-            this.Shown += new System.EventHandler(this.FBGlyphs_Shown);
-            this.Resize += new System.EventHandler(this.FBGlyphs_Resize);
+            this.Text = "Glyphs";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GlyphsForm_FormClosing);
+            this.Load += new System.EventHandler(this.GlyphsForm_Load);
+            this.Shown += new System.EventHandler(this.GlyphsForm_Shown);
             this.ResumeLayout(false);
 
         }

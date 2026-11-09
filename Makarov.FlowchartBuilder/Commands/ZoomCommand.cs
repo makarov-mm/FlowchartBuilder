@@ -1,51 +1,19 @@
-using System.Collections.Generic;
-using System.Drawing;
+using System.Globalization;
 
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+public sealed class ZoomCommand : CommandWithSubcommands
 {
+    private static readonly int[] Percents = [400, 200, 150, 125, 100, 75, 50, 25];
 
-    public sealed class ZoomCommand : CommandWithSubcommands
+    public override IEnumerable<string> Commands => Percents.Select(percent => $"{percent}%");
+
+    public override void Run(string subcommand)
     {
+        if (Core.Instance.ActiveSheet is not { } sheet)
+            return;
 
-        public override void Run()
-        { }
-
-        public override void Run(string name)
-        {
-
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            float val = int.Parse(name.Substring(0, name.Length - 1)) / 100f;
-            Core.Instance.CurrentDocument.DocumentSheet.ScaleFactor = val;
-
-            Core.Instance.Redraw();
-        }
-
-        public override IEnumerable<string> Commands
-        {
-            get
-            {
-                var vals = new List<int>
-                                {
-                                    400,
-                                    200,
-                                    150,
-                                    125,
-                                    100,
-                                    75,
-                                    50,
-                                    25
-                                };
-
-                foreach (int val in vals)
-                    yield return val + "%";
-            }
-        }
-
-        public override Bitmap Icon(string cmd)
-        {
-            return null;
-        }
+        sheet.ScaleFactor = int.Parse(subcommand.TrimEnd('%'), CultureInfo.InvariantCulture) / 100f;
+        Core.Instance.Redraw();
     }
 }

@@ -1,104 +1,45 @@
-using System.Drawing;
 using System.Drawing.Drawing2D;
-using Makarov.Framework.Core;
 
-namespace Makarov.Framework.Graphics.Primitives
+namespace Makarov.Framework.Graphics.Primitives;
+
+/// <summary>
+/// A closed outline that fits into a width x height box. The caller owns the returned <see cref="GraphicsPath"/>.
+/// </summary>
+public abstract class Primitive
 {
-
-    public abstract class Primitive
+    protected Primitive(int x, int y, int width, int height)
     {
-        #region Constructors
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
 
-        protected Primitive(int x, int y, int width, int height)
-        {
-            X = x;
-            Y = y;
-            Width = width;
-            Height = height;
-        }
+        X = x;
+        Y = y;
+        Width = width;
+        Height = height;
+    }
 
-        protected Primitive(Point coords, Size size)
-            : this(coords.X, coords.Y, size.Width, size.Height)
-        { }
+    public int X { get; }
 
-        protected Primitive(System.Drawing.Rectangle rect)
-            : this(rect.X, rect.Y, rect.Width, rect.Height)
-        { }
-        #endregion
+    public int Y { get; }
 
-        #region Exceptions
+    public int Width { get; }
 
-        public class InvalidPrimitiveWidthException : MakarovFrameworkException
-        {
+    public int Height { get; }
 
-            public InvalidPrimitiveWidthException(int width)
-                : base(string.Format("Invalid width = '{0}'", width))
-            { }
-        }
+    /// <summary>Creates the outline with (<see cref="X"/>, <see cref="Y"/>) as the top-left corner.</summary>
+    public GraphicsPath Create() => CreatePath(X, Y, Width, Height);
 
-        public class InvalidPrimitiveHeightException : MakarovFrameworkException
-        {
+    /// <summary>Creates the outline with (<see cref="X"/>, <see cref="Y"/>) as the center.</summary>
+    public GraphicsPath CreateCentered() => CreatePath(X - Width / 2, Y - Height / 2, Width, Height);
 
-            public InvalidPrimitiveHeightException(int height)
-                : base(string.Format("Invalid height = '{0}'", height))
-            { }
-        }
-        #endregion
+    protected abstract GraphicsPath CreatePath(int left, int top, int width, int height);
 
-        #region Private members
-
-        private int _width;
-
-        private int _height;
-        #endregion
-
-        #region Properties
-
-        public int X { get; set; }
-
-        public int Y { get; set; }
-
-        public int Width
-        {
-            get { return _width; }
-            set
-            {
-                if (value <= 0)
-                    throw new InvalidPrimitiveWidthException(value);
-
-                _width = value;
-            }
-        }
-
-        public int Height
-        {
-            get { return _height; }
-            set
-            {
-                if (value <= 0)
-                    throw new InvalidPrimitiveHeightException(value);
-
-                _height = value;
-            }
-        }
-        #endregion
-
-        #region Public methods
-
-        public GraphicsPath Create()
-        {
-            return CreatePath(X, Y, Width, Height);
-        }
-
-        public GraphicsPath CreateCentered()
-        {
-            return CreatePath(X - (Width >> 1), Y - (Height >> 1), Width, Height);
-        }
-        #endregion
-
-        #region Protected methods
-
-        protected abstract GraphicsPath CreatePath(int x, int y, int width, int height);
-        #endregion
+    protected static GraphicsPath Polygon(params PointF[] points)
+    {
+        var path = new GraphicsPath();
+        path.StartFigure();
+        path.AddLines(points);
+        path.CloseFigure();
+        return path;
     }
 }

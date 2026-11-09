@@ -1,47 +1,8 @@
-using System.Collections.Generic;
-using Makarov.FlowchartBuilder.Extensions;
-using Makarov.FlowchartBuilder.Glyphs;
+namespace Makarov.FlowchartBuilder.Commands;
 
-namespace Makarov.FlowchartBuilder.Commands
+/// <summary>Moves the selection to the bottom edge of the paper.</summary>
+public sealed class AlignBottomSheetCommand : AlignOnSheetCommand
 {
-
-    public sealed class AlignBottomSheetCommand : Command
-    {
-
-        public override void Run()
-        {
-
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            if (!Core.Instance.CurrentDocument.DocumentSheet.SelectedGlyphsExists)
-                throw new InvalidContextException(@"Selected glyphs not exists.");
-
-            int bottom = 0;
-
-            var lst = new List<BlockGlyph>();
-
-            foreach (var glyph in Core.Instance.CurrentDocument.DocumentSheet.NonFixedGlyphs)
-            {
-
-                if (glyph is BlockGlyph && glyph.Selected)
-                {
-
-                    var g = (BlockGlyph) glyph;
-
-                    if (g.Y + (g.Height >> 1) > bottom)
-                        bottom = g.Y + (g.Height >> 1);
-
-                    lst.Add(g);
-                }
-            }
-
-            var sizedSheet = (ISize)Core.Instance.CurrentDocument.DocumentSheet;
-            bottom = sizedSheet.Height.MMToPx() - bottom;
-            foreach (var glyph in lst)
-                glyph.Y += bottom;
-
-            Core.Instance.Redraw();
-        }
-    }
+    protected override PointF? GetOffset(RectangleF bounds, SizeF? paper) =>
+        paper is { } size ? new PointF(0, size.Height - bounds.Bottom) : null;
 }

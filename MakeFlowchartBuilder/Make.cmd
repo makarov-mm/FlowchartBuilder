@@ -1,73 +1,38 @@
-@REM Clear destination folder
-erase /F /S /Q FlowchartBuilder\*.*
+@echo off
+setlocal
 
-@REM Create subdirs
-mkdir FlowchartBuilder\Translations
-mkdir FlowchartBuilder\Plugins
-mkdir FlowchartBuilder\Icons
-mkdir FlowchartBuilder\Graphics
-mkdir FlowchartBuilder\Data
-mkdir FlowchartBuilder\Docs
-mkdir FlowchartBuilder\Examples
+rem Builds FlowchartBuilder in Release (output: ..\Build\Release) and, if Inno Setup is installed,
+rem packs it into an installer (output: Output\FlowchartBuilderSetup-<version>.exe).
+rem Set ISCC to the full path of ISCC.exe to use a specific Inno Setup compiler.
 
-@REM Copy program
-copy ..\Makarov.FlowchartBuilder\Makarov.FlowchartBuilder.exe FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\Makarov.FlowchartBuilder.Box.dll FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\Makarov.FlowchartBuilder.API.dll FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\Makarov.Framework.Collections.dll FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\Makarov.Framework.Components.dll FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\Makarov.Framework.Core.dll FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\Makarov.Framework.Graphics.dll FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\Makarov.Framework.Instance.dll FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\Makarov.Framework.Math.dll FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\Makarov.Framework.Serialization.dll FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\License.txt FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\Settings.xml FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\Settings.xsd FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\BackwardCompatibility.xml FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\BackwardCompatibility.xsd FlowchartBuilder
+pushd "%~dp0"
 
-@REM Copy program icon
-copy ..\Makarov.FlowchartBuilder\FlowchartFile.ico FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\FlowchartBuilder.ico FlowchartBuilder
-copy ..\Makarov.FlowchartBuilder\FlowchartSettings.ico FlowchartBuilder
+dotnet build ..\FlowchartBuilder.slnx -c Release
+if errorlevel 1 goto failed
 
-@REM Copy translations
-copy ..\Makarov.FlowchartBuilder\Translations\*.xml FlowchartBuilder\Translations
-copy ..\Makarov.FlowchartBuilder\Translations\*.xsd FlowchartBuilder\Translations
+if not defined ISCC for %%I in (ISCC.exe) do set "ISCC=%%~$PATH:I"
+if not defined ISCC call :find "%ProgramFiles%\Inno Setup 7"
+if not defined ISCC call :find "%ProgramFiles(x86)%\Inno Setup 7"
+if not defined ISCC call :find "%LocalAppData%\Programs\Inno Setup 7"
+if not defined ISCC call :find "%ProgramFiles(x86)%\Inno Setup 6"
+if not defined ISCC call :find "%LocalAppData%\Programs\Inno Setup 6"
 
-@REM Copy plugins
-copy ..\Makarov.FlowchartBuilder\Plugins\*.dll FlowchartBuilder\Plugins
+if not defined ISCC (
+    echo Inno Setup was not found, so no installer was made. The application is in Build\Release.
+    goto done
+)
 
-@REM Copy icons
-copy ..\Makarov.FlowchartBuilder\Icons\*.ico FlowchartBuilder\Icons
-copy ..\Makarov.FlowchartBuilder\Icons\*.bmp FlowchartBuilder\Icons
-copy ..\Makarov.FlowchartBuilder\Icons\*.jpg FlowchartBuilder\Icons
-copy ..\Makarov.FlowchartBuilder\Icons\*.png FlowchartBuilder\Icons
+"%ISCC%" FlowchartBuilder.iss
+if errorlevel 1 goto failed
 
-@REM Copy graphics
-copy ..\Makarov.FlowchartBuilder\Graphics\*.ico FlowchartBuilder\Graphics
-copy ..\Makarov.FlowchartBuilder\Graphics\*.bmp FlowchartBuilder\Graphics
-copy ..\Makarov.FlowchartBuilder\Graphics\*.jpg FlowchartBuilder\Graphics
-copy ..\Makarov.FlowchartBuilder\Graphics\*.png FlowchartBuilder\Graphics
+:done
+popd
+exit /b 0
 
-@REM Copy data
-copy ..\Makarov.FlowchartBuilder\Data\*.xml FlowchartBuilder\Data
-copy ..\Makarov.FlowchartBuilder\Data\*.xsd FlowchartBuilder\Data
+:failed
+popd
+exit /b 1
 
-@REM Copy docs
-copy ..\Makarov.FlowchartBuilder\Docs\*.* FlowchartBuilder\Docs
-
-@REM Copy examples
-copy ..\Makarov.FlowchartBuilder\Examples\*.* FlowchartBuilder\Examples
-
-@REM Obfuscation
-@REM rmdir /S /Q FlowchartBuilder\Obfuscated
-@REM mkdir FlowchartBuilder\Obfuscated
-@REM "C:\Program Files (x86)\{smartassembly}\{smartassembly}.com" "C:\MakarovProject\Make\FlowchartBuilder.{sa}proj"
-
-@REM rmdir /S /Q FlowchartBuilder\Obfuscated
-
-@REM Create installation
-@REM erase FlowchartBuilder.exe
-@REM "C:\Program Files (x86)\Inno Setup 5\ISCC.exe" FlowchartBuilder.iss
+:find
+if exist "%~1\ISCC.exe" set "ISCC=%~1\ISCC.exe"
+exit /b 0

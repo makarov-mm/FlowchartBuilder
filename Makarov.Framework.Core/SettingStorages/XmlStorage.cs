@@ -1,108 +1,85 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Xml;
 
-namespace Makarov.Framework.Core.SettingStorages
+namespace Makarov.Framework.Core.SettingStorages;
+
+/// <summary>
+/// Stores settings in an XML file under %APPDATA%; used when the registry is not accessible.
+/// </summary>
+public sealed class XmlStorage : ISettingsStorage
 {
+    private const string RootTag = "Settings";
+    private const string EntryTag = "Key";
+    private const string NameAttribute = "name";
 
-    public sealed class XmlStorage : IDict<string>
+    private readonly Dictionary<string, string> _values = new(StringComparer.Ordinal);
+
+    public XmlStorage(string fileName)
     {
-        private readonly StringDictionary<string> _dict = new StringDictionary<string>();
-        private readonly string _settingsFileName;
+        FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), fileName);
+        Load();
+    }
 
-        public XmlStorage(string settingsFileName)
-        {
-            _settingsFileName = settingsFileName;
-            LoadData();
-        }
+    public string FileName { get; }
 
-        public string this[string x]
+    public string? this[string key]
+    {
+        get => _values.GetValueOrDefault(key);
+        set
         {
-            get
+            if (value is null)
             {
-                if (string.IsNullOrEmpty(x))
-                    return null;
-
-                if (!_dict.ContainsKey(x))
-                    return null;
-
-                return _dict[x];
+                if (!_values.Remove(key))
+                    return;
             }
-
-            set
+            else
             {
-                if (string.IsNullOrEmpty(x))
+                if (_values.TryGetValue(key, out string? old) && old == value)
                     return;
 
-                if (!_dict.ContainsKey(x))
-                {
-                    _dict.Add(x, value);
-                    SaveData();
-                    return;
-                }
-
-                _dict[x] = value;
-                SaveData();
-            }
-        }
-
-        public bool IsKeyExists(string key)
-        {
-            if (string.IsNullOrEmpty(key))
-                return false;
-
-            return _dict.ContainsKey(key);
-        }
-
-        public string SettingsFileName =>
-            Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                _settingsFileName);
-
-        public void LoadData()
-        {
-            if (!File.Exists(SettingsFileName))
-                return;
-
-            var xmlDoc = new XmlDocument();
-            xmlDoc.Load(SettingsFileName);
-
-            XmlNode mainNode = xmlDoc.DocumentElement;
-
-            if (mainNode != null)
-                foreach (XmlNode node in mainNode)
-                {
-                    if (node.Attributes == null)
-                        continue;
-
-                    string key = node.Attributes["name"].Value;
-                    string val = node.InnerText;
-                    _dict.Add(key, val);
-                }
-        }
-
-        public void SaveData()
-        {
-            var xmlDoc = new XmlDocument();
-            XmlNode mainNode = xmlDoc.CreateElement("Settings");
-
-            foreach (KeyValuePair<string, string> kvp in _dict)
-            {
-                XmlNode node = xmlDoc.CreateElement("Key");
-                XmlAttribute attrib = xmlDoc.CreateAttribute("name");
-                attrib.Value = kvp.Key;
-
-                if (node.Attributes == null)
-                    continue;
-
-                node.Attributes.Append(attrib);
-                node.InnerText = kvp.Value;
-                mainNode.AppendChild(node);
+                _values[key] = value;
             }
 
-            xmlDoc.AppendChild(mainNode);
-            xmlDoc.Save(SettingsFileName);
+            Save();
         }
+    }
+
+    public IEnumerable<string> Keys => _values.Keys;
+
+    public bool Contains(string key) => _values.ContainsKey(key);
+
+    private void Load()
+    {
+        if (!File.Exists(FileName))
+            return;
+
+        var document = new XmlDocument();
+        document.Load(FileName);
+
+        if (document.DocumentElement is null)
+            return;
+
+        foreach (XmlElement entry in document.DocumentElement.ChildNodes.OfType<XmlElement>())
+        {
+            string name = entry.GetAttribute(NameAttribute);
+            if (name.Length > 0)
+                _values[name] = entry.InnerText;
+        }
+    }
+
+    private void Save()
+    {
+        var document = new XmlDocument();
+        XmlElement root = document.CreateElement(RootTag);
+        document.AppendChild(root);
+
+        foreach ((string name, string value) in _values)
+        {
+            XmlElement entry = document.CreateElement(EntryTag);
+            entry.SetAttribute(NameAttribute, name);
+            entry.InnerText = value;
+            root.AppendChild(entry);
+        }
+
+        document.Save(FileName);
     }
 }

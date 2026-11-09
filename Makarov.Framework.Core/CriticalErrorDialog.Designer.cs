@@ -22,7 +22,7 @@ namespace Makarov.Framework.Core
             this.lblError = new System.Windows.Forms.Label();
             this.pbErrorIcon = new System.Windows.Forms.PictureBox();
             this.btnClose = new System.Windows.Forms.Button();
-            this.btnSendReport = new System.Windows.Forms.Button();
+            this.btnCopy = new System.Windows.Forms.Button();
             this.lblException = new System.Windows.Forms.Label();
             this.tbExceptionDetails = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.pbErrorIcon)).BeginInit();
@@ -50,14 +50,13 @@ namespace Makarov.Framework.Core
             this.btnClose.UseVisualStyleBackColor = true;
             this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
 
-            this.btnSendReport.Enabled = false;
-            this.btnSendReport.Location = new System.Drawing.Point(197, 239);
-            this.btnSendReport.Name = "btnSendReport";
-            this.btnSendReport.Size = new System.Drawing.Size(104, 23);
-            this.btnSendReport.TabIndex = 0;
-            this.btnSendReport.Text = "Send report";
-            this.btnSendReport.UseVisualStyleBackColor = true;
-            this.btnSendReport.Click += new System.EventHandler(this.btnSendReport_Click);
+            this.btnCopy.Location = new System.Drawing.Point(197, 239);
+            this.btnCopy.Name = "btnCopy";
+            this.btnCopy.Size = new System.Drawing.Size(104, 23);
+            this.btnCopy.TabIndex = 0;
+            this.btnCopy.Text = "Copy details";
+            this.btnCopy.UseVisualStyleBackColor = true;
+            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
 
             this.lblException.AutoSize = true;
             this.lblException.Location = new System.Drawing.Point(50, 31);
@@ -80,7 +79,7 @@ namespace Makarov.Framework.Core
             this.ClientSize = new System.Drawing.Size(394, 274);
             this.Controls.Add(this.tbExceptionDetails);
             this.Controls.Add(this.lblException);
-            this.Controls.Add(this.btnSendReport);
+            this.Controls.Add(this.btnCopy);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.pbErrorIcon);
             this.Controls.Add(this.lblError);
@@ -103,7 +102,7 @@ namespace Makarov.Framework.Core
         private System.Windows.Forms.Label lblError;
         private System.Windows.Forms.PictureBox pbErrorIcon;
         private System.Windows.Forms.Button btnClose;
-        private System.Windows.Forms.Button btnSendReport;
+        private System.Windows.Forms.Button btnCopy;
         private System.Windows.Forms.Label lblException;
         private System.Windows.Forms.TextBox tbExceptionDetails;
 

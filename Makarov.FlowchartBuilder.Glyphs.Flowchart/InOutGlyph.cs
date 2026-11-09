@@ -1,38 +1,26 @@
 using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics.Primitives;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Flowchart
+namespace Makarov.FlowchartBuilder.Glyphs.Flowchart;
+
+/// <summary>Input or output block (parallelogram).</summary>
+[GlyphName("In/Out")]
+[GlyphDefaultWidth(30)]
+[GlyphDefaultHeight(20)]
+public sealed class InOutGlyph : AbstractFlowchartGlyph
 {
+    protected override Primitive CreatePrimitive(int x, int y, int width, int height) =>
+        new BeveledRectangle(x, y, width, height, width >> 3);
 
-    [GlyphName("In/Out")]
-    [GlyphDefaultWidth(30)]
-    [GlyphDefaultHeight(20)]
-    public class InOutGlyph : AbstractFlowchartGlyph
+    /// <summary>In the palette the bevel follows the whole image width, not the inset outline.</summary>
+    protected override GraphicsPath CreateThumbnailOutline()
     {
-
-        protected override GraphicsPath CenteredPath
-        {
-            get
-            {
-                return new Framework.Graphics.Primitives.BeveledRectangle(
-                    ScaledX, ScaledY,
-                    ScaledWidth, ScaledHeight,
-                    ScaledWidth >> 3).CreateCentered();
-            }
-        }
-
-        protected override GraphicsPath Path
-        {
-            get
-            {
-                int offsetX = ThumbnailWidth >> 3;
-                int offsetY = ThumbnailHeight >> 2;
-
-                return new Framework.Graphics.Primitives.BeveledRectangle(
-                    offsetX, offsetY,
-                    ThumbnailWidth - (offsetX << 1), ThumbnailHeight - (offsetY << 1),
-                    ThumbnailWidth >> 3).Create();
-            }
-        }
+        int insetX = ThumbnailWidth >> 3;
+        int insetY = ThumbnailInsetY;
+        return new BeveledRectangle(
+            insetX, insetY,
+            ThumbnailWidth - (insetX << 1), ThumbnailHeight - (insetY << 1),
+            ThumbnailWidth >> 3).Create();
     }
 }

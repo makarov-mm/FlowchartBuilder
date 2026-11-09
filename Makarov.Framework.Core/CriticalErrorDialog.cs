@@ -1,48 +1,26 @@
-using System;
-using System.Windows.Forms;
+namespace Makarov.Framework.Core;
 
-namespace Makarov.Framework.Core
+/// <summary>
+/// Last-chance error report. Closing the dialog terminates the application.
+/// </summary>
+public partial class CriticalErrorDialog : Form
 {
-    public partial class CriticalErrorDialog : Form
+    public CriticalErrorDialog(Exception exception)
     {
-        public CriticalErrorDialog(string exception, string message, string stackTrace,
-            string errorReportMail, string errorReportTitle)
-        {
-            InitializeComponent();
+        InitializeComponent();
 
-            ErrorReportMail = errorReportMail;
-            ErrorReportTitle = errorReportTitle;
-
-            lblException.Text = $@"Exception: {exception}";
-            tbExceptionDetails.Text = string.Format(
-                @"Message:{0}{1}{0}{0}Stack trace:{0}{2}",
-                Environment.NewLine,
-                message,
-                stackTrace);
-        }
-
-        private void btnClose_Click(object sender, EventArgs e)
-        {
-            Environment.Exit(1);
-            Close();
-        }
-
-        private void btnSendReport_Click(object sender, EventArgs e)
-        {
-            if (!SendReport.Send(ErrorReportMail, ErrorReportTitle, tbExceptionDetails.Text))
-            {
-
-            }
-        }
-
-        public string ErrorReportMail
-        {
-            get;
-        }
-
-        public string ErrorReportTitle
-        {
-            get;
-        }
+        lblException.Text = $"Exception: {exception.GetType().Name}";
+        tbExceptionDetails.Text = string.Join(
+            Environment.NewLine,
+            "Message:",
+            exception.Message,
+            string.Empty,
+            "Stack trace:",
+            exception.StackTrace);
     }
+
+    private void btnClose_Click(object? sender, EventArgs e) => Environment.Exit(1);
+
+    private void btnCopy_Click(object? sender, EventArgs e) =>
+        Clipboard.SetText($"{lblException.Text}{Environment.NewLine}{tbExceptionDetails.Text}");
 }

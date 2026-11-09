@@ -1,48 +1,42 @@
-using System;
-using System.Windows.Forms;
+using Makarov.FlowchartBuilder.Commands;
+using Makarov.FlowchartBuilder.Forms;
 using Makarov.Framework.Instance;
 
-namespace Makarov.FlowchartBuilder
+namespace Makarov.FlowchartBuilder;
+
+/// <summary>
+/// Handles a launch of a second copy of the application: opens the files passed to it
+/// (or a new document) in this instance and brings the main window to the front.
+/// </summary>
+internal sealed class AppInstance(MainForm mainWindow) : IInstance
 {
-    public sealed class AppInstance : IInstance
+    public void Message(string[] messages)
     {
-        public void Message(string[] messages)
+        try
         {
-            var mainWnd = Core.Instance.MainWindow;
-            if (mainWnd != null && mainWnd.InvokeRequired)
-            {
-                mainWnd.BeginInvoke(new Action(() => Message(messages)));
-                return;
-            }
+            mainWindow.BeginInvoke(new Action(() => Open(messages)));
+        }
+        catch (InvalidOperationException)
+        {
+            // The main window is closing; there is nobody left to open the files.
+        }
+    }
 
-            if (messages != null && messages.Length > 0)
-            {
-                foreach (string message in messages)
-                    Core.Instance.AddDocument(new Document(message));
-            }
-            else
-            {
-                Core.Instance.AddDocument(new Document());
-            }
+    private void Open(string[] fileNames)
+    {
+        if (mainWindow.WindowState == FormWindowState.Minimized)
+            mainWindow.WindowState = mainWindow.WindowStateBeforeMinimize;
 
-            UpdateWindowState();
+        mainWindow.Activate();
+        mainWindow.BringToFront();
+
+        if (fileNames.Length == 0)
+        {
+            Command.GetInstance<NewCommand>().Run();
+            return;
         }
 
-        private static void UpdateWindowState()
-        {
-            var mainWnd = Core.Instance.MainWindow;
-            if (mainWnd == null)
-                return;
-
-            if (mainWnd.WindowState == FormWindowState.Minimized)
-            {
-                mainWnd.WindowState = mainWnd.OldWindowState == FormWindowState.Normal
-                    ? FormWindowState.Normal
-                    : FormWindowState.Maximized;
-            }
-
-            mainWnd.Activate();
-            mainWnd.BringToFront();
-        }
+        foreach (string fileName in fileNames)
+            Core.Instance.TryOpenDocument(fileName);
     }
 }

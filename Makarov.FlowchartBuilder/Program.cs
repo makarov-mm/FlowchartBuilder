@@ -1,57 +1,42 @@
-using System;
-using System.Threading;
-using System.Windows.Forms;
 using Makarov.Framework.Core;
 using Makarov.Framework.Instance;
 
-namespace Makarov.FlowchartBuilder
+namespace Makarov.FlowchartBuilder;
+
+internal static class Program
 {
-    public sealed class Program
+    [STAThread]
+    private static void Main(string[] args)
     {
-        [STAThread]
-        public static void Main(string[] args)
+        using SingleInstance? instance = SingleInstance.TryAcquire(Settings.Environment.ApplicationName);
+        if (instance is null)
         {
-            try
-            {
-                var appInstance = new AppInstance();
-                bool primary = InstanceHelper.TryStartPrimary(
-                    Settings.Environment.ApplicationName, appInstance);
-
-                if (!primary)
-                {
-                    InstanceHelper.SendToPrimary(
-                        Settings.Environment.ApplicationName,
-                        args.Length == 0 ? Array.Empty<string>() : args);
-                    return;
-                }
-
-                Application.ThreadException += Application_ThreadException;
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-
-                using (Core.Instance)
-                {
-                    Core.Instance.Run(args);
-                }
-
-                InstanceHelper.Stop();
-            }
-            catch (Exception e)
-            {
-                ShowErrorMessage(e.GetType().Name, e.Message, e.StackTrace);
-            }
+            // Another instance is running: let it open the files and bring itself to the front.
+            SingleInstance.TrySendToPrimary(Settings.Environment.ApplicationName, args);
+            return;
         }
 
-        private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
-        {
-            ShowErrorMessage(e.Exception.GetType().Name, e.Exception.Message, e.Exception.StackTrace);
-        }
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
+        Application.ThreadException += (_, e) => ShowCriticalError(e.Exception);
 
-        private static void ShowErrorMessage(string exception, string message, string stackTrace)
+        try
         {
-            new CriticalErrorDialog(exception, message, stackTrace,
-                Settings.Environment.ErrorReportMail,
-                Settings.Environment.ErrorReportTitle).ShowDialog();
+            using Core core = Core.Instance;
+            var mainWindow = core.MainWindow;
+            mainWindow.HandleCreated += (_, _) => instance.StartListening(new AppInstance(mainWindow));
+
+            core.Run(args);
         }
+        catch (Exception e)
+        {
+            ShowCriticalError(e);
+        }
+    }
+
+    private static void ShowCriticalError(Exception exception)
+    {
+        using var dialog = new CriticalErrorDialog(exception);
+        dialog.ShowDialog();
     }
 }

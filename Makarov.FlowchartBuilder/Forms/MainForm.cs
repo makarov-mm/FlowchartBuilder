@@ -1,268 +1,154 @@
-using System.ComponentModel;
-using System;
-using System.Drawing;
-using System.Windows.Forms;
-using Makarov.FlowchartBuilder.Extensions;
-using Makarov.FlowchartBuilder.Sheets.Iso;
 using Makarov.Framework.Components;
-using BaseSettings = Makarov.Framework.Core.Settings;
 
-namespace Makarov.FlowchartBuilder.Forms
+namespace Makarov.FlowchartBuilder.Forms;
+
+/// <summary>
+/// Main window: menus, document tabs and the work area painted by <see cref="Core.Paint"/>.
+/// </summary>
+public partial class MainForm : BasicForm
 {
-    public partial class MainForm : BasicForm
+    public MainForm()
     {
-        public MainForm()
+        InitializeComponent();
+
+        SetStyle(
+            ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer |
+            ControlStyles.UserPaint | ControlStyles.ResizeRedraw,
+            true);
+    }
+
+    /// <summary>Set once the main window starts closing, so that tool windows close instead of hiding.</summary>
+    public bool IsClosing { get; private set; }
+
+    /// <summary>State to restore when the window is brought back from the taskbar.</summary>
+    public FormWindowState WindowStateBeforeMinimize { get; private set; } = FormWindowState.Normal;
+
+    public HScrollBar HorizontalScrollBar => hScrollBar;
+
+    public VScrollBar VerticalScrollBar => vScrollBar;
+
+    public TabsPanel DocumentsTabs => documentsTabsBar;
+
+    /// <summary>Work area: the client area below the document tabs, without the rulers.</summary>
+    public override Rectangle InnerRectangle
+    {
+        get
         {
-            InitializeComponent();
+            int rulersSize = Settings.Environment.Rulers ? Settings.Environment.RulersSize : 0;
+            int tabsHeight = documentsTabsBar.Height;
+            Rectangle rect = base.InnerRectangle;
+
+            return new Rectangle(
+                rect.Left + rulersSize,
+                rect.Top + rulersSize + tabsHeight,
+                rect.Width - rulersSize,
+                rect.Height - rulersSize - tabsHeight);
+        }
+    }
+
+    /// <summary><see cref="BasicForm.WorkRectangle"/> without the visible scroll bars.</summary>
+    public Rectangle WorkRectangleWithScrollbars
+    {
+        get
+        {
+            Rectangle rect = WorkRectangle;
+            return new Rectangle(
+                rect.Left,
+                rect.Top,
+                rect.Width - (vScrollBar.Visible ? vScrollBar.Width : 0),
+                rect.Height - (hScrollBar.Visible ? hScrollBar.Height : 0));
+        }
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        base.OnPaint(e);
+        Core.Instance.Paint(e.Graphics);
+    }
+
+    private void MainForm_Load(object? sender, EventArgs e)
+    {
+        Text = Core.Instance.CurrentTranslator["FlowchartBuilder_Caption"];
+
+        if (Core.Instance.IsFirstRun)
+        {
+            SetBounds(50, 50, 800, 600);
+            WindowState = FormWindowState.Maximized;
         }
 
-        private void FBMainWindow_Load(object sender, EventArgs e)
+        LoadWindowParamsFromRegistry();
+
+        MenuLoader.LoadMainMenu(this);
+        MenuLoader.LoadSecondaryMenu(this);
+
+        // Documents passed on the command line were opened before the menus existed.
+        Core.Instance.ActiveSheet?.UpdateGlyphsCommands();
+
+        Core.Instance.GetWindowAsChild<GlyphsForm>().Show();
+        Core.Instance.GetWindowAsChild<PropertiesForm>().Show();
+
+        DocumentsTabs.SelectedTabChanged += (_, _) =>
         {
+            if (DocumentsTabs.SelectedTab is { } tab)
+                Core.Instance.SelectDocument(tab.Id);
+        };
+    }
 
-            Text = Core.Instance.CurrentTranslator["FlowchartBuilder_Caption"];
-
-            if (Core.Instance.IsFirstRun)
-            {
-                Left = 50;
-                Top = 50;
-                Width = 800;
-                Height = 600;
-                WindowState = FormWindowState.Maximized;
-            }
-
-            LoadWindowParamsFromRegistry();
-
-            MenuLoader.LoadMainMenu(this);
-
-            MenuLoader.LoadSecondaryMenu(this);
-
-            Core.Instance.GetWindowAsChild<GlyphsForm>().Show();
-
-            Core.Instance.GetWindowAsChild<PropertiesForm>().Show();
-
-            DocumentsTabs.SelectedTabChanged += (s, args) =>
-                                                    {
-                                                        var tab = DocumentsTabs.SelectedTab;
-
-                                                        Core.Instance.SelectDocument(tab.Id);
-                                                    };
+    private void MainForm_Shown(object? sender, EventArgs e)
+    {
+        if (Settings.Environment.ShowNewSheetDialogOnStartup && !Core.Instance.HasDocuments)
+        {
+            using var dialog = new SheetsForm();
+            dialog.ShowDialog(this);
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool IsClosing
-        {
-            get; set;
-        }
+        if (Core.Instance.IsFirstRun)
+            Core.Instance.SetDefaultWindowsPos();
 
-        private void FBMainWindow_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (IsClosing)
-                return;
+        Core.Instance.Redraw();
+    }
 
-            SaveWindowParamsToRegistry();
-            IsClosing = true;
+    private void MainForm_FormClosing(object? sender, FormClosingEventArgs e)
+    {
+        if (IsClosing)
+            return;
 
-            foreach (var wnd in Core.Instance.Windows.Windows)
-                if (wnd != this)
-                    wnd.Close();
+        SaveWindowParamsToRegistry();
+        IsClosing = true;
 
-            Close();
-        }
+        foreach (Form window in Core.Instance.Windows.Windows.Where(window => window != this))
+            window.Close();
+    }
 
-        private void FBMainWindow_Paint(object sender, PaintEventArgs e)
-        {
+    private void MainForm_Resize(object? sender, EventArgs e)
+    {
+        if (WindowState != FormWindowState.Minimized)
+            WindowStateBeforeMinimize = WindowState;
+
+        UpdateDockedWindows();
+
+        if (Visible)
             Core.Instance.Redraw();
-        }
+    }
 
-        private void FBMainWindow_Resize(object sender, EventArgs e)
-        {
+    private void MainForm_Move(object? sender, EventArgs e) => UpdateDockedWindows();
 
-            foreach (var wnd in Core.Instance.Windows.Windows)
-                if (wnd is DockingForm)
-                {
-                    var dockingWnd = (DockingForm)wnd;
+    private void MainForm_MouseDown(object? sender, MouseEventArgs e) =>
+        Core.Instance.ActiveSheet?.MouseDown(Core.Instance.ClientToSheet(e.Location));
 
-                    dockingWnd.UpdateDockedWindowPosition();
-                }
+    private void MainForm_MouseMove(object? sender, MouseEventArgs e) =>
+        Core.Instance.ActiveSheet?.MouseMove(Core.Instance.ClientToSheet(e.Location));
 
-            if (Visible)
-                Core.Instance.Redraw();
-        }
+    private void MainForm_MouseUp(object? sender, MouseEventArgs e) =>
+        Core.Instance.ActiveSheet?.MouseUp();
 
-        public override Rectangle InnerRectangle
-        {
-            get
-            {
-                int rulersSize = Settings.Environment.Rulers ? Settings.Environment.RulersSize : 0;
-                int docsBarHeight = documentsTabsBar.Height;
-                Rectangle rect = base.InnerRectangle;
-                return new Rectangle(
-                    rect.Left + rulersSize,
-                    rect.Top + rulersSize + docsBarHeight,
-                    rect.Width - rulersSize,
-                    rect.Height - rulersSize - docsBarHeight);
-            }
-        }
+    private void hScrollBar_Scroll(object? sender, ScrollEventArgs e) => Core.Instance.Redraw();
 
-        public Rectangle InnerRectangleWithScrollbars
-        {
-            get
-            {
-                int hScrollHeight = hScrollBar.Visible ? hScrollBar.Height : 0;
-                int vScrollWidth = vScrollBar.Visible ? vScrollBar.Width : 0;
-                var rect = InnerRectangle;
-                return new Rectangle(
-                    rect.Left,
-                    rect.Top,
-                    rect.Width - vScrollWidth,
-                    rect.Height - hScrollHeight);
-            }
-        }
+    private void vScrollBar_Scroll(object? sender, ScrollEventArgs e) => Core.Instance.Redraw();
 
-        public Rectangle WorkRectangleWithScrollbars
-        {
-            get
-            {
-                int hScrollHeight = hScrollBar.Visible ? hScrollBar.Height : 0;
-                int vScrollWidth = vScrollBar.Visible ? vScrollBar.Width : 0;
-                var rect = WorkRectangle;
-                return new Rectangle(
-                    rect.Left,
-                    rect.Top,
-                    rect.Width - vScrollWidth,
-                    rect.Height - hScrollHeight);
-            }
-        }
-
-        private void FBMainWindow_Shown(object sender, EventArgs e)
-        {
-
-            if (!Framework.Core.Settings.Environment.IsMono)
-            {
-
-                string showOnStartup = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.NewSheetDialog.ShowOnStartup];
-                if (string.IsNullOrEmpty(showOnStartup) || bool.Parse(showOnStartup))
-                    if (string.IsNullOrEmpty(Settings.Environment.LoadedDocumentName))
-                        Core.Instance.GetWindowAsChild<SheetsForm>().ShowDialog(this);
-            }
-            else
-            {
-
-                Core.Instance.AddDocument(new Document(new VerticalA4()));
-                Core.Instance.Redraw();
-            }
-
-            if (Core.Instance.IsFirstRun)
-                Core.Instance.SetDefaultWindowsPos();
-
-            Core.Instance.Redraw();
-        }
-
-        private void FBMainWindow_Enter(object sender, EventArgs e)
-        {
-
-            Core.Instance.Redraw();
-        }
-
-        private Point CoordinatesInSheet(Point pt)
-        {
-            if (Core.Instance.CurrentDocument.DocumentSheet is IScaledSize)
-            {
-                var sizedSheet = (IScaledSize)Core.Instance.CurrentDocument.DocumentSheet;
-
-                var hbar = HorizontalScrollBar;
-                var vbar = VerticalScrollBar;
-                int xScrollbarOffset = hbar.Visible ? hbar.Value - (hbar.Maximum >> 1) : 0;
-                int yScrollbarOffset = vbar.Visible ? vbar.Value - (vbar.Maximum >> 1) : 0;
-
-                int x = pt.X - InnerRectangle.Left -
-                        ((InnerRectangle.Width - sizedSheet.ScaledWidth.MMToPx())/2) +
-                        xScrollbarOffset;
-                int y = pt.Y - InnerRectangle.Top -
-                        ((InnerRectangle.Height - sizedSheet.ScaledHeight.MMToPx())/2) +
-                        yScrollbarOffset;
-
-                return new Point(x, y);
-            }
-            else
-            {
-                int x = pt.X - InnerRectangle.Left;
-                int y = pt.Y - InnerRectangle.Top;
-                return new Point(x, y);
-            }
-        }
-
-        private void FBMainWindow_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (Core.Instance.IsDocumentsExists)
-                Core.Instance.CurrentDocument.DocumentSheet.MouseDown(CoordinatesInSheet(new Point(e.X, e.Y)));
-        }
-
-        private void FBMainWindow_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (Core.Instance.IsDocumentsExists)
-                Core.Instance.CurrentDocument.DocumentSheet.MouseUp();
-        }
-
-        private void FBMainWindow_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (Core.Instance.IsDocumentsExists)
-                Core.Instance.CurrentDocument.DocumentSheet.MouseMove(CoordinatesInSheet(new Point(e.X, e.Y)));
-        }
-
-        private void FBMainWindow_Move(object sender, EventArgs e)
-        {
-
-            foreach (var wnd in Core.Instance.Windows.Windows)
-                if (wnd is DockingForm)
-                {
-                    var dockingWnd = (DockingForm)wnd;
-
-                    dockingWnd.UpdateDockedWindowPosition();
-                }
-        }
-
-        public HScrollBar HorizontalScrollBar
-        {
-            get { return hScrollBar; }
-        }
-
-        public VScrollBar VerticalScrollBar
-        {
-            get { return vScrollBar; }
-        }
-
-        private void vScrollBar_Scroll(object sender, ScrollEventArgs e)
-        {
-            Core.Instance.Redraw();
-        }
-
-        private void hScrollBar_Scroll(object sender, ScrollEventArgs e)
-        {
-            Core.Instance.Redraw();
-        }
-
-        public FormWindowState OldWindowState
-        {
-            get; private set;
-        }
-
-        public TabsPanel DocumentsTabs
-        {
-            get { return documentsTabsBar; }
-        }
-
-        protected override void DefWndProc(ref Message m)
-        {
-            const int WM_SYSCOMMAND = 0x0112;
-            const int SC_MINIMIZE = 0xF020;
-
-            if (m.Msg == WM_SYSCOMMAND && m.WParam == (IntPtr)SC_MINIMIZE)
-            {
-                OldWindowState = WindowState;
-            }
-
-            base.DefWndProc(ref m);
-        }
+    private static void UpdateDockedWindows()
+    {
+        foreach (DockingForm window in Core.Instance.Windows.Windows.OfType<DockingForm>())
+            window.UpdateDockedWindowPosition();
     }
 }

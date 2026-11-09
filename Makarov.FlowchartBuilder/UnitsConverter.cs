@@ -1,67 +1,36 @@
-namespace Makarov.FlowchartBuilder
+namespace Makarov.FlowchartBuilder;
+
+/// <summary>
+/// Conversions between millimeters (the document unit), inches, screen pixels and the units chosen by the user.
+/// </summary>
+public static class UnitsConverter
 {
+    private static float? _inchesInMM;
 
-    public static class UnitsConverter
-    {
+    /// <summary>Inches per millimeter, as defined by the "Inches" entry of Data\Units.xml.</summary>
+    private static float InchesInMM => _inchesInMM ??= Core.Instance.Units["Inches"].InMM;
 
-        public static float MMToCurr(float mm)
-        {
-            return mm * Settings.Environment.CurrentUnits.InMM;
-        }
+    private static Units Current => Settings.Environment.CurrentUnits;
 
-        public static float CurrToMM(float curr)
-        {
-            return curr * Settings.Environment.CurrentUnits.MMInThis;
-        }
+    public static float MMToCurr(float mm) => mm * Current.InMM;
 
-        public static int CurrToPx(float curr)
-        {
-            return InchToPx(CurrToInch(curr));
-        }
+    public static float CurrToMM(float curr) => curr * Current.MMInThis;
 
-        public static float PxToCurr(float px)
-        {
-            return MMToCurr(PxToMM(px));
-        }
+    public static int CurrToPx(float curr) => InchToPx(CurrToInch(curr));
 
-        public static float PxToInch(float px)
-        {
-            return px / Settings.Environment.DPI;
-        }
+    public static float PxToCurr(float px) => MMToCurr(PxToMM(px));
 
-        public static int InchToPx(float inch)
-        {
-            return (int)(inch * Settings.Environment.DPI);
-        }
+    public static float PxToInch(float px) => px / Settings.Environment.Dpi;
 
-        public static float InchToMM(float inch)
-        {
-            return inch * Core.Instance.Units["Inches"].MMInThis;
-        }
+    public static int InchToPx(float inch) => (int)(inch * Settings.Environment.Dpi);
 
-        public static float MMToInch(float mm)
-        {
-            return mm * Core.Instance.Units["Inches"].InMM;
-        }
+    public static float InchToMM(float inch) => inch * (1f / InchesInMM);
 
-        public static int MMToPx(float mm)
-        {
-            return InchToPx(MMToInch(mm));
-        }
+    public static float MMToInch(float mm) => mm * InchesInMM;
 
-        public static float PxToMM(float px)
-        {
-            return InchToMM(PxToInch(px));
-        }
+    public static int MMToPx(float mm) => InchToPx(MMToInch(mm));
 
-        public static float InchToCurr(float inch)
-        {
-            return MMToCurr(InchToMM(inch));
-        }
+    public static float PxToMM(float px) => InchToMM(PxToInch(px));
 
-        public static float CurrToInch(float curr)
-        {
-            return MMToInch(CurrToMM(curr));
-        }
-    }
+    public static float CurrToInch(float curr) => MMToInch(CurrToMM(curr));
 }

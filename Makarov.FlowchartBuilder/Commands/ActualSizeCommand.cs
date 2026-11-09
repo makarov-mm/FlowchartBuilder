@@ -1,26 +1,21 @@
-using Makarov.FlowchartBuilder.Extensions;
+using Makarov.FlowchartBuilder.Sheets;
 
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+/// <summary>Zooms so that the whole paper fits into 90% of the work area.</summary>
+public sealed class ActualSizeCommand : Command
 {
+    private const float WindowFraction = 0.9f;
 
-    public sealed class ActualSizeCommand : Command
+    public override void Run()
     {
+        if (Core.Instance.ActiveSheet is not { } sheet)
+            return;
 
-        public override void Run()
-        {
+        sheet.ScaleFactor = sheet is FixedSheet fixedSheet
+            ? fixedSheet.GetFitScaleFactor(Core.Instance.MainWindow.InnerRectangle.Size, WindowFraction)
+            : 1f;
 
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            var sizedSheet = (ISize)Core.Instance.CurrentDocument.DocumentSheet;
-            float h = sizedSheet.Width.MMToPx() /
-                      (Core.Instance.MainWindow.InnerRectangle.Width * 0.9f);
-            float v = sizedSheet.Height.MMToPx() /
-                      (Core.Instance.MainWindow.InnerRectangle.Height * 0.9f);
-
-            Core.Instance.CurrentDocument.DocumentSheet.ScaleFactor = h > v ? 1 / h : 1 / v;
-
-            Core.Instance.Redraw();
-        }
+        Core.Instance.Redraw();
     }
 }

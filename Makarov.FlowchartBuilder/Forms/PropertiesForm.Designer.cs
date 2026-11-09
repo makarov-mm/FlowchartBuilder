@@ -21,9 +21,9 @@ namespace Makarov.FlowchartBuilder.Forms
             this.gridView = new System.Windows.Forms.PropertyGrid();
             this.SuspendLayout();
 
-            this.gridView.Location = new System.Drawing.Point(12, 12);
+            this.gridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gridView.Name = "gridView";
-            this.gridView.Size = new System.Drawing.Size(149, 160);
+            this.gridView.Size = new System.Drawing.Size(234, 389);
             this.gridView.TabIndex = 1;
             this.gridView.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.gridView_PropertyValueChanged);
 
@@ -32,12 +32,12 @@ namespace Makarov.FlowchartBuilder.Forms
             this.ClientSize = new System.Drawing.Size(234, 389);
             this.Controls.Add(this.gridView);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
-            this.Name = "FBProperties";
+            this.Name = "PropertiesForm";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.Text = "FBProperties";
-            this.Load += new System.EventHandler(this.FBProperties_Load);
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FBProperties_FormClosing);
+            this.Text = "Properties";
+            this.Load += new System.EventHandler(this.PropertiesForm_Load);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PropertiesForm_FormClosing);
             this.ResumeLayout(false);
 
         }

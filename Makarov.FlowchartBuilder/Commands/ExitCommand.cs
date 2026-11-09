@@ -1,12 +1,6 @@
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+public sealed class ExitCommand : Command
 {
-
-    public sealed class ExitCommand : Command
-    {
-
-        public override void Run()
-        {
-            Core.Instance.MainWindow.Close();
-        }
-    }
+    public override void Run() => Core.Instance.MainWindow.Close();
 }

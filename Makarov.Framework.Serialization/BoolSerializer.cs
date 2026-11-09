@@ -1,46 +1,11 @@
-using System;
 using Makarov.Framework.Core;
 
-namespace Makarov.Framework.Serialization
+namespace Makarov.Framework.Serialization;
+
+public sealed class BoolSerializer : AbstractSerializer<bool>
 {
-    public sealed class BoolSerializer : AbstractSerializer
-    {
+    protected override string Format(bool value) => value ? bool.TrueString : bool.FalseString;
 
-        public override Type SerializerType
-        {
-            get { return typeof(bool); }
-        }
-
-        public override string Serialize(object obj)
-        {
-            var b = (bool) obj;
-            if (b) return @"True";
-            return @"False";
-        }
-
-        public override object Deserialize(string str)
-        {
-            if (str == @"True" ||
-                str == @"TRUE" ||
-                str == @"true" ||
-                str.ToLowerInvariant() == @"true" ||
-                str.ToUpperInvariant() == @"TRUE")
-                return true;
-
-            if (str == @"False" ||
-                str == @"FALSE" ||
-                str == @"false" ||
-                str.ToLowerInvariant() == @"false" ||
-                str.ToUpperInvariant() == @"FALSE")
-                return false;
-
-            if (str == bool.TrueString)
-                return true;
-
-            if (str == bool.FalseString)
-                return false;
-
-            return bool.Parse(str);
-        }
-    }
+    /// <remarks><see cref="bool.Parse(string)"/> ignores case and surrounding white space.</remarks>
+    protected override bool Parse(string text) => bool.Parse(text);
 }

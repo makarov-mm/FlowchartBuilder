@@ -1,13 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <RootNamespace>Makarov.Framework.Serialization</RootNamespace>
-    <AssemblyName>Makarov.Framework.Serialization</AssemblyName>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Makarov.Framework.Core\Makarov.Framework.Core.csproj" />
   </ItemGroup>

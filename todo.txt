@@ -1,24 +1,22 @@
 FlowchartBuilder - TODO
 
 Pending:
+- Undo and Redo
+- Close and Close All for documents (menu items and a close button on the document tabs)
+- Save All
+- Page Setup and Print
+- Drawing for the Arrow, Broken Arrow and Link glyphs (Simple plugin), then the Image and Text glyphs
 - Snap the mouse to the manipulation point
 - Proper About dialog
 - Finish translations
 - Remove redundant sheet templates
-- Document tabs: switching and closing
 - Choose an appropriate license
-- Minimize the number of exception classes
-- Fix bug: cannot create two instances of the same glyph consecutively
-- Fix bug: double-clicking a glyph icon spawns instances stacked in one spot
-- Correct scrolling
 - Unit tests, at least for the core subsystems
+- Fix bug: double-clicking a glyph icon spawns instances stacked in one spot
 - Glyph shadows
 - Uniform glyph-icon background, gradient glyph image
 - Default language and units of measurement from the user's system locale
 - Use the system clipboard and put an XML description of the copied content into it
-- Export the document to a bitmap
-- Print the document
-- Fix bug: copy, then paste + paste - the second paste does nothing
 
 Done:
 - Fall back to an XML settings file when the registry is not accessible
@@ -31,3 +29,9 @@ Done:
 - Remove (or minimize) the Framework.Core.Settings class
 - Define all glyphs for the release version
 - Draw manipulation points nicely
+- Document tabs: switching
+- Minimize the number of exception classes
+- Fix bug: cannot create two instances of the same glyph consecutively
+- Correct scrolling
+- Export the document to a bitmap
+- Fix bug: copy, then paste + paste - the second paste does nothing

@@ -1,26 +1,19 @@
-using Makarov.FlowchartBuilder.Extensions;
+using Makarov.FlowchartBuilder.Sheets;
 
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+/// <summary>Zooms so that the paper fills the work area.</summary>
+public sealed class ZoomToWindowCommand : Command
 {
-
-    public sealed class ZoomToWindowCommand : Command
+    public override void Run()
     {
+        if (Core.Instance.ActiveSheet is not { } sheet)
+            return;
 
-        public override void Run()
-        {
+        sheet.ScaleFactor = sheet is FixedSheet fixedSheet
+            ? fixedSheet.GetFitScaleFactor(Core.Instance.MainWindow.InnerRectangle.Size, 1f)
+            : 1f;
 
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            var sizedSheet = (ISize)Core.Instance.CurrentDocument.DocumentSheet;
-            float h = sizedSheet.Width.MMToPx() /
-                      (float) Core.Instance.MainWindow.InnerRectangle.Width;
-            float v = sizedSheet.Height.MMToPx() /
-                      (float) Core.Instance.MainWindow.InnerRectangle.Height;
-
-            Core.Instance.CurrentDocument.DocumentSheet.ScaleFactor = h > v ? 1 / h : 1 / v;
-
-            Core.Instance.Redraw();
-        }
+        Core.Instance.Redraw();
     }
 }

@@ -1,17 +1,9 @@
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+/// <summary>Redo is not implemented yet; the menu item stays disabled.</summary>
+public sealed class RedoCommand : Command
 {
-
-    public sealed class RedoCommand : Command
+    public override void Run()
     {
-
-        public override void Run()
-        {
-
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            Core.Instance.CurrentDocument.HistoryForward();
-            Core.Instance.Redraw();
-        }
     }
 }

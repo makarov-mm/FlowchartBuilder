@@ -1,133 +1,85 @@
-using System.Drawing;
-using System.Windows.Forms;
-using BaseSettings = Makarov.Framework.Core.Settings;
+using System.Globalization;
 
-namespace Makarov.FlowchartBuilder.Forms
+namespace Makarov.FlowchartBuilder.Forms;
+
+/// <summary>
+/// Window with a main menu, a toolbar and a status bar; persists its position in the settings.
+/// </summary>
+public partial class BasicForm : Form
 {
-    public partial class BasicForm : Form
+    private const int MinimumWindowSize = 100;
+
+    public BasicForm()
     {
-        public BasicForm()
+        InitializeComponent();
+    }
+
+    public MenuStrip MainMenu => mnuMain;
+
+    public ToolStrip SecondaryMenu => mnuSecondary;
+
+    public StatusStrip StatusMenu => mnuStatus;
+
+    /// <summary>Client area between the toolbar and the status bar.</summary>
+    public virtual Rectangle InnerRectangle =>
+        new(
+            ClientRectangle.Left,
+            ClientRectangle.Top + SecondaryMenu.Top + SecondaryMenu.Height,
+            ClientRectangle.Width - 2,
+            ClientRectangle.Height - StatusMenu.Height - SecondaryMenu.Height - MainMenu.Height - 2);
+
+    /// <summary><see cref="InnerRectangle"/> in screen coordinates.</summary>
+    public Rectangle WorkRectangle
+    {
+        get
         {
-            InitializeComponent();
-        }
+            int borderWidth = (Width - ClientSize.Width) / 2;
+            int titleBarHeight = Height - ClientSize.Height - borderWidth;
+            Rectangle inner = InnerRectangle;
 
-        public MenuStrip MainMenu
-        {
-            get { return mnuMain; }
-        }
-
-        public ToolStrip SecondaryMenu
-        {
-            get { return mnuSecondary; }
-        }
-
-        public StatusStrip StatusMenu
-        {
-            get { return mnuStatus; }
-        }
-
-        public virtual Rectangle InnerRectangle
-        {
-            get
-            {
-                return new Rectangle(
-                    ClientRectangle.Left,
-                    ClientRectangle.Top + SecondaryMenu.Top + SecondaryMenu.Height,
-                    ClientRectangle.Width - 2,
-                    ClientRectangle.Height - StatusMenu.Height - SecondaryMenu.Height - MainMenu.Height - 2);
-            }
-        }
-
-        protected void LoadWindowParamsFromRegistry()
-        {
-
-            string x = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.X];
-            string y = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Y];
-            string width = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Width];
-            string height = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Height];
-
-            if (!string.IsNullOrEmpty(x))
-            {
-                int ix = int.Parse(x);
-                if (ix < 0)
-                {
-                    ix = 0;
-                    Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.X] = ix.ToString();
-                }
-                Left = ix;
-            }
-
-            if (!string.IsNullOrEmpty(y))
-            {
-                int iy = int.Parse(y);
-                if (iy < 0)
-                {
-                    iy = 0;
-                    Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Y] = iy.ToString();
-                }
-                Top = iy;
-            }
-
-            if (!string.IsNullOrEmpty(width))
-            {
-                int iwidth = int.Parse(width);
-                if (iwidth < 100)
-                {
-                    iwidth = 100;
-                    Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Width] = iwidth.ToString();
-                }
-                Width = iwidth;
-            }
-
-            if (!string.IsNullOrEmpty(height))
-            {
-                int iheight = int.Parse(height);
-                if (iheight < 100)
-                {
-                    iheight = 100;
-                    Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Height] = iheight.ToString();
-                }
-                Height = iheight;
-            }
-
-            string windowState = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.WindowState];
-            if (!string.IsNullOrEmpty(windowState))
-            {
-                if (windowState == FormWindowState.Maximized.ToString())
-                    WindowState = FormWindowState.Maximized;
-                else if (windowState == FormWindowState.Minimized.ToString())
-                    WindowState = FormWindowState.Minimized;
-            }
-        }
-
-        protected void SaveWindowParamsToRegistry()
-        {
-
-            if (WindowState == FormWindowState.Normal)
-            {
-                Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.X] = Left.ToString();
-                Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Y] = Top.ToString();
-                Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Width] = Width.ToString();
-                Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.Height] = Height.ToString();
-            }
-
-            Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.MainWindow.WindowState] = WindowState.ToString();
-        }
-
-        public Rectangle WorkRectangle
-        {
-            get
-            {
-                int borderWidth = (Width - ClientSize.Width) / 2;
-                int titlebarHeight = Height - ClientSize.Height - borderWidth;
-
-                return new Rectangle(
-                    Left + InnerRectangle.Left + borderWidth,
-                    Top + InnerRectangle.Top + titlebarHeight,
-                    InnerRectangle.Width,
-                    InnerRectangle.Height
-                    );
-            }
+            return new Rectangle(Left + inner.Left + borderWidth, Top + inner.Top + titleBarHeight, inner.Width, inner.Height);
         }
     }
+
+    protected void LoadWindowParamsFromRegistry()
+    {
+        if (ReadSetting(Settings.Keys.MainWindow.X, 0) is { } x)
+            Left = x;
+
+        if (ReadSetting(Settings.Keys.MainWindow.Y, 0) is { } y)
+            Top = y;
+
+        if (ReadSetting(Settings.Keys.MainWindow.Width, MinimumWindowSize) is { } width)
+            Width = width;
+
+        if (ReadSetting(Settings.Keys.MainWindow.Height, MinimumWindowSize) is { } height)
+            Height = height;
+
+        if (Enum.TryParse(Core.Instance.SettingsStorage[Settings.Keys.MainWindow.WindowState], out FormWindowState state) &&
+            state != FormWindowState.Normal)
+        {
+            WindowState = state;
+        }
+    }
+
+    protected void SaveWindowParamsToRegistry()
+    {
+        var storage = Core.Instance.SettingsStorage;
+
+        if (WindowState == FormWindowState.Normal)
+        {
+            storage[Settings.Keys.MainWindow.X] = Left.ToString(CultureInfo.InvariantCulture);
+            storage[Settings.Keys.MainWindow.Y] = Top.ToString(CultureInfo.InvariantCulture);
+            storage[Settings.Keys.MainWindow.Width] = Width.ToString(CultureInfo.InvariantCulture);
+            storage[Settings.Keys.MainWindow.Height] = Height.ToString(CultureInfo.InvariantCulture);
+        }
+
+        storage[Settings.Keys.MainWindow.WindowState] = WindowState.ToString();
+    }
+
+    /// <summary>Reads a stored integer, raising it to <paramref name="minimum"/> if needed.</summary>
+    private static int? ReadSetting(string key, int minimum) =>
+        int.TryParse(Core.Instance.SettingsStorage[key], NumberStyles.Integer, CultureInfo.InvariantCulture, out int value)
+            ? Math.Max(value, minimum)
+            : null;
 }

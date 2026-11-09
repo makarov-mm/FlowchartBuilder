@@ -1,34 +1,12 @@
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics.Primitives;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Shapes
+namespace Makarov.FlowchartBuilder.Glyphs.Shapes;
+
+[GlyphName("Ellipse")]
+public sealed class EllypseGlyph : AbstractShapeGlyph
 {
+    protected override int ThumbnailInsetY => ThumbnailHeight >> 2;
 
-    [GlyphName("Ellypse")]
-    public sealed class EllypseGlyph : AbstractShapeGlyph
-    {
-
-        protected override GraphicsPath CenteredPath
-        {
-            get
-            {
-                return new Framework.Graphics.Primitives.Circle(
-                    ScaledX, ScaledY,
-                    ScaledWidth, ScaledHeight).CreateCentered();
-            }
-        }
-
-        protected override GraphicsPath Path
-        {
-            get
-            {
-                int offsetX = ThumbnailWidth >> 3;
-                int offsetY = ThumbnailHeight >> 2;
-
-                return new Framework.Graphics.Primitives.Circle(
-                    offsetX, offsetY,
-                    ThumbnailWidth - (offsetX << 1), ThumbnailHeight - (offsetY << 1)).Create();
-            }
-        }
-    }
+    protected override Primitive CreatePrimitive(int x, int y, int width, int height) => new Circle(x, y, width, height);
 }

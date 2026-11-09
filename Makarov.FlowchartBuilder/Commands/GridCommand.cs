@@ -1,17 +1,10 @@
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+public sealed class GridCommand : ToggleCommand
 {
-
-    public sealed class GridCommand : Command
+    public override bool IsOn
     {
-
-        public override void Run()
-        {
-
-            Settings.Environment.Grid = !Settings.Environment.Grid;
-
-            Checked = Settings.Environment.Grid;
-
-            Core.Instance.Redraw();
-        }
+        get => Settings.Environment.Grid;
+        set => Settings.Environment.Grid = value;
     }
 }

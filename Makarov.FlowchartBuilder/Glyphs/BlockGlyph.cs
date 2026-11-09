@@ -1,1101 +1,441 @@
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Linq;
+using System.Globalization;
 using Makarov.FlowchartBuilder.API.Attributes;
 using Makarov.FlowchartBuilder.Extensions;
-using Makarov.FlowchartBuilder.Sheets;
 using Makarov.Framework.Core;
 
-namespace Makarov.FlowchartBuilder.Glyphs
+namespace Makarov.FlowchartBuilder.Glyphs;
+
+/// <summary>
+/// Rectangular glyph positioned by its center. It can be moved, resized, rotated, grouped and, if
+/// <see cref="SupportsLinks"/>, connected to other block glyphs. Sizes and positions are stored in millimeters;
+/// the Scaled* members are screen pixels at the current zoom.
+/// </summary>
+[GlyphDefaultWidth(30f)]
+[GlyphDefaultHeight(20f)]
+[GlyphMinimalWidth(15f)]
+[GlyphMinimalHeight(15f)]
+public class BlockGlyph : AbstractGlyph
 {
+    private const int CenterMarkSize = 10;
+    private const int LockMarkerOffset = 2;
 
-    [GlyphDefaultWidth(30f)]
-    [GlyphDefaultHeight(20f)]
-    [GlyphMinimalWidth(15f)]
-    [GlyphMinimalHeight(15f)]
-    public class BlockGlyph : AbstractGlyph
+    private static readonly Brush PlaceholderBrush = new SolidBrush(Color.FromArgb(10, Color.Blue));
+    private static readonly Pen PlaceholderPen = new(Color.Silver) { DashPattern = [4f, 2f] };
+    private static readonly Brush SelectionLabelBrush = new SolidBrush(Settings.Colors.SelectionBorder);
+    private static readonly Brush GroupSelectionLabelBrush = new SolidBrush(Settings.Colors.GroupSelectionBorder);
+    private static Font? _labelFont;
+
+    private float _width;
+    private float _height;
+    private float _angle;
+
+    protected BlockGlyph()
     {
+        XInMM = Random.Shared.Next(50, 101);
+        YInMM = Random.Shared.Next(50, 101);
+        WidthInMM = Metadata.DefaultWidthInMM;
+        HeightInMM = Metadata.DefaultHeightInMM;
 
-        #region Constructors
+        Caption = Name;
+        ForegroundColor = Color.Black;
+        BorderColor = Color.Black;
+        BorderWidthInMM = 0.5f;
+        TextFont = Fonts.Create("Arial", 8);
+    }
 
-        protected BlockGlyph(int x, int y, int width, int height)
+    /// <summary>Zoom of the current document.</summary>
+    public float ScaleFactor => Core.Instance.CurrentDocument.DocumentSheet.ScaleFactor;
+
+    #region Appearance
+
+    [Description("Text font.")]
+    [Category("Appearance")]
+    [DisplayName("Font")]
+    [ActiveProperty]
+    public Font TextFont { get; set; }
+
+    [Description("Border width in mm.")]
+    [Category("Appearance")]
+    [DisplayName("Border Width")]
+    [ActiveProperty]
+    public float BorderWidthInMM { get; set; }
+
+    public int ScaledBorderWidth => (BorderWidthInMM * ScaleFactor).MMToPx();
+
+    [Description("Border color.")]
+    [Category("Appearance")]
+    [DisplayName("Border Color")]
+    [ActiveProperty]
+    public Color BorderColor { get; set; }
+
+    [Description("Background glyph color.")]
+    [Category("Appearance")]
+    [DisplayName("Background Color")]
+    [ActiveProperty]
+    public Color BackgroundColor { get; set; }
+
+    [Description("Foreground glyph color.")]
+    [Category("Appearance")]
+    [DisplayName("Foreground Color")]
+    [ActiveProperty]
+    public Color ForegroundColor { get; set; }
+
+    #endregion
+
+    #region Size and position
+
+    [Description("Width in mm.")]
+    [Category("Layout")]
+    [DisplayName("Width")]
+    [ActiveProperty]
+    public float WidthInMM
+    {
+        get => _width;
+        set
         {
-            XInMM = x;
-            YInMM = y;
-            WidthInMM = width;
-            HeightInMM = height;
-
-            Selected = false;
-            Caption = Name;
-            ForegroundColor = Color.Black;
-            BorderColor = Color.Black;
-            BorderWidthInMM = 0.5f;
-            TextFont = "Arial".SafeCreateFont(8);
+            value = Math.Max(value, Metadata.MinimalWidthInMM);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
+            _width = value;
         }
+    }
 
-        protected BlockGlyph()
+    [Description("Height in mm.")]
+    [Category("Layout")]
+    [DisplayName("Height")]
+    [ActiveProperty]
+    public float HeightInMM
+    {
+        get => _height;
+        set
         {
-            var range = new Range(50, 100);
-            XInMM = RandomGenerator.Instance.Next(range);
-            YInMM = RandomGenerator.Instance.Next(range);
-            WidthInMM = DefaultWidthInMM;
-            HeightInMM = DefaultHeightInMM;
-
-            Selected = false;
-            Caption = Name;
-            ForegroundColor = Color.Black;
-            BorderColor = Color.Black;
-            BorderWidthInMM = 0.5f;
-            TextFont = "Arial".SafeCreateFont(8);
+            value = Math.Max(value, Metadata.MinimalHeightInMM);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
+            _height = value;
         }
-        #endregion
+    }
 
-        #region Private members
+    [Description("X coordinate in mm.")]
+    [Category("Layout")]
+    [DisplayName("X")]
+    [ActiveProperty]
+    public float XInMM { get; set; }
 
-        private float _angle;
+    [Description("Y coordinate in mm.")]
+    [Category("Layout")]
+    [DisplayName("Y")]
+    [ActiveProperty]
+    public float YInMM { get; set; }
 
-        private float _width;
+    /// <summary>Rotation in degrees, kept within [-360, 360].</summary>
+    [Description("Angle.")]
+    [Category("Layout")]
+    [DisplayName("Angle")]
+    [ActiveProperty]
+    public float Angle
+    {
+        get => _angle;
+        set => _angle = Math.Abs(value) > 360 ? (float)(value - Math.Truncate(value / 360.0) * 360) : value;
+    }
 
-        private float _height;
-        #endregion
+    public int Width => WidthInMM.MMToPx();
 
-        #region Minimal size properties
+    public int Height => HeightInMM.MMToPx();
 
-        protected float MinimalWidthInMM
+    public int X => XInMM.MMToPx();
+
+    public int Y => YInMM.MMToPx();
+
+    public int ScaledWidth => Width.Scale();
+
+    public int ScaledHeight => Height.Scale();
+
+    public int ScaledX
+    {
+        get => X.Scale();
+        set => XInMM = value.Unscale().PxToMM();
+    }
+
+    public int ScaledY
+    {
+        get => Y.Scale();
+        set => YInMM = value.Unscale().PxToMM();
+    }
+
+    public float ScaledXInMM
+    {
+        get => XInMM.Scale();
+        set => XInMM = value.Unscale();
+    }
+
+    public float ScaledYInMM
+    {
+        get => YInMM.Scale();
+        set => YInMM = value.Unscale();
+    }
+
+    public float ScaledWidthInMM
+    {
+        get => WidthInMM.Scale();
+        set => WidthInMM = value.Unscale();
+    }
+
+    public float ScaledHeightInMM
+    {
+        get => HeightInMM.Scale();
+        set => HeightInMM = value.Unscale();
+    }
+
+    /// <summary>Bounds in sheet pixels at the current zoom, ignoring rotation.</summary>
+    public Rectangle ScaledBounds =>
+        new(ScaledX - (ScaledWidth >> 1), ScaledY - (ScaledHeight >> 1), ScaledWidth, ScaledHeight);
+
+    /// <summary>Bounds in millimeters, ignoring rotation.</summary>
+    public RectangleF BoundsInMM => new(XInMM - WidthInMM / 2, YInMM - HeightInMM / 2, WidthInMM, HeightInMM);
+
+    /// <summary>Area the caption is drawn into.</summary>
+    protected virtual Rectangle InnerRegion => ScaledBounds;
+
+    #endregion
+
+    #region Grouping
+
+    /// <summary>The group this glyph belongs to in the current document, if any.</summary>
+    public List<BlockGlyph>? Group =>
+        Core.Instance.CurrentDocument.DocumentSheet.Groups.FirstOrDefault(group => group.Contains(this));
+
+    public bool InGroup => Group is not null;
+
+    #endregion
+
+    #region Manipulation
+
+    /// <summary>What the current mouse drag does to the glyph.</summary>
+    public MoveDirection Direction { get; set; }
+
+    /// <summary>Angle between the dragged handle and the side it resizes, used to project the mouse movement.</summary>
+    public float DirectionsAngle { get; set; }
+
+    public virtual bool CanRotate => true;
+
+    public virtual float ManipulationPointSize => 7f;
+
+    public virtual float RotationPointSize => ManipulationPointSize * 1.5f;
+
+    public virtual float RotationPointOffset => 40f;
+
+    /// <summary>
+    /// The rotation handle stem, rotated with the glyph: [0] top edge center, [1] stem start,
+    /// [2] stem end and [3] handle center.
+    /// </summary>
+    public PointF[] RotationPoints
+    {
+        get
         {
-            get
-            {
-                return ((GlyphMinimalWidthAttribute)(GetType().GetCustomAttributes(typeof(GlyphMinimalWidthAttribute), true)[0])).WidthInMM;
-            }
+            float top = ScaledY - (ScaledHeight >> 1);
+            float handle = top - RotationPointOffset;
+
+            return
+            [
+                RotateAroundCenter(new PointF(ScaledX, top)),
+                RotateAroundCenter(new PointF(ScaledX, top - ManipulationPointSize / 2f)),
+                RotateAroundCenter(new PointF(ScaledX, handle + RotationPointSize / 2f)),
+                RotateAroundCenter(new PointF(ScaledX, handle)),
+            ];
         }
+    }
 
-        protected int MinimalWidth
+    /// <summary>The eight resize handles clockwise from the top center, rotated with the glyph.</summary>
+    public virtual IEnumerable<ManipPoint> ManipulationPoints
+    {
+        get
         {
-            get { return UnitsConverter.MMToPx(MinimalWidthInMM); }
-        }
-
-        protected float MinimalWidthInInches
-        {
-            get { return UnitsConverter.MMToInch(MinimalWidthInMM); }
-        }
-
-        protected float MinimalWidthInCurr
-        {
-            get { return UnitsConverter.MMToCurr(MinimalWidthInMM); }
-        }
-
-        protected float MinimalHeightInMM
-        {
-            get
-            {
-                return ((GlyphMinimalHeightAttribute)(GetType().GetCustomAttributes(typeof(GlyphMinimalHeightAttribute), true)[0])).HeightInMM;
-            }
-        }
-
-        protected int MinimalHeight
-        {
-            get { return UnitsConverter.MMToPx(MinimalHeightInMM); }
-        }
-
-        protected float MinimalHeightInInches
-        {
-            get { return UnitsConverter.MMToInch(MinimalHeightInMM); }
-        }
-
-        protected float MinimalHeightInCurr
-        {
-            get { return UnitsConverter.MMToCurr(MinimalHeightInMM); }
-        }
-        #endregion
-
-        #region InnerRegion
-
-        protected virtual Rectangle InnerRegion
-        {
-            get
-            {
-                return new Rectangle(
-                    ScaledX - (ScaledWidth >> 1),
-                    ScaledY - (ScaledHeight >> 1),
-                    ScaledWidth,
-                    ScaledHeight);
-            }
-        }
-        #endregion
-
-        #region Properties
-
-        public float ScaleFactor
-        {
-            get { return Core.Instance.CurrentDocument.DocumentSheet.ScaleFactor; }
-        }
-
-        public ContainerGlyph Owner
-        {
-            get;
-            set;
-        }
-
-        [Description(@"Text font.")]
-        [Category(@"Appearance")]
-        [DisplayName(@"Font")]
-        [ActiveProperty]
-        public Font TextFont
-        {
-            get;
-            set;
-        }
-
-        public int BorderWidth
-        {
-            get { return BorderWidthInMM.MMToPx(); }
-            set { BorderWidthInMM = value.PxToMM(); }
-        }
-
-        public int ScaledBorderWidth
-        {
-            get { return (BorderWidthInMM * ScaleFactor).MMToPx(); }
-            set { BorderWidthInMM = value.PxToMM() / ScaleFactor; }
-        }
-
-        [Description(@"Border width in mm.")]
-        [Category(@"Appearance")]
-        [DisplayName(@"Border Width")]
-        [ActiveProperty]
-        public float BorderWidthInMM
-        {
-            get; set;
-        }
-
-        [Description(@"Border color.")]
-        [Category(@"Appearance")]
-        [DisplayName(@"Border Color")]
-        [ActiveProperty]
-        public Color BorderColor
-        {
-            get; set;
-        }
-
-        [Description(@"Background glyph color.")]
-        [Category(@"Appearance")]
-        [DisplayName(@"Background Color")]
-        [ActiveProperty]
-        public Color BackgroundColor
-        {
-            get; set;
-        }
-
-        [Description(@"Foreground glyph color.")]
-        [Category(@"Appearance")]
-        [DisplayName(@"Foreground Color")]
-        [ActiveProperty]
-        public Color ForegroundColor
-        {
-            get; set;
-        }
-
-        public bool InGroup
-        {
-            get { return Group != null; }
-        }
-
-        public List<BlockGlyph> Group
-        {
-            get
-            {
-                return Core.Instance.CurrentDocument.DocumentSheet.Groups.FirstOrDefault(group => group.Contains(this));
-            }
-        }
-
-        public float GroupLeft
-        {
-            get
-            {
-
-                if (!InGroup)
-                    throw new InvalidContextException();
-
-                Sheet sheet = Core.Instance.CurrentDocument.DocumentSheet;
-
-                float left = sheet is FixedSheet
-                               ? ((FixedSheet)sheet).Width
-                               : Core.Instance.MainWindow.Width.PxToMM();
-
-                foreach (var glyph in Group)
-                    if (glyph.XInMM - glyph.WidthInMM / 2 < left)
-                        left = glyph.XInMM - glyph.WidthInMM / 2;
-
-                return left;
-            }
-        }
-
-        public float GroupRight
-        {
-            get
-            {
-
-                if (!InGroup)
-                    throw new InvalidContextException();
-
-                float right = 0;
-
-                foreach (var glyph in Group)
-                    if (glyph.XInMM + glyph.WidthInMM / 2 > right)
-                        right = glyph.XInMM + glyph.WidthInMM / 2;
-
-                return right;
-            }
-        }
-
-        public float GroupTop
-        {
-            get
-            {
-
-                if (!InGroup)
-                    throw new InvalidContextException();
-
-                Sheet sheet = Core.Instance.CurrentDocument.DocumentSheet;
-
-                float top = sheet is FixedSheet
-                               ? ((FixedSheet)sheet).Height
-                               : Core.Instance.MainWindow.Height.PxToMM();
-
-                foreach (var glyph in Group)
-                    if (glyph.YInMM - glyph.HeightInMM / 2 < top)
-                        top = glyph.YInMM - glyph.HeightInMM / 2;
-
-                return top;
-            }
-        }
-
-        public float GroupBottom
-        {
-            get
-            {
-
-                if (!InGroup)
-                    throw new InvalidContextException();
-
-                float bottom = 0;
-
-                foreach (var glyph in Group)
-                    if (glyph.YInMM + glyph.HeightInMM / 2 > bottom)
-                        bottom = glyph.YInMM + glyph.HeightInMM / 2;
-
-                return bottom;
-            }
-        }
-
-        public float GroupX
-        {
-            get { return (GroupRight + GroupLeft) / 2; }
-
-            set
-            {
-
-                float dx = value - GroupX;
-
-                foreach (var glyph in Group)
-                    glyph.XInMM += dx;
-            }
-        }
-
-        public float GroupY
-        {
-            get { return (GroupBottom + GroupTop) / 2; }
-
-            set
-            {
-
-                float dy = value - GroupY;
-
-                foreach (var glyph in Group)
-                    glyph.YInMM += dy;
-            }
-        }
-
-        public PointF GroupCenter
-        {
-            get { return new PointF(GroupX, GroupY); }
-
-            set
-            {
-                GroupX = value.X;
-                GroupY = value.Y;
-            }
-        }
-
-        public float GroupWidth
-        {
-            get { return GroupRight - GroupLeft; }
-        }
-
-        public float GroupHeight
-        {
-            get { return GroupBottom - GroupTop; }
-        }
-        #endregion
-
-        #region Manipulation properties
-
-        public MoveDirection Direction
-        {
-            get;
-            set;
-        }
-
-        public float DirectionsAngle
-        {
-            get;
-            set;
-        }
-
-        public virtual float ManipulationPointSize
-        {
-            get { return 7f; }
-        }
-
-        public virtual float RotationPointSize
-        {
-            get { return ManipulationPointSize * 1.5f; }
-        }
-
-        public virtual float RotationPointOffset
-        {
-            get { return 40f; }
-        }
-
-        public PointF[] RotationPoints
-        {
-            get
-            {
-                float angle = Angle.DegToRad();
-                var cos = (float) System.Math.Cos(angle);
-                var sin = (float) System.Math.Sin(angle);
-
-                var startPoint = new PointF(
-                    ScaledX,
-                    ScaledY - (ScaledHeight >> 1));
-
-                var pt0 = new PointF(
-                    startPoint.X,
-                    startPoint.Y - ManipulationPointSize / 2f);
-
-                var endPoint = new PointF(
-                    ScaledX,
-                    ScaledY - (ScaledHeight >> 1) - RotationPointOffset);
-
-                var pt1 = new PointF(
-                    endPoint.X,
-                    endPoint.Y + RotationPointSize/2f);
-
-                var point0 = new PointF(
-                    (startPoint.X - ScaledX) * cos - (startPoint.Y - ScaledY) * sin + ScaledX,
-                    (startPoint.Y - ScaledY) * cos + (startPoint.X - ScaledX) * sin + ScaledY);
-
-                var point1 = new PointF(
-                    (pt0.X - ScaledX) * cos - (pt0.Y - ScaledY) * sin + ScaledX,
-                    (pt0.Y - ScaledY) * cos + (pt0.X - ScaledX) * sin + ScaledY);
-
-                var point2 = new PointF(
-                    (pt1.X - ScaledX) * cos - (pt1.Y - ScaledY) * sin + ScaledX,
-                    (pt1.Y - ScaledY) * cos + (pt1.X - ScaledX) * sin + ScaledY);
-
-                var point3 = new PointF(
-                    (endPoint.X - ScaledX) * cos - (endPoint.Y - ScaledY) * sin + ScaledX,
-                    (endPoint.Y - ScaledY) * cos + (endPoint.X - ScaledX) * sin + ScaledY);
-
-                return new[] { point0, point1, point2, point3 };
-            }
-        }
-
-        public virtual IEnumerable<ManipPoint> ManipulationPoints
-        {
-            get
-            {
-                float halfScaledWidth = ScaledWidth/2f;
-                float halfScaledHeight = ScaledHeight/2f;
-
-                var pts = new[]
-                              {
-
-                                  new PointF(
-                                      ScaledX,
-                                      ScaledY - halfScaledHeight),
-
-                                  new PointF(
-                                      ScaledX + halfScaledWidth,
-                                      ScaledY - halfScaledHeight),
-
-                                  new PointF(
-                                      ScaledX + halfScaledWidth,
-                                      ScaledY),
-
-                                  new PointF(
-                                      ScaledX + halfScaledWidth,
-                                      ScaledY + halfScaledHeight),
-
-                                  new PointF(
-                                      ScaledX,
-                                      ScaledY + halfScaledHeight),
-
-                                  new PointF(
-                                      ScaledX - halfScaledWidth,
-                                      ScaledY + halfScaledHeight),
-
-                                  new PointF(
-                                      ScaledX - halfScaledWidth,
-                                      ScaledY),
-
-                                  new PointF(
-                                      ScaledX - halfScaledWidth,
-                                      ScaledY - halfScaledHeight)
-                              };
-
-                var directions = MoveDirectionHelper.GetDirectionsArray();
-
-                float angle = Angle;
-                float radians = angle.DegToRad();
-                var cos = (float) System.Math.Cos(radians);
-                var sin = (float) System.Math.Sin(radians);
-
-                var directionOffset = angle > 0
-                    ? (int)System.Math.Truncate((angle + (45 / 2f)) / 45f)
-                    : (int)System.Math.Truncate((angle - (45 / 2f)) / 45f);
-
-                for (int i = 0; i < pts.Length; i++)
-                {
-                    PointF pt = pts[i];
-
-                    int j = i + directionOffset;
-                    if (j < 0) j = directions.Length + j;
-                    if (j >= directions.Length) j %= directions.Length;
-                    MoveDirection direction = directions[j];
-
-                    yield return new ManipPoint(
-                        new PointF(
-                            (pt.X - ScaledX) * cos - (pt.Y - ScaledY) * sin + ScaledX,
-                            (pt.Y - ScaledY) * cos + (pt.X - ScaledX) * sin + ScaledY),
-                        directions[i],
-                        direction);
-                }
-            }
-        }
-        #endregion
-
-        #region Link properties
-
-        public virtual float LinkPointSize
-        {
-            get { return 7f; }
-        }
-
-        public virtual IEnumerable<LinkPoint> LinkPoints
-        {
-            get { return new List<LinkPoint>(); }
-        }
-        #endregion
-
-        #region Default values properties
-
-        protected float DefaultXInMM
-        {
-            get
-            {
-                if (Core.Instance.CurrentDocument.DocumentSheet is ISize)
-                {
-                    var sizedSheet = (ISize)Core.Instance.CurrentDocument.DocumentSheet;
-                    float sheetWidth = sizedSheet.Width;
-                    return RandomGenerator.Instance.NextFloat(WidthInMM/2, sheetWidth - WidthInMM/2);
-                }
-
-                throw new InvalidContextException();
-            }
-        }
-
-        protected int DefaultX
-        {
-            get { return UnitsConverter.MMToPx(DefaultXInMM); }
-        }
-
-        protected float DefaultXInInches
-        {
-            get { return UnitsConverter.MMToInch(DefaultXInMM); }
-        }
-
-        protected float DefaultXInCurr
-        {
-            get { return UnitsConverter.MMToCurr(DefaultXInMM); }
-        }
-
-        protected float DefaultYInMM
-        {
-            get
-            {
-                if (Core.Instance.CurrentDocument.DocumentSheet is ISize)
-                {
-                    var sizedSheet = (ISize)Core.Instance.CurrentDocument.DocumentSheet;
-                    float sheetHeight = sizedSheet.Height;
-                    return RandomGenerator.Instance.NextFloat(HeightInMM/2, sheetHeight - HeightInMM/2);
-                }
-
-                throw new InvalidContextException();
-            }
-        }
-
-        protected int DefaultY
-        {
-            get { return UnitsConverter.MMToPx(DefaultYInMM); }
-        }
-
-        protected float DefaultYInInches
-        {
-            get { return UnitsConverter.MMToInch(DefaultYInMM); }
-        }
-
-        protected float DefaultYInCurr
-        {
-            get { return UnitsConverter.MMToCurr(DefaultYInMM); }
-        }
-
-        public float DefaultWidthInMM
-        {
-            get
-            {
-                return ((GlyphDefaultWidthAttribute)(GetType().GetCustomAttributes(typeof(GlyphDefaultWidthAttribute), true)[0])).WidthInMM;
-            }
-        }
-
-        protected int DefaultWidth
-        {
-            get { return UnitsConverter.MMToPx(DefaultWidthInMM); }
-        }
-
-        protected float DefaultWidthInInches
-        {
-            get { return UnitsConverter.MMToInch(DefaultWidthInMM); }
-        }
-
-        protected float DefaultWidthInCurr
-        {
-            get { return UnitsConverter.MMToCurr(DefaultWidthInMM); }
-        }
-
-        public float DefaultHeightInMM
-        {
-            get
-            {
-                return ((GlyphDefaultHeightAttribute)(GetType().GetCustomAttributes(typeof(GlyphDefaultHeightAttribute), true)[0])).HeightInMM;
-            }
-        }
-
-        protected int DefaultHeight
-        {
-            get { return UnitsConverter.MMToPx(DefaultHeightInMM); }
-        }
-
-        protected float DefaultHeightInInches
-        {
-            get { return UnitsConverter.MMToInch(DefaultHeightInMM); }
-        }
-
-        protected float DefaultHeightInCurr
-        {
-            get { return UnitsConverter.MMToCurr(DefaultHeightInMM); }
-        }
-        #endregion
-
-        #region Draw methods
-
-        protected override void DrawGlyph(Graphics gfx)
-        {
-            using (Brush brush = new SolidBrush(Color.FromArgb(10, Color.Blue)))
-            {
-                gfx.FillRectangle(
-                    brush,
-                    ScaledX - (ScaledWidth >> 1), ScaledY - (ScaledHeight >> 1),
-                    ScaledWidth, ScaledHeight);
-            }
-
-            using (var pen = new Pen(Color.Silver))
-            {
-                pen.DashPattern = new float[] { 4, 2 };
-                gfx.DrawRectangle(
-                    pen,
-                    ScaledX - (ScaledWidth >> 1), ScaledY - (ScaledHeight >> 1),
-                    ScaledWidth, ScaledHeight);
-            }
-
-            const int crossWidth = 40;
-
-            gfx.DrawLine(
-                Pens.Silver,
-                ScaledX - (crossWidth >> 2), ScaledY,
-                ScaledX + (crossWidth >> 2), ScaledY);
-
-            gfx.DrawLine(
-                Pens.Silver,
-                ScaledX, ScaledY - (crossWidth >> 2),
-                ScaledX, ScaledY + (crossWidth >> 2));
-        }
-
-        protected override void DrawText(Graphics gfx)
-        {
-            using (var font = "Arial".SafeCreateFont(8))
-            using (var brush = new SolidBrush(ForegroundColor))
-                gfx.DrawString(Caption, font, brush, InnerRegion);
-        }
-
-        protected override void DrawDots(Graphics gfx)
-        {
-            Pen pen;
-            Brush brush;
-
-            if (InGroup)
-            {
-                pen = Settings.Pens.GroupSelectionBorder;
-                brush = Settings.Brushes.GroupSelection;
-            }
-            else
-            {
-                pen = Settings.Pens.SelectionBorder;
-                brush = Settings.Brushes.Selection;
-            }
-
-            var halfManipulationPointSize = (float)System.Math.Ceiling(ManipulationPointSize / 2f);
+            float halfWidth = ScaledWidth / 2f;
+            float halfHeight = ScaledHeight / 2f;
+
+            PointF[] points =
+            [
+                new(ScaledX, ScaledY - halfHeight),
+                new(ScaledX + halfWidth, ScaledY - halfHeight),
+                new(ScaledX + halfWidth, ScaledY),
+                new(ScaledX + halfWidth, ScaledY + halfHeight),
+                new(ScaledX, ScaledY + halfHeight),
+                new(ScaledX - halfWidth, ScaledY + halfHeight),
+                new(ScaledX - halfWidth, ScaledY),
+                new(ScaledX - halfWidth, ScaledY - halfHeight),
+            ];
+
+            // After rotation by more than half a step, a handle visually points to the next direction.
             float angle = Angle;
+            int directionOffset = (int)MathF.Truncate((angle > 0 ? angle + 22.5f : angle - 22.5f) / 45f);
+            IReadOnlyList<MoveDirection> directions = MoveDirectionExtensions.ResizeDirections;
 
-            foreach (var pt in ManipulationPoints)
+            for (int i = 0; i < points.Length; i++)
             {
-                Matrix mx = gfx.Transform;
-
-                gfx.TranslateTransform(pt.Coords.X, pt.Coords.Y);
-                gfx.RotateTransform(angle);
-                gfx.TranslateTransform(-pt.Coords.X, -pt.Coords.Y);
-
-                gfx.FillRectangle(
-                    brush,
-                    (int) (pt.Coords.X - halfManipulationPointSize),
-                    (int) (pt.Coords.Y - halfManipulationPointSize),
-                    (int) ManipulationPointSize,
-                    (int) ManipulationPointSize);
-
-                gfx.DrawRectangle(
-                    pen,
-                    (int) (pt.Coords.X - halfManipulationPointSize),
-                    (int) (pt.Coords.Y - halfManipulationPointSize),
-                    (int) ManipulationPointSize,
-                    (int) ManipulationPointSize);
-
-                gfx.Transform = mx;
-            }
-
-            if (CanRotate)
-            {
-                var pts = RotationPoints;
-                float halfRotationPointSize = RotationPointSize / 2f;
-
-                gfx.DrawEllipse(
-                    pen,
-                    pts[3].X - halfRotationPointSize, pts[3].Y - halfRotationPointSize,
-                    RotationPointSize, RotationPointSize);
-
-                gfx.FillEllipse(
-                    brush,
-                    pts[3].X - halfRotationPointSize, pts[3].Y - halfRotationPointSize,
-                    RotationPointSize, RotationPointSize);
-
-                using (var dashPen = (Pen) pen.Clone())
-                {
-                    dashPen.DashPattern = new[] {3f, 3f};
-                    gfx.DrawLine(
-                        dashPen,
-                        pts[1].X, pts[1].Y,
-                        pts[2].X, pts[2].Y);
-                }
+                int j = ((i + directionOffset) % directions.Count + directions.Count) % directions.Count;
+                yield return new ManipPoint(RotateAroundCenter(points[i]), directions[i], directions[j]);
             }
         }
+    }
 
-        protected override void DrawLinkPoints(Graphics gfx)
+    #endregion
+
+    #region Links
+
+    public virtual bool SupportsLinks => false;
+
+    public virtual float LinkPointSize => 7f;
+
+    /// <summary>Connection ports in sheet pixels: [0] top, [1] right, [2] bottom, [3] left.</summary>
+    public PointF[] LinkPointsScaled
+    {
+        get
         {
-            if (Core.Instance.CurrGlyphTypeSelected &&
-                Core.Instance.CurrentGlyphType.IsSubclassOf(typeof(LinkGlyph)))
-            {
-                float halfLinkPointSize = LinkPointSize / 2f;
+            int halfWidth = ScaledWidth >> 1;
+            int halfHeight = ScaledHeight >> 1;
 
-                foreach (var pt in LinkPoints)
-                {
-                    gfx.FillPie(
-                        Settings.Brushes.Selection,
-                        pt.Coords.X - halfLinkPointSize,
-                        pt.Coords.Y - halfLinkPointSize,
-                        LinkPointSize,
-                        LinkPointSize,
-                        0f, 360f);
+            return
+            [
+                new(ScaledX, ScaledY - halfHeight),
+                new(ScaledX + halfWidth, ScaledY),
+                new(ScaledX, ScaledY + halfHeight),
+                new(ScaledX - halfWidth, ScaledY),
+            ];
+        }
+    }
 
-                    gfx.DrawPie(
-                        Settings.Pens.SelectionBorder,
-                        pt.Coords.X - halfLinkPointSize,
-                        pt.Coords.Y - halfLinkPointSize,
-                        LinkPointSize,
-                        LinkPointSize,
-                        0f, 360f);
-                }
-            }
+    #endregion
+
+    /// <summary>Whether the glyph bounds touch <paramref name="rect"/> (sheet pixels).</summary>
+    public bool InRegion(Rectangle rect)
+    {
+        Rectangle bounds = ScaledBounds;
+
+        return bounds.Right >= rect.X && bounds.X <= rect.Right
+            && bounds.Bottom >= rect.Y && bounds.Y <= rect.Bottom;
+    }
+
+    /// <summary>Hit test against the unrotated bounds, edges included (sheet pixels).</summary>
+    public bool Contains(Point point)
+    {
+        int halfWidth = ScaledWidth >> 1;
+        int halfHeight = ScaledHeight >> 1;
+
+        return point.X >= ScaledX - halfWidth && point.X <= ScaledX + halfWidth
+            && point.Y >= ScaledY - halfHeight && point.Y <= ScaledY + halfHeight;
+    }
+
+    #region Drawing
+
+    protected override void ApplyRotation(Graphics graphics)
+    {
+        if (!CanRotate || Angle == 0)
+            return;
+
+        graphics.TranslateTransform(ScaledX, ScaledY);
+        graphics.RotateTransform(Angle);
+        graphics.TranslateTransform(-ScaledX, -ScaledY);
+    }
+
+    /// <summary>Placeholder look for block glyphs that do not draw themselves.</summary>
+    protected override void DrawGlyph(Graphics graphics)
+    {
+        Rectangle bounds = ScaledBounds;
+        graphics.FillRectangle(PlaceholderBrush, bounds);
+        graphics.DrawRectangle(PlaceholderPen, bounds);
+
+        graphics.DrawLine(Pens.Silver, ScaledX - CenterMarkSize, ScaledY, ScaledX + CenterMarkSize, ScaledY);
+        graphics.DrawLine(Pens.Silver, ScaledX, ScaledY - CenterMarkSize, ScaledX, ScaledY + CenterMarkSize);
+    }
+
+    protected override void DrawText(Graphics graphics)
+    {
+        using var brush = new SolidBrush(ForegroundColor);
+        graphics.DrawString(Caption, TextFont, brush, InnerRegion);
+    }
+
+    protected override void DrawDots(Graphics graphics)
+    {
+        bool inGroup = InGroup;
+        Pen pen = inGroup ? Settings.Pens.GroupSelectionBorder : Settings.Pens.SelectionBorder;
+        Brush brush = inGroup ? Settings.Brushes.GroupSelection : Settings.Brushes.Selection;
+
+        float halfSize = MathF.Ceiling(ManipulationPointSize / 2f);
+        var size = (int)ManipulationPointSize;
+
+        foreach (ManipPoint point in ManipulationPoints)
+        {
+            GraphicsState state = graphics.Save();
+            graphics.TranslateTransform(point.Coords.X, point.Coords.Y);
+            graphics.RotateTransform(Angle);
+            graphics.TranslateTransform(-point.Coords.X, -point.Coords.Y);
+
+            var square = new Rectangle((int)(point.Coords.X - halfSize), (int)(point.Coords.Y - halfSize), size, size);
+            graphics.FillRectangle(brush, square);
+            graphics.DrawRectangle(pen, square);
+
+            graphics.Restore(state);
         }
 
-        protected override void DrawHelpers(Graphics gfx)
-        {
-            Color color = InGroup
-                              ? Settings.Colors.GroupSelectionBorder
-                              : Settings.Colors.SelectionBorder;
+        if (!CanRotate)
+            return;
 
-            using (Brush brush = new SolidBrush(color))
-                if (Settings.Environment.SizeLocationLabel && Direction != MoveDirection.None)
-                    if (Direction == MoveDirection.Move)
-                    {
-                        using (var font = "Arial".SafeCreateFont(7))
-                            gfx.DrawString(
-                                string.Format("[x:{0}{2}, y:{1}{2}]",
-                                              XInMM.MMToCurr().ToString("F1"),
-                                              YInMM.MMToCurr().ToString("F1"),
-                                              Core.Instance.CurrentTranslator[
-                                                  Settings.Environment.CurrentUnits.ShortName]),
-                                font,
-                                brush,
-                                ScaledX - (ScaledWidth >> 1) - ManipulationPointSize,
-                                ScaledY + (ScaledHeight >> 1) + ManipulationPointSize);
-                    }
-                    else
-                    {
-                        using (var font = "Arial".SafeCreateFont(7))
-                            gfx.DrawString(
-                                string.Format("[{0}:{1}{4}, {2}:{3}{4}]",
-                                              Core.Instance.CurrentTranslator["width"],
-                                              WidthInMM.MMToCurr().ToString("F1"),
-                                              Core.Instance.CurrentTranslator["height"],
-                                              HeightInMM.MMToCurr().ToString("F1"),
-                                              Core.Instance.CurrentTranslator[
-                                                  Settings.Environment.CurrentUnits.ShortName]),
-                                font,
-                                brush,
-                                ScaledX - (ScaledWidth >> 1) - ManipulationPointSize,
-                                ScaledY + (ScaledHeight >> 1) + ManipulationPointSize);
-                    }
-        }
-        #endregion
+        PointF[] stem = RotationPoints;
+        float radius = RotationPointSize / 2f;
+        var handle = new RectangleF(stem[3].X - radius, stem[3].Y - radius, RotationPointSize, RotationPointSize);
 
-        #region Public methods
+        graphics.DrawEllipse(pen, handle);
+        graphics.FillEllipse(brush, handle);
 
-        public bool InRegion(Rectangle rect)
-        {
-            int ix = ScaledX - (ScaledWidth >> 1);
-            int iy = ScaledY - (ScaledHeight >> 1);
+        using var dashPen = (Pen)pen.Clone();
+        dashPen.DashPattern = [3f, 3f];
+        graphics.DrawLine(dashPen, stem[1], stem[2]);
+    }
 
-            if (ix + ScaledWidth < rect.X) return false;
-            if (ix > rect.X + rect.Width) return false;
+    protected override void DrawHelpers(Graphics graphics)
+    {
+        if (!Settings.Environment.SizeLocationLabel || Direction == MoveDirection.None)
+            return;
 
-            if (iy + ScaledHeight < rect.Y) return false;
-            if (iy > rect.Y + rect.Height) return false;
+        Translator translator = Core.Instance.CurrentTranslator;
+        string units = translator[Settings.Environment.CurrentUnits.ShortName];
 
-            return true;
-        }
-        #endregion
+        string label = Direction == MoveDirection.Move
+            ? $"[x:{Format(XInMM)}{units}, y:{Format(YInMM)}{units}]"
+            : $"[{translator["width"]}:{Format(WidthInMM)}{units}, {translator["height"]}:{Format(HeightInMM)}{units}]";
 
-        #region ISize
+        graphics.DrawString(
+            label,
+            _labelFont ??= Fonts.Create("Arial", 7),
+            InGroup ? GroupSelectionLabelBrush : SelectionLabelBrush,
+            ScaledX - (ScaledWidth >> 1) - ManipulationPointSize,
+            ScaledY + (ScaledHeight >> 1) + ManipulationPointSize);
 
-        public int Width
-        {
-            get { return WidthInMM.MMToPx(); }
-            set { WidthInMM = value.PxToMM(); }
-        }
+        static string Format(float mm) => mm.MMToCurr().ToString("F1", CultureInfo.CurrentCulture);
+    }
 
-        public int Height
-        {
-            get { return HeightInMM.MMToPx(); }
-            set { HeightInMM = value.PxToMM(); }
-        }
+    /// <summary>Lock icon in the top-right corner of a fixed glyph.</summary>
+    protected override void DrawLockMarker(Graphics graphics)
+    {
+        Bitmap image = Core.Instance.Images["Lock"];
 
-        [Description(@"Width in mm.")]
-        [Category(@"Layout")]
-        [DisplayName(@"Width")]
-        [ActiveProperty]
-        public float WidthInMM
-        {
-            get { return _width; }
+        graphics.DrawImageUnscaled(
+            image,
+            ScaledX + (ScaledWidth >> 1) - image.Width - LockMarkerOffset,
+            ScaledY - (ScaledHeight >> 1) + LockMarkerOffset);
+    }
 
-            set
-            {
-                if (value < MinimalWidthInMM)
-                    value = MinimalWidthInMM;
+    #endregion
 
-                if (value <= 0)
-                    throw new InvalidValueException(@"Sheet.Width", value.ToString());
+    private PointF RotateAroundCenter(PointF point)
+    {
+        float radians = float.DegreesToRadians(Angle);
+        float cos = MathF.Cos(radians);
+        float sin = MathF.Sin(radians);
+        float dx = point.X - ScaledX;
+        float dy = point.Y - ScaledY;
 
-                _width = value;
-            }
-        }
-
-        [Description(@"Height in mm.")]
-        [Category(@"Layout")]
-        [DisplayName(@"Height")]
-        [ActiveProperty]
-        public float HeightInMM
-        {
-            get { return _height; }
-
-            set
-            {
-                if (value < MinimalHeightInMM)
-                    value = MinimalHeightInMM;
-
-                if (value <= 0)
-                    throw new InvalidValueException(@"Sheet.Height", value.ToString());
-
-                _height = value;
-            }
-        }
-
-        public float WidthInInches
-        {
-            get { return WidthInMM.MMToInch(); }
-            set { WidthInMM = value.InchToMM(); }
-        }
-
-        public float HeightInInches
-        {
-            get { return HeightInMM.MMToInch(); }
-            set { HeightInMM = value.InchToMM(); }
-        }
-
-        public float WidthInCurr
-        {
-            get { return WidthInMM.MMToCurr(); }
-            set { WidthInMM = value.CurrToMM(); }
-        }
-
-        public float HeightInCurr
-        {
-            get { return HeightInMM.MMToCurr(); }
-            set { HeightInMM = value.CurrToMM(); }
-        }
-        #endregion
-
-        #region IScaledSize
-
-        public int ScaledWidth
-        {
-            get { return Width.Scale(); }
-            set { Width = value.Unscale(); }
-        }
-
-        public int ScaledHeight
-        {
-            get { return Height.Scale(); }
-            set { Height = value.Unscale(); }
-        }
-
-        public float ScaledWidthInMM
-        {
-            get { return WidthInMM.Scale(); }
-            set { WidthInMM = value.Unscale(); }
-        }
-
-        public float ScaledHeightInMM
-        {
-            get { return HeightInMM.Scale(); }
-            set { HeightInMM = value.Unscale(); }
-        }
-
-        public float ScaledWidthInInches
-        {
-            get { return WidthInInches.Scale(); }
-            set { WidthInInches = value.Unscale(); }
-        }
-
-        public float ScaledHeightInInches
-        {
-            get { return HeightInInches.Scale(); }
-            set { HeightInInches = value.Unscale(); }
-        }
-
-        public float ScaledWidthInCurr
-        {
-            get { return WidthInCurr.Scale(); }
-            set { WidthInCurr = value.Unscale(); }
-        }
-
-        public float ScaledHeightInCurr
-        {
-            get { return HeightInCurr.Scale(); }
-            set { HeightInCurr = value.Unscale(); }
-        }
-        #endregion
-
-        #region ILocation
-
-        public int X
-        {
-            get { return XInMM.MMToPx(); }
-            set { XInMM = value.PxToMM(); }
-        }
-
-        public int Y
-        {
-            get { return YInMM.MMToPx(); }
-            set { YInMM = value.PxToMM(); }
-        }
-
-        [Description(@"X coordinate in mm.")]
-        [Category(@"Layout")]
-        [DisplayName(@"X")]
-        [ActiveProperty]
-        public float XInMM { get; set; }
-
-        [Description(@"Y coordinate in mm.")]
-        [Category(@"Layout")]
-        [DisplayName(@"Y")]
-        [ActiveProperty]
-        public float YInMM { get; set; }
-
-        public float XInInches
-        {
-            get { return XInMM.MMToInch(); }
-            set { XInMM = value.InchToMM(); }
-        }
-
-        public float YInInches
-        {
-            get { return YInMM.MMToInch(); }
-            set { YInMM = value.InchToMM(); }
-        }
-
-        public float XInCurr
-        {
-            get { return XInMM.MMToCurr(); }
-            set { XInMM = value.CurrToMM(); }
-        }
-
-        public float YInCurr
-        {
-            get { return YInMM.MMToCurr(); }
-            set { YInMM = value.CurrToMM(); }
-        }
-        #endregion
-
-        #region IScaledLocation
-
-        public int ScaledX
-        {
-            get { return X.Scale(); }
-            set { X = value.Unscale(); }
-        }
-
-        public int ScaledY
-        {
-            get { return Y.Scale(); }
-            set { Y = value.Unscale(); }
-        }
-
-        public float ScaledXInMM
-        {
-            get { return XInMM.Scale(); }
-            set { XInMM = value.Unscale(); }
-        }
-
-        public float ScaledYInMM
-        {
-            get { return YInMM.Scale(); }
-            set { YInMM = value.Unscale(); }
-        }
-
-        public float ScaledXInInches
-        {
-            get { return XInInches.Scale(); }
-            set { XInInches = value.Unscale(); }
-        }
-
-        public float ScaledYInInches
-        {
-            get { return YInInches.Scale(); }
-            set { YInInches = value.Unscale(); }
-        }
-
-        public float ScaledXInCurr
-        {
-            get { return XInCurr.Scale(); }
-            set { XInCurr = value.Unscale(); }
-        }
-
-        public float ScaledYInCurr
-        {
-            get { return YInCurr.Scale(); }
-            set { YInCurr = value.Unscale(); }
-        }
-        #endregion
-
-        #region Rotation
-
-        [Description(@"Angle.")]
-        [Category(@"Layout")]
-        [DisplayName(@"Angle")]
-        [ActiveProperty]
-        public float Angle
-        {
-            get
-            {
-                if (System.Math.Abs(_angle) > 360)
-                    _angle = (float)(_angle - System.Math.Truncate(_angle / 360) * 360);
-
-                return _angle;
-            }
-
-            set
-            {
-                _angle = value;
-
-                if (System.Math.Abs(_angle) > 360)
-                    _angle = (float)(_angle - System.Math.Truncate(_angle / 360) * 360);
-            }
-        }
-
-        public virtual bool CanRotate
-        {
-            get
-            {
-
-                return true;
-            }
-        }
-        #endregion
-
-        #region Connection points
-
-        public virtual bool SupportsLinks
-        {
-            get { return false; }
-        }
-
-        public PointF[] LinkPointsScaled
-        {
-            get
-            {
-                int halfWidth = ScaledWidth >> 1;
-                int halfHeight = ScaledHeight >> 1;
-
-                return new[]
-                {
-                    new PointF(ScaledX, ScaledY - halfHeight),
-                    new PointF(ScaledX + halfWidth, ScaledY),
-                    new PointF(ScaledX, ScaledY + halfHeight),
-                    new PointF(ScaledX - halfWidth, ScaledY)
-                };
-            }
-        }
-        #endregion
-
+        return new PointF(dx * cos - dy * sin + ScaledX, dy * cos + dx * sin + ScaledY);
     }
 }

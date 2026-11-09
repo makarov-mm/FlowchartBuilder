@@ -1,59 +1,34 @@
-using System.Windows.Forms;
+using System.ComponentModel;
+using Makarov.FlowchartBuilder.API.Attributes;
 using Makarov.FlowchartBuilder.Commands;
-using BaseSettings = Makarov.Framework.Core.Settings;
 
-namespace Makarov.FlowchartBuilder.Forms
+namespace Makarov.FlowchartBuilder.Forms;
+
+/// <summary>
+/// Property grid for the selected glyphs; it shows only the document properties (<see cref="ActivePropertyAttribute"/>).
+/// </summary>
+public partial class PropertiesForm : DockingForm
 {
-    public partial class PropertiesForm : DockingForm
+    public PropertiesForm()
     {
-        public PropertiesForm()
-        {
-            InitializeComponent();
-        }
-
-        protected override string RegistrySettingsName
-        {
-            get { return "PropertiesForm"; }
-        }
-
-        private void FBProperties_Load(object sender, System.EventArgs e)
-        {
-
-            Text = Core.Instance.CurrentTranslator["Wnd_Properties_Title"];
-        }
-
-        protected override void OnResize(System.EventArgs e)
-        {
-            base.OnResize(e);
-
-            if (gridView != null)
-            {
-                gridView.Left = ClientRectangle.Left;
-                gridView.Top = ClientRectangle.Top;
-                gridView.Width = ClientRectangle.Width;
-                gridView.Height = ClientRectangle.Height;
-            }
-        }
-
-        private void FBProperties_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (Core.Instance.MainWindow.IsClosing)
-                return;
-
-            e.Cancel = true;
-            Hide();
-
-            Command.GetInstance("PropertiesWindowCommand").Enabled = true;
-        }
-
-        public PropertyGrid Grid
-        {
-            get { return gridView; }
-        }
-
-        private void gridView_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
-        {
-            Core.Instance.Redraw();
-        }
+        InitializeComponent();
+        gridView.BrowsableAttributes = new AttributeCollection(new ActivePropertyAttribute());
     }
+
+    public PropertyGrid Grid => gridView;
+
+    private void PropertiesForm_Load(object? sender, EventArgs e) =>
+        Text = Core.Instance.CurrentTranslator["Wnd_Properties_Title"];
+
+    private void PropertiesForm_FormClosing(object? sender, FormClosingEventArgs e)
+    {
+        if (Core.Instance.MainWindow.IsClosing)
+            return;
+
+        e.Cancel = true;
+        Hide();
+        Command.GetInstance<PropertiesWindowCommand>().Enabled = true;
+    }
+
+    private void gridView_PropertyValueChanged(object? sender, PropertyValueChangedEventArgs e) => Core.Instance.Redraw();
 }

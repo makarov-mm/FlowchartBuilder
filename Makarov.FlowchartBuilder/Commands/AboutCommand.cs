@@ -1,14 +1,12 @@
 using Makarov.FlowchartBuilder.Forms;
 
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+public sealed class AboutCommand : Command
 {
-
-    public sealed class AboutCommand : Command
+    public override void Run()
     {
-
-        public override void Run()
-        {
-            Core.Instance.Windows.GetWindow<AboutForm>().ShowDialog(Core.Instance.MainWindow);
-        }
+        using var dialog = new AboutForm();
+        dialog.ShowDialog(Core.Instance.MainWindow);
     }
 }

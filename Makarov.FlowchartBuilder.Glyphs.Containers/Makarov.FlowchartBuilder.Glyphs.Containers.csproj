@@ -1,17 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <RootNamespace>Makarov.FlowchartBuilder.Glyphs.Containers</RootNamespace>
-    <AssemblyName>Makarov.FlowchartBuilder.Glyphs.Containers</AssemblyName>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Makarov.FlowchartBuilder.API\Makarov.FlowchartBuilder.API.csproj" />
     <ProjectReference Include="..\Makarov.FlowchartBuilder\Makarov.FlowchartBuilder.csproj" />
-    <ProjectReference Include="..\Makarov.Framework.Core\Makarov.Framework.Core.csproj" />
   </ItemGroup>
 
 </Project>

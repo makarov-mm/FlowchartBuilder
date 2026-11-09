@@ -1,21 +1,10 @@
-using System;
 using Makarov.Framework.Core;
 
-namespace Makarov.Framework.Serialization
+namespace Makarov.Framework.Serialization;
+
+public sealed class VersionSerializer : AbstractSerializer<Version>
 {
-    public sealed class VersionSerializer : AbstractSerializer
-    {
+    protected override string Format(Version value) => value.ToString();
 
-        public override Type SerializerType => typeof(Version);
-
-        public override string Serialize(object obj)
-        {
-            return obj.ToString();
-        }
-
-        public override object Deserialize(string str)
-        {
-            return new Version(str);
-        }
-    }
+    protected override Version Parse(string text) => Version.Parse(text);
 }

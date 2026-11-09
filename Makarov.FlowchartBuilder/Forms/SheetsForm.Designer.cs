@@ -75,9 +75,8 @@ namespace Makarov.FlowchartBuilder.Forms
             this.Name = "SheetsForm";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "FBNew";
+            this.Text = "New";
             this.Shown += new System.EventHandler(this.SheetsForm_Shown);
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FBNew_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 

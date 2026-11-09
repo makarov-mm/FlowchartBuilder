@@ -1,81 +1,68 @@
-using System.Drawing;
 using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics.Primitives;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Shapes
+namespace Makarov.FlowchartBuilder.Glyphs.Shapes;
+
+/// <summary>
+/// A filled geometric shape without a caption; the outline comes from a <see cref="Primitive"/>.
+/// </summary>
+[GlyphFamily("Shapes")]
+[GlyphDefaultWidth(30)]
+[GlyphDefaultHeight(30)]
+public abstract class AbstractShapeGlyph : BlockGlyph
 {
-
-    [GlyphFamily("Shapes")]
-    [GlyphDefaultWidth(30)]
-    [GlyphDefaultHeight(30)]
-    public abstract class AbstractShapeGlyph : BlockGlyph
+    protected AbstractShapeGlyph()
     {
+        BackgroundColor = Color.Yellow;
+    }
 
-        protected AbstractShapeGlyph()
+    public override Bitmap Thumbnail
+    {
+        get
         {
-            BackgroundColor = Color.Yellow;
+            Bitmap bitmap = base.Thumbnail;
+
+            using Graphics graphics = Graphics.FromImage(bitmap);
+            using GraphicsPath path = CreateThumbnailPrimitive().Create();
+            using var brush = new LinearGradientBrush(
+                Point.Empty,
+                new Point(ThumbnailWidth, ThumbnailHeight),
+                Settings.Colors.ThumbnailObjectGradientStart,
+                Settings.Colors.ThumbnailObjectGradientEnd);
+
+            graphics.FillPath(brush, path);
+            graphics.DrawPath(Settings.Pens.ThumbnailBorder, path);
+            DrawThumbnailBorder(graphics);
+
+            return bitmap;
         }
+    }
 
-        protected override void DrawText(Graphics gfx)
-        {
+    /// <summary>Vertical margin of the shape in the palette image; flat shapes use a larger one.</summary>
+    protected virtual int ThumbnailInsetY => ThumbnailHeight >> 3;
 
-        }
+    /// <summary>Creates the outline fitted into the given box.</summary>
+    protected abstract Primitive CreatePrimitive(int x, int y, int width, int height);
 
-        protected abstract GraphicsPath CenteredPath
-        {
-            get;
-        }
+    protected override void DrawGlyph(Graphics graphics)
+    {
+        using GraphicsPath path = CreatePrimitive(ScaledX, ScaledY, ScaledWidth, ScaledHeight).CreateCentered();
+        using var brush = new SolidBrush(BackgroundColor);
+        using var pen = new Pen(BorderColor, ScaledBorderWidth);
 
-        protected abstract GraphicsPath Path
-        {
-            get;
-        }
+        graphics.FillPath(brush, path);
+        graphics.DrawPath(pen, path);
+    }
 
-        protected override void DrawGlyph(Graphics gfx)
-        {
-            using (GraphicsPath path = CenteredPath)
-            {
-                using (Brush brush = new LinearGradientBrush(
-                    new PointF(ScaledX - ScaledWidth / 2, ScaledY - ScaledHeight / 2),
-                    new PointF(ScaledX + ScaledWidth / 2, ScaledY + ScaledHeight / 2),
-                    BackgroundColor, BackgroundColor))
-                {
-                    gfx.FillPath(brush, path);
-                }
+    protected override void DrawText(Graphics graphics)
+    {
+    }
 
-                using (var pen = new Pen(BorderColor, ScaledBorderWidth))
-                {
-                    gfx.DrawPath(pen, path);
-                }
-            }
-        }
-
-        public override Bitmap Thumbnail
-        {
-            get
-            {
-                Bitmap bmp = base.Thumbnail;
-
-                using (Graphics gfx = Graphics.FromImage(bmp))
-                {
-                    using (GraphicsPath path = Path)
-                    {
-                        using (Brush brush = new LinearGradientBrush(
-                            new PointF(0, 0),
-                            new PointF(ThumbnailWidth, ThumbnailHeight),
-                            Settings.Colors.ThumbnailObjectGradientStart,
-                            Settings.Colors.ThumbnailObjectGradientEnd))
-                        {
-                            gfx.FillPath(brush, path);
-                        }
-
-                        gfx.DrawPath(Settings.Pens.ThumbnailBorder, path);
-                        DrawThumbnailBorder(gfx);
-                    }
-                }
-
-                return bmp;
-            }
-        }
+    private Primitive CreateThumbnailPrimitive()
+    {
+        int insetX = ThumbnailWidth >> 3;
+        int insetY = ThumbnailInsetY;
+        return CreatePrimitive(insetX, insetY, ThumbnailWidth - (insetX << 1), ThumbnailHeight - (insetY << 1));
     }
 }

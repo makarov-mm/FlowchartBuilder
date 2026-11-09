@@ -1,66 +1,12 @@
-using System.Collections.Generic;
-using Makarov.FlowchartBuilder.Extensions;
-using Makarov.FlowchartBuilder.Glyphs;
+namespace Makarov.FlowchartBuilder.Commands;
 
-namespace Makarov.FlowchartBuilder.Commands
+/// <summary>Lines up the top edges with the topmost one.</summary>
+public sealed class AlignTopCommand : AlignCommand
 {
-
-    public sealed class AlignTopCommand : Command
+    protected override void Align(IReadOnlyList<AlignItem> items)
     {
-
-        public override void Run()
-        {
-
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            if (!Core.Instance.CurrentDocument.DocumentSheet.SelectedGlyphsExists)
-                throw new InvalidContextException(@"Selected glyphs not exists.");
-
-            var sizedSheet = (ISize)Core.Instance.CurrentDocument.DocumentSheet;
-            int top = sizedSheet.Height.MMToPx();
-
-            var lst = new List<BlockGlyph>();
-
-            var groups = new List<List<BlockGlyph>>();
-
-            foreach (var glyph in Core.Instance.CurrentDocument.DocumentSheet.NonFixedGlyphs)
-            {
-
-                if (glyph is BlockGlyph && glyph.Selected)
-                {
-
-                    var g = (BlockGlyph)glyph;
-
-                    if (g.InGroup)
-                    {
-
-                        if (!groups.Contains(g.Group))
-                        {
-                            groups.Add(g.Group);
-
-                            if (g.GroupY.MMToPx() - (g.GroupHeight.MMToPx() >> 1) < top)
-                                top = g.GroupY.MMToPx() - (g.GroupHeight.MMToPx() >> 1);
-                        }
-                    }
-                    else
-                    {
-
-                        if (g.Y - (g.Height >> 1) < top)
-                            top = g.Y - (g.Height >> 1);
-
-                        lst.Add(g);
-                    }
-                }
-            }
-
-            foreach (var glyph in lst)
-                glyph.Y = top + (glyph.Height >> 1);
-
-            foreach (var group in groups)
-                group[0].GroupY = (top + (group[0].GroupHeight.MMToPx() >> 1)).PxToMM();
-
-            Core.Instance.Redraw();
-        }
+        float top = items.Min(item => item.Bounds.Top);
+        foreach (AlignItem item in items)
+            item.MoveBy(0, top - item.Bounds.Top);
     }
 }

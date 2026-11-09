@@ -1,18 +1,9 @@
-using System;
+namespace Makarov.FlowchartBuilder.Commands;
 
-namespace Makarov.FlowchartBuilder.Commands
+/// <summary>Closing a document is not implemented yet; the menu item stays disabled.</summary>
+public sealed class CloseCommand : Command
 {
-
-    public sealed class CloseCommand : Command
+    public override void Run()
     {
-
-        public override void Run()
-        {
-
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            throw new NotImplementedException();
-        }
     }
 }

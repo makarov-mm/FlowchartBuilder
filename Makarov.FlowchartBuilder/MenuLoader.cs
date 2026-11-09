@@ -1,292 +1,164 @@
-using System;
-using System.Drawing;
-using System.Windows.Forms;
 using System.Xml;
-using System.Xml.Schema;
 using Makarov.FlowchartBuilder.Commands;
 using Makarov.FlowchartBuilder.Forms;
-using Makarov.Framework.Components;
+using Makarov.Framework.Core.Xml;
 
-namespace Makarov.FlowchartBuilder
+namespace Makarov.FlowchartBuilder;
+
+/// <summary>
+/// Builds the main menu and the toolbar from Data\MainMenu.xml and Data\SecondaryMenu.xml.
+/// Captions and tooltips in the files are translation keys; command classes are bound by name.
+/// </summary>
+public static class MenuLoader
 {
+    private const char SubcommandsPrefix = '@';
 
-    public static class MenuLoader
+    public static void LoadMainMenu(MainForm window)
     {
-        #region Public methods
+        XmlElement root = ValidatedXml.Load(
+            Settings.Files.MainMenuDefinition, Settings.Xml.Namespace, Settings.Files.MainMenuSchema);
 
-        public static void LoadMainMenu(MainForm wnd)
-        {
-
-            var doc = new XmlDocument();
-            doc.Load(Settings.Files.MainMenuDefinition);
-            doc.Schemas.Add(Settings.Xml.Namespaces.Base, Settings.Files.MainMenuSchema);
-            doc.Validate(delegate(object sender, ValidationEventArgs args) { throw args.Exception; });
-
-            var mainNode = doc.GetElementsByTagName(Settings.Xml.Tags.MainMenu)[0];
-
-            foreach (XmlNode node in mainNode)
-            {
-
-                if (node.NodeType == XmlNodeType.Element && node.Name == Settings.Xml.Tags.Menu)
-                {
-                    wnd.MainMenu.Items.Add(CreateSubmenu(node));
-                }
-
-                else if (node.NodeType != XmlNodeType.Comment)
-                    throw new InvalidNodeTypeException(node.NodeType.ToString());
-            }
-        }
-
-        public static void LoadSecondaryMenu(MainForm wnd)
-        {
-
-            var doc = new XmlDocument();
-            doc.Load(Settings.Files.SecondaryMenuDefinition);
-            doc.Schemas.Add(Settings.Xml.Namespaces.Base, Settings.Files.SecondaryMenuSchema);
-            doc.Validate(delegate(object sender, ValidationEventArgs args) { throw args.Exception; });
-
-            var mainNode = doc.GetElementsByTagName(Settings.Xml.Tags.SecondaryMenu)[0];
-
-            foreach (XmlNode node in mainNode)
-            {
-
-                if (node.NodeType == XmlNodeType.Element)
-                {
-                    switch (node.Name)
-                    {
-
-                        case Settings.Xml.Tags.Command:
-                            wnd.SecondaryMenu.Items.Add(CreateButton(node));
-                            break;
-
-                        case Settings.Xml.Tags.Separator:
-                            wnd.SecondaryMenu.Items.Add(CreateSeparator());
-                            break;
-
-                        default:
-                            throw new InvalidNodeNameException(node.Name);
-                    }
-                }
-
-                else if (node.NodeType != XmlNodeType.Comment)
-                    throw new InvalidNodeTypeException(node.NodeType.ToString());
-            }
-        }
-        #endregion
-
-        #region Private methods
-
-        private static ToolStripItem CreateSubmenu(XmlNode node)
-        {
-            var item = new ToolStripMenuItem(
-                Core.Instance.CurrentTranslator[node.Attributes[Settings.Xml.Attributes.Caption].Value]);
-
-            if (node.Attributes[Settings.Xml.Attributes.Icon] != null)
-            {
-                string icon = node.Attributes[Settings.Xml.Attributes.Icon].Value;
-                if (!string.IsNullOrEmpty(icon))
-                {
-                    item.ImageScaling = ToolStripItemImageScaling.None;
-                    item.ImageTransparentColor = Color.White;
-                    item.Image = Core.Instance.Icons[icon];
-                }
-            }
-
-            foreach (XmlNode subNode in node)
-            {
-                if (subNode.NodeType == XmlNodeType.Element)
-                {
-                    switch (subNode.Name)
-                    {
-
-                        case Settings.Xml.Tags.Menu:
-                            item.DropDownItems.Add(CreateSubmenu(subNode));
-                            break;
-
-                        case Settings.Xml.Tags.Command:
-                            item.DropDownItems.Add(CreateCommand(subNode));
-                            break;
-
-                        case Settings.Xml.Tags.Separator:
-                            item.DropDownItems.Add(CreateSeparator());
-                            break;
-
-                        default:
-                            throw new InvalidNodeNameException(node.Name);
-                    }
-                }
-                else if (subNode.NodeType != XmlNodeType.Comment)
-                    throw new InvalidNodeTypeException(subNode.NodeType.ToString());
-            }
-
-            return item;
-        }
-
-        private static ToolStripItem CreateCommand(XmlNode node)
-        {
-
-            var cmdValue = node.Attributes[Settings.Xml.Attributes.Class].Value;
-
-            if (cmdValue[0] == '@')
-            {
-                cmdValue = cmdValue.Substring(1);
-
-                var submenu = new ToolStripMenuItem(
-                Core.Instance.CurrentTranslator[node.Attributes[Settings.Xml.Attributes.Caption].Value]);
-
-                if (node.Attributes[Settings.Xml.Attributes.Icon] != null)
-                {
-                    string icon = node.Attributes[Settings.Xml.Attributes.Icon].Value;
-                    if (!string.IsNullOrEmpty(icon))
-                    {
-                        submenu.ImageScaling = ToolStripItemImageScaling.None;
-                        submenu.ImageTransparentColor = Color.White;
-                        submenu.Image = Core.Instance.Icons[icon];
-                    }
-                }
-
-                foreach (var cmd in ((CommandWithSubcommands)Command.GetInstance(cmdValue)).Commands)
-                {
-                    var subitem = new ActiveToolStripMenuItem(
-                        Core.Instance.CurrentTranslator[cmd],
-                        string.Format("{0}@{1}", cmdValue, cmd));
-
-                    subitem.Click += (e, args) =>
-                                         {
-                                             var commandName = ((string) subitem.Tag).Split('@')[0];
-                                             var commandParam = ((string) subitem.Tag).Split('@')[1];
-                                             var instance = (CommandWithSubcommands) Command.GetInstance(commandName);
-                                             instance.Run(commandParam);
-                                         };
-
-                    subitem.ImageScaling = ToolStripItemImageScaling.None;
-                    subitem.ImageTransparentColor = Color.White;
-                    subitem.ActiveIcon = ((CommandWithSubcommands)Command.GetInstance(cmdValue)).Icon(cmd);
-
-                    submenu.DropDownItems.Add(subitem);
-                }
-
-                return submenu;
-            }
-
-            var item = new ActiveToolStripMenuItem(
-                node.Attributes[Settings.Xml.Attributes.Caption] != null
-                    ? Core.Instance.CurrentTranslator[node.Attributes[Settings.Xml.Attributes.Caption].Value]
-                    : string.Empty,
-                cmdValue);
-
-            if (node.Attributes[Settings.Xml.Attributes.Icon] != null)
-            {
-                string icon = node.Attributes[Settings.Xml.Attributes.Icon].Value;
-                if (!string.IsNullOrEmpty(icon))
-                {
-                    item.ImageScaling = ToolStripItemImageScaling.None;
-                    item.ImageTransparentColor = Color.White;
-                    item.ActiveIcon = Core.Instance.Icons[icon];
-                }
-            }
-
-            if (node.Attributes[Settings.Xml.Attributes.Shortcut] != null)
-            {
-                string shortcut = node.Attributes[Settings.Xml.Attributes.Shortcut].Value;
-                if (!string.IsNullOrEmpty(shortcut))
-                {
-                    string[] parts = shortcut.Split('+');
-                    Keys keys = 0;
-
-                    foreach (string part in parts)
-                    {
-                        switch (part.ToLowerInvariant())
-                        {
-                            case "ctrl":
-                                keys |= Keys.Control;
-                                break;
-
-                            case "alt":
-                                keys |= Keys.Alt;
-                                break;
-
-                            case "shift":
-                                keys |= Keys.Shift;
-                                break;
-
-                            default:
-                                Keys parsed;
-                                if (Enum.TryParse(part, out parsed))
-                                    keys |= parsed;
-                                else
-                                    throw new FlowchartBuilderException(
-                                        string.Format(@"Key '{0}' not parsed.", part));
-                                break;
-                        }
-                    }
-
-                    item.ShortcutKeys = keys;
-                }
-            }
-
-            var checkedAttrib = node.Attributes[Settings.Xml.Attributes.Checked];
-            item.ActiveChecked = checkedAttrib != null
-                                     ? bool.Parse(checkedAttrib.Value)
-                                     : false;
-
-            item.ActiveBalloon = node.Attributes[Settings.Xml.Attributes.ToolTip] != null
-                                    ? Core.Instance.CurrentTranslator[node.Attributes[Settings.Xml.Attributes.ToolTip].Value]
-                                    : string.Empty;
-
-            if (node.Attributes[Settings.Xml.Attributes.Enabled] != null)
-                item.ActiveEnabled = bool.Parse(node.Attributes[Settings.Xml.Attributes.Enabled].Value);
-
-            Command.GetInstance(cmdValue, item);
-
-            item.Click += (e, args) => Command.GetInstance((string) item.Tag).Run();
-
-            return item;
-        }
-
-        private static ToolStripItem CreateSeparator()
-        {
-            return new ToolStripSeparator();
-        }
-
-        private static ToolStripItem CreateButton(XmlNode node)
-        {
-
-            var item = new ActiveToolStripButton(
-                node.Attributes[Settings.Xml.Attributes.Caption] != null
-                    ? Core.Instance.CurrentTranslator[node.Attributes[Settings.Xml.Attributes.Caption].Value]
-                    : string.Empty,
-                node.Attributes[Settings.Xml.Attributes.Class].Value);
-
-            if (node.Attributes[Settings.Xml.Attributes.Icon] != null)
-            {
-                string icon = node.Attributes[Settings.Xml.Attributes.Icon].Value;
-                if (!string.IsNullOrEmpty(icon))
-                {
-                    item.ImageScaling = ToolStripItemImageScaling.None;
-                    item.ImageTransparentColor = Color.White;
-                    item.ActiveIcon = Core.Instance.Icons[icon];
-                }
-            }
-
-            var checkedAttrib = node.Attributes[Settings.Xml.Attributes.Checked];
-            item.ActiveChecked = checkedAttrib != null
-                                     ? bool.Parse(checkedAttrib.Value)
-                                     : false;
-
-            item.ActiveBalloon = node.Attributes[Settings.Xml.Attributes.ToolTip] != null
-                                    ? Core.Instance.CurrentTranslator[node.Attributes[Settings.Xml.Attributes.ToolTip].Value]
-                                    : string.Empty;
-
-            if (node.Attributes[Settings.Xml.Attributes.Enabled] != null)
-                item.ActiveEnabled = bool.Parse(node.Attributes[Settings.Xml.Attributes.Enabled].Value);
-
-            Command.GetInstance((string) item.Tag, item);
-
-            item.Click += (e, args) => Command.GetInstance((string) item.Tag).Run();
-
-            return item;
-        }
-        #endregion
+        foreach (XmlElement node in root.ChildNodes.OfType<XmlElement>())
+            window.MainMenu.Items.Add(CreateMenuItem(node));
     }
+
+    public static void LoadSecondaryMenu(MainForm window)
+    {
+        XmlElement root = ValidatedXml.Load(
+            Settings.Files.SecondaryMenuDefinition, Settings.Xml.Namespace, Settings.Files.SecondaryMenuSchema);
+
+        foreach (XmlElement node in root.ChildNodes.OfType<XmlElement>())
+        {
+            window.SecondaryMenu.Items.Add(node.Name switch
+            {
+                Settings.Xml.Tags.Command => CreateButton(node),
+                Settings.Xml.Tags.Separator => new ToolStripSeparator(),
+                _ => throw UnexpectedElement(node),
+            });
+        }
+    }
+
+    private static ToolStripItem CreateMenuItem(XmlElement node) => node.Name switch
+    {
+        Settings.Xml.Tags.Menu => CreateSubmenu(node),
+        Settings.Xml.Tags.Command => CreateCommandItem(node),
+        Settings.Xml.Tags.Separator => new ToolStripSeparator(),
+        _ => throw UnexpectedElement(node),
+    };
+
+    private static ToolStripMenuItem CreateSubmenu(XmlElement node)
+    {
+        var menu = new ToolStripMenuItem(Translate(node, Settings.Xml.Attributes.Caption));
+        SetIcon(menu, node);
+
+        foreach (XmlElement child in node.ChildNodes.OfType<XmlElement>())
+            menu.DropDownItems.Add(CreateMenuItem(child));
+
+        return menu;
+    }
+
+    private static ToolStripMenuItem CreateCommandItem(XmlElement node)
+    {
+        string commandName = node.GetAttribute(Settings.Xml.Attributes.Class);
+        if (commandName.StartsWith(SubcommandsPrefix))
+            return CreateSubcommandsMenu(node, (CommandWithSubcommands)Command.GetInstance(commandName[1..]));
+
+        var item = new ToolStripMenuItem(Translate(node, Settings.Xml.Attributes.Caption))
+        {
+            ShortcutKeys = ParseShortcut(node.GetAttribute(Settings.Xml.Attributes.Shortcut)),
+        };
+
+        BindCommand(item, node, Command.GetInstance(commandName));
+        return item;
+    }
+
+    private static ToolStripMenuItem CreateSubcommandsMenu(XmlElement node, CommandWithSubcommands command)
+    {
+        var menu = new ToolStripMenuItem(Translate(node, Settings.Xml.Attributes.Caption));
+        SetIcon(menu, node);
+
+        foreach (string subcommand in command.Commands)
+        {
+            var item = new ToolStripMenuItem(Core.Instance.CurrentTranslator[subcommand])
+            {
+                ImageScaling = ToolStripItemImageScaling.None,
+                ImageTransparentColor = Color.White,
+                Image = command.GetIcon(subcommand),
+            };
+
+            item.Click += (_, _) => command.Run(subcommand);
+            menu.DropDownItems.Add(item);
+        }
+
+        return menu;
+    }
+
+    private static ToolStripButton CreateButton(XmlElement node)
+    {
+        var button = new ToolStripButton(Translate(node, Settings.Xml.Attributes.Caption));
+        BindCommand(button, node, Command.GetInstance(node.GetAttribute(Settings.Xml.Attributes.Class)));
+        return button;
+    }
+
+    private static void BindCommand(ToolStripItem item, XmlElement node, Command command)
+    {
+        SetIcon(item, node);
+        item.ToolTipText = Translate(node, Settings.Xml.Attributes.ToolTip);
+
+        if (node.HasAttribute(Settings.Xml.Attributes.Enabled))
+            item.Enabled = bool.Parse(node.GetAttribute(Settings.Xml.Attributes.Enabled));
+
+        command.Attach(item);
+
+        // On/off options show their saved state; the Checked attribute is only a default for other commands.
+        command.Checked = command is ToggleCommand toggle
+            ? toggle.IsOn
+            : node.HasAttribute(Settings.Xml.Attributes.Checked) && bool.Parse(node.GetAttribute(Settings.Xml.Attributes.Checked));
+
+        item.Click += (_, _) => command.Run();
+    }
+
+    private static void SetIcon(ToolStripItem item, XmlElement node)
+    {
+        string icon = node.GetAttribute(Settings.Xml.Attributes.Icon);
+        if (icon.Length == 0)
+            return;
+
+        item.ImageScaling = ToolStripItemImageScaling.None;
+        item.ImageTransparentColor = Color.White;
+        item.Image = Core.Instance.Icons.GetCopy(icon);
+    }
+
+    /// <summary>Translates the attribute value; a missing attribute gives an empty string.</summary>
+    private static string Translate(XmlElement node, string attribute)
+    {
+        string key = node.GetAttribute(attribute);
+        return key.Length == 0 ? string.Empty : Core.Instance.CurrentTranslator[key];
+    }
+
+    /// <summary>Parses shortcuts such as "Ctrl+Shift+S", "Delete" or "F1".</summary>
+    private static Keys ParseShortcut(string shortcut)
+    {
+        if (shortcut.Length == 0)
+            return Keys.None;
+
+        Keys keys = Keys.None;
+
+        foreach (string part in shortcut.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+        {
+            keys |= part.ToLowerInvariant() switch
+            {
+                "ctrl" => Keys.Control,
+                "alt" => Keys.Alt,
+                "shift" => Keys.Shift,
+                _ when Enum.TryParse(part, ignoreCase: true, out Keys key) => key,
+                _ => throw new InvalidDataException($"Unknown key '{part}' in shortcut '{shortcut}'."),
+            };
+        }
+
+        return keys;
+    }
+
+    private static InvalidDataException UnexpectedElement(XmlElement node) =>
+        new($"Unexpected element '{node.Name}' in a menu definition.");
 }

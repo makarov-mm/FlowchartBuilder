@@ -17,10 +17,6 @@
   <fb:Word Key="Command_Print">Друк</fb:Word>
   <fb:Word Key="Command_Exit">Вихід</fb:Word>
 
-  <fb:Word Key="Menu_Debug">Налагодження</fb:Word>
-  <fb:Word Key="Command_ForceGarbageCollection">Ініціювати збірку сміття</fb:Word>
-  <fb:Word Key="Command_ForceFullGarbageCollection">Ініціювати збірку сміття у всіх поколіннях</fb:Word>
-
   <fb:Word Key="Menu_Edit">Редагувати</fb:Word>
   <fb:Word Key="Command_Undo">Взад</fb:Word>
   <fb:Word Key="Command_Redo">Вперед</fb:Word>
@@ -73,7 +69,6 @@
   <fb:Word Key="Command_PaletteWindow">Палітра</fb:Word>
   <fb:Word Key="Command_PropertiesWindow">Властивості</fb:Word>
 
-  <fb:Word Key="Menu_Tools">Iнструменти</fb:Word>
 
   <fb:Word Key="Menu_Window">Вікно</fb:Word>
   <fb:Word Key="Command_ResetWindowLocations">Стандартне расположення вікон</fb:Word>
@@ -84,7 +79,6 @@
   <fb:Word Key="Command_OtherSettings">Iнші налаштунки...</fb:Word>
 
   <fb:Word Key="Menu_Help">Допомога</fb:Word>
-  <fb:Word Key="Command_HelpTopics">Заголовки допомоги</fb:Word>
   <fb:Word Key="Command_About">Про програму</fb:Word>
 
   <fb:Word Key="Wnd_About_Title">Про Редактор Діаграм</fb:Word>
@@ -99,9 +93,6 @@
   <fb:Word Key="Command_SaveSettings">Сохранити настройки...</fb:Word>
 
   <fb:Word Key="Tab_Common">Загальні</fb:Word>
-  <fb:Word Key="Cb_LimitedHistory">Обмеження історії</fb:Word>
-  <fb:Word Key="Cb_CacheResources">Кешувати ресурси</fb:Word>
-  <fb:Word Key="Cb_CacheImages">Кешувати зображення</fb:Word>
   <fb:Word Key="Cb_Antialiasing">Згладжування</fb:Word>
 
   <fb:Word Key="Centimeters">Сантиметри</fb:Word>
@@ -120,13 +111,11 @@
   <fb:Word Key="OK">Примінити</fb:Word>
   <fb:Word Key="Cancel">Відміна</fb:Word>
   <fb:Word Key="Close">Зачінити</fb:Word>
-  <fb:Word Key="License_Text">Warning: This computer program is protected by copyright law and international treaties. Unauthorized reproduction or distribution of this program, or any portion of it, may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under tha law.</fb:Word>
+  <fb:Word Key="License_Text">Warning: This computer program is protected by copyright law and international treaties. Unauthorized reproduction or distribution of this program, or any portion of it, may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under the law.</fb:Word>
 
   <fb:Word Key="Msg_Error">Помилка</fb:Word>
-  <fb:Word Key="Msg_Warning">Увага</fb:Word>
   <fb:Word Key="Msg_Info">Інформація</fb:Word>
   <fb:Word Key="Msg_InvalidImageExtension">Некоріктне розширення графічного файла.</fb:Word>
-  <fb:Word Key="Msg_FunctionDisabledInNonRegisteredProgram">Ця функція недоступна в незарегістрованій версії програми.</fb:Word>
   <fb:Word Key="Msg_Need_Restart_Application">Будьласка, перезавантажте програму.</fb:Word>
 
   <fb:Word Key="UndefinedGlyphName">*безіменний*</fb:Word>

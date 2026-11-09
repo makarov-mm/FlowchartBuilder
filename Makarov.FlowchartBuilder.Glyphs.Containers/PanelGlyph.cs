@@ -1,41 +1,22 @@
-using System.Drawing;
 using Makarov.FlowchartBuilder.API.Attributes;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Containers
+namespace Makarov.FlowchartBuilder.Glyphs.Containers;
+
+[GlyphName("Panel")]
+public sealed class PanelGlyph : AbstractContainerGlyph
 {
-
-    [GlyphName("Panel")]
-    public sealed class PanelGlyph : AbstractContainerGlyph
+    public override Bitmap Thumbnail
     {
-        public override Bitmap Thumbnail
+        get
         {
-            get
-            {
-                Bitmap bmp = base.Thumbnail;
+            Bitmap bitmap = base.Thumbnail;
+            Rectangle frame = ThumbnailFrame;
 
-                const int offset = 5;
+            using Graphics graphics = Graphics.FromImage(bitmap);
+            FillThumbnailFrame(graphics, frame);
+            graphics.DrawRectangle(Settings.Pens.ThumbnailBorder, frame);
 
-                using (Graphics gfx = Graphics.FromImage(bmp))
-                {
-                    using (Brush brush = new SolidBrush(Color.FromArgb(128, Color.LightGray)))
-                        gfx.FillRectangle(
-                            brush,
-                            offset,
-                            offset,
-                            ThumbnailWidth - (offset << 1),
-                            ThumbnailHeight - (offset << 1));
-
-                    gfx.DrawRectangle(
-                        Settings.Pens.ThumbnailBorder,
-                        offset,
-                        offset,
-                        ThumbnailWidth - (offset << 1),
-                        ThumbnailHeight - (offset << 1));
-
-                }
-
-                return bmp;
-            }
+            return bitmap;
         }
     }
 }

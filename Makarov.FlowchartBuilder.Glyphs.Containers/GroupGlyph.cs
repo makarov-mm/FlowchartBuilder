@@ -1,44 +1,25 @@
-using System.Drawing;
 using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Containers
+namespace Makarov.FlowchartBuilder.Glyphs.Containers;
+
+[GlyphName("Group")]
+public sealed class GroupGlyph : AbstractContainerGlyph
 {
+    private static readonly Pen ThumbnailFramePen = new(Settings.Colors.ThumbnailBorder) { DashStyle = DashStyle.Dash };
 
-    [GlyphName("Group")]
-    public sealed class GroupGlyph : AbstractContainerGlyph
+    public override Bitmap Thumbnail
     {
-        public override Bitmap Thumbnail
+        get
         {
-            get
-            {
-                Bitmap bmp = base.Thumbnail;
+            Bitmap bitmap = base.Thumbnail;
+            Rectangle frame = ThumbnailFrame;
 
-                const int offset = 5;
+            using Graphics graphics = Graphics.FromImage(bitmap);
+            FillThumbnailFrame(graphics, frame);
+            graphics.DrawRectangle(ThumbnailFramePen, frame);
 
-                using (Graphics gfx = Graphics.FromImage(bmp))
-                {
-                    using (Brush brush = new SolidBrush(Color.FromArgb(128, Color.LightGray)))
-                        gfx.FillRectangle(
-                            brush,
-                            offset, offset,
-                            ThumbnailWidth - (offset << 1),
-                            ThumbnailHeight - (offset << 1));
-
-                    using (var borderPen = new Pen(Settings.Colors.ThumbnailBorder))
-                    {
-                        borderPen.DashStyle = DashStyle.Dash;
-
-                        gfx.DrawRectangle(
-                            borderPen,
-                            offset, offset,
-                            ThumbnailWidth - (offset << 1),
-                            ThumbnailHeight - (offset << 1));
-                    }
-                }
-
-                return bmp;
-            }
+            return bitmap;
         }
     }
 }

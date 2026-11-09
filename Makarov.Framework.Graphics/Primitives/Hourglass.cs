@@ -1,41 +1,13 @@
-using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace Makarov.Framework.Graphics.Primitives
+namespace Makarov.Framework.Graphics.Primitives;
+
+public sealed class Hourglass(int x, int y, int width, int height) : Primitive(x, y, width, height)
 {
-
-    public class Hourglass : Primitive
-    {
-        #region Constructors
-
-        public Hourglass(int x, int y, int width, int height)
-            : base(x, y, width, height)
-        { }
-
-        public Hourglass(Point coords, Size size)
-            : base(coords.X, coords.Y, size.Width, size.Height)
-        { }
-
-        public Hourglass(System.Drawing.Rectangle rect)
-            : base(rect.X, rect.Y, rect.Width, rect.Height)
-        { }
-        #endregion
-
-        #region Protected methods
-
-        protected override GraphicsPath CreatePath(int x, int y, int width, int height)
-        {
-            var path = new GraphicsPath();
-
-            path.StartFigure();
-            path.AddLine(x, y, x + width, y);
-            path.AddLine(x + width, y, x, y + height);
-            path.AddLine(x, y + height, x + width, y + height);
-            path.AddLine(x + width, y + height, x, y);
-            path.CloseFigure();
-
-            return path;
-        }
-        #endregion
-    }
+    protected override GraphicsPath CreatePath(int left, int top, int width, int height) => Polygon(
+        new PointF(left, top),
+        new PointF(left + width, top),
+        new PointF(left, top + height),
+        new PointF(left + width, top + height),
+        new PointF(left, top));
 }
