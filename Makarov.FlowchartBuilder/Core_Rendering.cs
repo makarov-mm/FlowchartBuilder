@@ -1,8 +1,7 @@
-using System.Drawing.Drawing2D;
 using System.Globalization;
 using Makarov.FlowchartBuilder.Forms;
 using Makarov.FlowchartBuilder.Sheets;
-using Makarov.Framework.Core;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder;
 
@@ -11,8 +10,9 @@ public sealed partial class Core
     private const int SheetShadowSize = 3;
 
     /// <summary>How many pixels the current sheet overflows the visible work area horizontally and vertically.</summary>
+    private static readonly TextStyle RulersTextStyle = new("Arial", 6f);
+
     private Size _scrollRange;
-    private Font? _rulersFont;
 
     public bool IsRedrawSuspended => _redrawSuspensions > 0;
 
@@ -33,46 +33,56 @@ public sealed partial class Core
             return;
 
         UpdateScrollbars(window);
-        window.Invalidate();
+        window.SheetView.Invalidate();
     }
 
     /// <summary>Paints the work area of the main window: background, current sheet and rulers.</summary>
-    public void Paint(Graphics graphics)
+    /// <summary>Paints the sheet view: the work area, the sheet with its shadow and border, and the rulers.</summary>
+    public void Paint(Canvas canvas)
     {
-        graphics.Clear(Settings.Colors.WorkArea);
+        canvas.Clear(Settings.Colors.WorkArea);
 
-        Rectangle inner = MainWindow.InnerRectangle;
-        Point origin = inner.Location;
+        Rectangle viewport = GetViewport(canvas.Size);
+        Point origin = viewport.Location;
 
         if (ActiveSheet is { } sheet)
         {
-            Size size = sheet.GetPixelSize(scaled: true, inner.Size);
-            origin = GetSheetOrigin(sheet, inner);
+            Size size = sheet.GetPixelSize(scaled: true, viewport.Size);
+            origin = GetSheetOrigin(sheet, viewport);
 
-            graphics.FillRectangle(Brushes.Black, origin.X + size.Width, origin.Y + SheetShadowSize, SheetShadowSize, size.Height);
-            graphics.FillRectangle(Brushes.Black, origin.X + SheetShadowSize, origin.Y + size.Height, size.Width - SheetShadowSize, SheetShadowSize);
+            canvas.FillRectangle(
+                new Rectangle(origin.X + size.Width, origin.Y + SheetShadowSize, SheetShadowSize, size.Height),
+                Settings.Colors.SheetShadow);
+            canvas.FillRectangle(
+                new Rectangle(origin.X + SheetShadowSize, origin.Y + size.Height, size.Width - SheetShadowSize, SheetShadowSize),
+                Settings.Colors.SheetShadow);
 
-            GraphicsState state = graphics.Save();
-            graphics.TranslateTransform(origin.X, origin.Y);
-            graphics.SetClip(new Rectangle(Point.Empty, size));
-            sheet.Render(graphics, size);
-            graphics.Restore(state);
+            using (canvas.Translate(origin.X, origin.Y))
+            using (canvas.Clip(new Rectangle(Point.Empty, size)))
+                sheet.Render(canvas, size);
 
-            graphics.DrawRectangle(Settings.Pens.SheetBorder, origin.X - 1, origin.Y - 1, size.Width + 1, size.Height + 1);
+            canvas.Antialiasing = true;
+            canvas.DrawRectangle(new Rectangle(origin.X - 1, origin.Y - 1, size.Width + 1, size.Height + 1), Settings.Strokes.SheetBorder);
         }
 
-        DrawRulers(graphics, inner, origin);
+        DrawRulers(canvas, viewport, origin);
     }
 
-    /// <summary>Converts a point in main window client coordinates to sheet pixel coordinates.</summary>
-    public Point ClientToSheet(Point clientPoint)
+    /// <summary>Converts a point of the sheet view to sheet pixels at the current zoom.</summary>
+    public Point ClientToSheet(Point viewPoint)
     {
-        Rectangle inner = MainWindow.InnerRectangle;
-        Point origin = ActiveSheet is { } sheet ? GetSheetOrigin(sheet, inner) : inner.Location;
-        return new Point(clientPoint.X - origin.X, clientPoint.Y - origin.Y);
+        Rectangle viewport = GetViewport(MainWindow.SheetView.ClientSize);
+        Point origin = ActiveSheet is { } sheet ? GetSheetOrigin(sheet, viewport) : viewport.Location;
+        return new Point(viewPoint.X - origin.X, viewPoint.Y - origin.Y);
     }
 
-    /// <summary>Fixed-size sheets are centered in the work area and scrolled; other sheets fill it.</summary>
+    /// <summary>The part of the sheet view not covered by the rulers.</summary>
+    private static Rectangle GetViewport(Size viewSize)
+    {
+        int rulers = Settings.Environment.Rulers ? Settings.Environment.RulersSize : 0;
+        return new Rectangle(rulers, rulers, Math.Max(0, viewSize.Width - rulers), Math.Max(0, viewSize.Height - rulers));
+    }
+
     private Point GetSheetOrigin(Sheet sheet, Rectangle inner)
     {
         if (sheet is not FixedSheet)
@@ -104,7 +114,7 @@ public sealed partial class Core
         bool wasHorizontalVisible = horizontal.Visible;
         bool wasVerticalVisible = vertical.Visible;
 
-        int rulersBorder = Settings.Environment.Rulers ? (int)MathF.Ceiling(Settings.Pens.RulersBorder.Width) : 0;
+        int rulersBorder = Settings.Environment.Rulers ? (int)MathF.Ceiling(Settings.Strokes.RulersBorder.Width) : 0;
         Rectangle inner = window.InnerRectangle;
         var area = new Rectangle(
             inner.Left + rulersBorder,
@@ -164,52 +174,57 @@ public sealed partial class Core
         scrollBar.Value = range / 2;
     }
 
-    private void DrawRulers(Graphics graphics, Rectangle inner, Point origin)
+    private void DrawRulers(Canvas canvas, Rectangle viewport, Point origin)
     {
         if (!Settings.Environment.Rulers)
             return;
 
         const int size = Settings.Environment.RulersSize;
-        int left = inner.Left - size;
-        int top = inner.Top - size;
+        int left = viewport.Left - size;
+        int top = viewport.Top - size;
 
-        Size client = MainWindow.ClientSize;
+        Size view = canvas.Size;
         float scaleFactor = ActiveSheet?.ScaleFactor ?? 1f;
         Units units = Settings.Environment.CurrentUnits;
-        Font font = _rulersFont ??= Fonts.Create("Arial", 6);
-        Brush background = Settings.Brushes.RulersBackground;
-        Pen border = Settings.Pens.RulersBorder;
+        Color background = Settings.Colors.RulersBackground;
+        Color text = Settings.Colors.RulersText;
+        Stroke border = Settings.Strokes.RulersBorder;
+        Stroke tick = Settings.Strokes.RulersTick;
 
-        graphics.FillRectangle(background, left, top, inner.Width + size, size);
-        graphics.FillRectangle(background, left, top, size, inner.Height + size);
-        graphics.DrawRectangle(border, left, top, inner.Width + size, size);
-        graphics.DrawRectangle(border, left, top, size, inner.Height + size);
+        canvas.FillRectangle(new Rectangle(left, top, viewport.Width + size, size), background);
+        canvas.FillRectangle(new Rectangle(left, top, size, viewport.Height + size), background);
+        canvas.DrawRectangle(new Rectangle(left, top, viewport.Width + size, size), border);
+        canvas.DrawRectangle(new Rectangle(left, top, size, viewport.Height + size), border);
 
-        for (int i = 0; UnitsConverter.CurrToPx(i) <= client.Width - origin.X; i += units.SmallStep)
+        for (int i = 0; UnitsConverter.CurrToPx(i) <= view.Width - origin.X; i += units.SmallStep)
         {
             int x = origin.X + UnitsConverter.CurrToPx(i);
+            if (x < viewport.Left)
+                continue;
+
             bool isMajor = i % units.BigStep == 0;
-
             if (isMajor)
-                graphics.DrawString(FormatRulerLabel(i, scaleFactor), font, Brushes.Black, x + 1, top + (size >> 2));
+                canvas.DrawText(FormatRulerLabel(i, scaleFactor), RulersTextStyle, new PointF(x + 1, top + (size >> 2)), text);
 
-            graphics.DrawLine(Pens.Black, x, top, x, top + (isMajor ? size >> 1 : size >> 2));
+            canvas.DrawLine(new Point(x, top), new Point(x, top + (isMajor ? size >> 1 : size >> 2)), tick);
         }
 
-        for (int i = 0; UnitsConverter.CurrToPx(i) <= client.Height - origin.Y; i += units.SmallStep)
+        for (int i = 0; UnitsConverter.CurrToPx(i) <= view.Height - origin.Y; i += units.SmallStep)
         {
             int y = origin.Y + UnitsConverter.CurrToPx(i);
+            if (y < viewport.Top)
+                continue;
+
             bool isMajor = i % units.BigStep == 0;
-
             if (isMajor)
-                graphics.DrawString(FormatRulerLabel(i, scaleFactor), font, Brushes.Black, left + (size >> 2), y + 1);
+                canvas.DrawText(FormatRulerLabel(i, scaleFactor), RulersTextStyle, new PointF(left + (size >> 2), y + 1), text);
 
-            graphics.DrawLine(Pens.Black, left, y, left + (isMajor ? size >> 1 : size >> 2), y);
+            canvas.DrawLine(new Point(left, y), new Point(left + (isMajor ? size >> 1 : size >> 2), y), tick);
         }
 
-        graphics.FillRectangle(background, left, top, size, size);
-        graphics.DrawRectangle(border, left, top, size, size);
-        graphics.DrawString(units.ShortName, font, Brushes.Black, left + 1, top + 1);
+        canvas.FillRectangle(new Rectangle(left, top, size, size), background);
+        canvas.DrawRectangle(new Rectangle(left, top, size, size), border);
+        canvas.DrawText(units.ShortName, RulersTextStyle, new PointF(left + 1, top + 1), text);
     }
 
     private static string FormatRulerLabel(int value, float scaleFactor) =>

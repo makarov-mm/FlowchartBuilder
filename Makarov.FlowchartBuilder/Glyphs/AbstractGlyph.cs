@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder.Glyphs;
 
@@ -8,6 +8,7 @@ namespace Makarov.FlowchartBuilder.Glyphs;
 /// Base of everything placed on a sheet. Properties marked with <see cref="ActivePropertyAttribute"/>
 /// make up the document content; drawing lives in AbstractGlyph_Draw.cs and persistence in AbstractGlyph_Serialization.cs.
 /// </summary>
+[TypeDescriptionProvider(typeof(GlyphTypeDescriptionProvider))]
 public abstract partial class AbstractGlyph
 {
     private bool _selected;
@@ -61,28 +62,8 @@ public abstract partial class AbstractGlyph
 
     public virtual int ThumbnailHeight => 48;
 
-    /// <summary>Palette image; the caller owns the bitmap.</summary>
-    public virtual Bitmap Thumbnail
-    {
-        get
-        {
-            var bitmap = new Bitmap(ThumbnailWidth, ThumbnailHeight);
-
-            using Graphics graphics = Graphics.FromImage(bitmap);
-            using var brush = new LinearGradientBrush(
-                new Point(ThumbnailWidth >> 1, 0),
-                new Point(ThumbnailWidth >> 1, ThumbnailHeight),
-                Settings.Colors.ThumbnailGradientStart,
-                Settings.Colors.ThumbnailGradientEnd);
-
-            graphics.Clear(Color.White);
-            graphics.FillRectangle(brush, 0, 0, ThumbnailWidth, ThumbnailHeight);
-            return bitmap;
-        }
-    }
-
-    protected static SmoothingMode SmoothMode =>
-        Settings.Environment.Antialiasing ? SmoothingMode.HighQuality : SmoothingMode.HighSpeed;
+    /// <summary>Renders the palette image; the caller owns the bitmap.</summary>
+    public Bitmap CreateThumbnail() => OffscreenRenderer.Render(ThumbnailWidth, ThumbnailHeight, DrawThumbnail);
 
     /// <summary>Creates a glyph of the same type with a new id and a copy of all document properties.</summary>
     public AbstractGlyph Clone()
@@ -95,6 +76,19 @@ public abstract partial class AbstractGlyph
         return clone;
     }
 
-    protected void DrawThumbnailBorder(Graphics graphics) =>
-        graphics.DrawRectangle(Settings.Pens.ThumbnailBorder, 0, 0, ThumbnailWidth - 1, ThumbnailHeight - 1);
+    /// <summary>Whether the Properties window lists the property; glyphs hide properties that do not apply to them.</summary>
+    protected internal virtual bool IsPropertyVisible(string propertyName) => true;
+
+    /// <summary>Palette image background; glyphs draw their picture over it.</summary>
+    protected virtual void DrawThumbnail(Canvas canvas) =>
+        canvas.FillRectangle(
+            new RectangleF(0, 0, ThumbnailWidth, ThumbnailHeight),
+            new LinearGradient(
+                new PointF(ThumbnailWidth / 2f, 0),
+                new PointF(ThumbnailWidth / 2f, ThumbnailHeight),
+                Settings.Colors.ThumbnailGradientStart,
+                Settings.Colors.ThumbnailGradientEnd));
+
+    protected void DrawThumbnailBorder(Canvas canvas) =>
+        canvas.DrawRectangle(new RectangleF(0, 0, ThumbnailWidth - 1, ThumbnailHeight - 1), Settings.Strokes.ThumbnailBorder);
 }

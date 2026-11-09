@@ -1,11 +1,9 @@
-using System.Drawing.Drawing2D;
-
 namespace Makarov.Framework.Graphics.Primitives;
 
 /// <summary>Four-pointed star.</summary>
 public sealed class Star(int x, int y, int width, int height) : Primitive(x, y, width, height)
 {
-    protected override GraphicsPath CreatePath(int left, int top, int width, int height)
+    protected override Geometry CreateGeometry(int left, int top, int width, int height)
     {
         int cx = left + width / 2;
         int cy = top + height / 2;

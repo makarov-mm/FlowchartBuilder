@@ -1,4 +1,5 @@
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Simple;
 
@@ -16,7 +17,7 @@ public abstract class AbstractSimpleGlyph : BlockGlyph
         ForegroundColor = Color.WhiteSmoke;
     }
 
-    protected override void DrawText(Graphics graphics)
+    protected override void DrawText(Canvas canvas)
     {
     }
 }

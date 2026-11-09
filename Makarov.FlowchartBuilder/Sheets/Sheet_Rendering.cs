@@ -1,24 +1,31 @@
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.Extensions;
 using Makarov.FlowchartBuilder.Glyphs;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder.Sheets;
 
 public abstract partial class Sheet
 {
-    /// <summary>Size of the drawing surface in pixels: the paper at the current (or 100%) zoom, or the viewport for unbounded sheets.</summary>
+    private static readonly Color PrintBackground = Color.White;
+
+    /// <summary>Size of the sheet in pixels, at the current zoom when <paramref name="scaled"/> is set.</summary>
     public abstract Size GetPixelSize(bool scaled, Size viewport);
 
-    /// <summary>Paints the sheet at the current zoom with (0, 0) as its top-left corner.</summary>
-    public void Render(Graphics graphics, Size size)
+    /// <summary>Renders the sheet with its origin at (0, 0) of the canvas.</summary>
+    public void Render(Canvas canvas, Size size)
     {
-        RenderBackground(graphics, size, scaled: true);
-        RenderGlyphs(graphics);
-        RenderInteraction(graphics);
+        RenderBackground(canvas, size, scaled: true, plain: false);
+
+        canvas.Antialiasing = Settings.Environment.Antialiasing;
+        RenderGlyphs(canvas, adornments: true);
+        RenderInteraction(canvas);
     }
 
-    /// <summary>Renders the sheet at 100% zoom without selection marks, for image export. The caller owns the bitmap.</summary>
-    public Bitmap DrawUnscaled(Size viewport)
+    /// <summary>
+    /// Renders the sheet at 100% zoom without selection or editing marks, <paramref name="resolution"/> times larger
+    /// than on screen. For printing the background is plain white and the grid is left out.
+    /// </summary>
+    public Bitmap RenderImage(Size viewport, float resolution = 1f, bool forPrinting = false)
     {
         float scaleFactor = _scaleFactor;
         var selected = SelectedGlyphs.ToList();
@@ -30,13 +37,18 @@ public abstract partial class Sheet
                 glyph.Selected = false;
 
             Size size = GetPixelSize(scaled: false, viewport);
-            var bitmap = new Bitmap(size.Width, size.Height);
+            int width = Math.Max(1, (int)MathF.Ceiling(size.Width * resolution));
+            int height = Math.Max(1, (int)MathF.Ceiling(size.Height * resolution));
 
-            using Graphics graphics = Graphics.FromImage(bitmap);
-            RenderBackground(graphics, size, scaled: false);
-            RenderGlyphs(graphics);
-
-            return bitmap;
+            return OffscreenRenderer.Render(width, height, canvas =>
+            {
+                using (canvas.Scale(resolution))
+                {
+                    RenderBackground(canvas, size, scaled: false, plain: forPrinting);
+                    canvas.Antialiasing = true;
+                    RenderGlyphs(canvas, adornments: false);
+                }
+            });
         }
         finally
         {
@@ -46,53 +58,96 @@ public abstract partial class Sheet
         }
     }
 
-    private static void RenderBackground(Graphics graphics, Size size, bool scaled)
+    /// <summary>Renders the image shown for this sheet format in the New Document dialog; the caller owns the bitmap.</summary>
+    public Bitmap CreateThumbnail() => OffscreenRenderer.Render(ThumbnailWidth, ThumbnailHeight, DrawThumbnail);
+
+    protected abstract void DrawThumbnail(Canvas canvas);
+
+    protected static void DrawThumbnailBorder(Canvas canvas) =>
+        canvas.DrawRectangle(new RectangleF(0, 0, ThumbnailWidth - 1, ThumbnailHeight - 1), Settings.Strokes.ThumbnailBorder);
+
+    private static void RenderBackground(Canvas canvas, Size size, bool scaled, bool plain)
     {
-        using (var brush = new LinearGradientBrush(
-            Point.Empty, new Point(size.Width, size.Height), Settings.Colors.Sheet, Settings.Colors.SheetGradient))
+        var area = new RectangleF(0, 0, size.Width, size.Height);
+
+        if (plain)
         {
-            graphics.FillRectangle(brush, 0, 0, size.Width, size.Height);
+            canvas.FillRectangle(area, PrintBackground);
+            return;
         }
+
+        canvas.FillRectangle(area, new LinearGradient(PointF.Empty, new PointF(size.Width, size.Height), Settings.Colors.Sheet, Settings.Colors.SheetGradient));
 
         if (!Settings.Environment.Grid)
             return;
 
         int bigStep = Settings.Environment.CurrentUnits.BigStep.CurrToPx();
         float step = scaled ? bigStep.Scale() : bigStep;
-        if (step <= 0)
+        if (step <= 1f)
             return;
 
-        Pen pen = Settings.Pens.SheetGrid;
+        // Grid lines are drawn aliased so that they stay one pixel wide and sharp.
+        bool antialiasing = canvas.Antialiasing;
+        canvas.Antialiasing = false;
 
         for (float x = step; x < size.Width; x += step)
-            graphics.DrawLine(pen, x, 0, x, size.Height);
+            canvas.DrawLine(new PointF(MathF.Round(x), 0), new PointF(MathF.Round(x), size.Height), Settings.Strokes.SheetGrid);
 
         for (float y = step; y < size.Height; y += step)
-            graphics.DrawLine(pen, 0, y, size.Width, y);
+            canvas.DrawLine(new PointF(0, MathF.Round(y)), new PointF(size.Width, MathF.Round(y)), Settings.Strokes.SheetGrid);
+
+        canvas.Antialiasing = antialiasing;
     }
 
-    /// <summary>Back to front, so that the front-most glyph is painted last.</summary>
-    private void RenderGlyphs(Graphics graphics)
+    private void RenderGlyphs(Canvas canvas, bool adornments)
     {
         for (int i = _glyphs.Count - 1; i >= 0; i--)
-            _glyphs[i].Draw(graphics);
+            _glyphs[i].Draw(canvas, adornments);
     }
 
-    /// <summary>Rubber-band selection and the connector being dragged.</summary>
-    private void RenderInteraction(Graphics graphics)
+    private void RenderInteraction(Canvas canvas)
     {
         if (_selectionStart is { } start)
         {
             Rectangle selection = Normalize(start, _selectionEnd);
-            graphics.FillRectangle(Settings.Brushes.Selection, selection);
-            graphics.DrawRectangle(Settings.Pens.SelectionBorder, selection);
+            canvas.FillRectangle(selection, Settings.Colors.Selection);
+            canvas.DrawRectangle(selection, Settings.Strokes.SelectionBorder);
         }
 
-        if (_connectorSource is not null && _connectorCurrent is { } current)
+        if (_connectorSource is { } source && _connectorCurrent is { } current && _connectorPrototype is { } prototype)
         {
-            PointF from = _connectorSource.LinkPointsScaled[_connectorSourcePort];
-            graphics.DrawLine(ConnectorGlyph.DragPreviewPen, from, current);
+            ConnectorRoute route = CreateConnectorPreview(source, current, prototype.Routing);
+            Stroke stroke = ConnectorGlyph.CreateStroke(Settings.Colors.SelectedConnector, prototype.LineWidthInMM) with
+            {
+                Dash = new DashPattern(3f, 2f),
+                Cap = StrokeCap.Flat,
+            };
+
+            ConnectorGlyph.DrawRoute(canvas, route, stroke, prototype.ArrowHead, ConnectorGlyph.ArrowLength(stroke.Width));
         }
+    }
+
+    /// <summary>Route from the source port to the hovered port, or towards the mouse when no block is under it.</summary>
+    private ConnectorRoute CreateConnectorPreview(BlockGlyph source, Point current, ConnectorRouting routing)
+    {
+        if (_connectorTarget is { } target)
+        {
+            return ConnectorGlyph.CreateRoute(
+                routing,
+                source,
+                _connectorSourcePort,
+                ConnectorGlyph.PortLocation(target, _connectorTargetPort),
+                ConnectorGlyph.PortNormal(_connectorTargetPort),
+                target.ScaledBounds);
+        }
+
+        // Arrive at the mouse along the main axis of the movement, as if it were a port facing the source.
+        PointF from = ConnectorGlyph.PortLocation(source, _connectorSourcePort);
+        float dx = from.X - current.X;
+        float dy = from.Y - current.Y;
+        PointF normal = Math.Abs(dx) >= Math.Abs(dy) ? new PointF(Math.Sign(dx), 0f) : new PointF(0f, Math.Sign(dy));
+
+        return ConnectorGlyph.CreateRoute(routing, source, _connectorSourcePort, current, normal, new RectangleF(current, Size.Empty));
     }
 
     private static Rectangle Normalize(Point a, Point b) =>

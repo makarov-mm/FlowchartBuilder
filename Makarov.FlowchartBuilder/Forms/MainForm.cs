@@ -1,3 +1,4 @@
+using Makarov.FlowchartBuilder.Commands;
 using Makarov.Framework.Components;
 
 namespace Makarov.FlowchartBuilder.Forms;
@@ -11,10 +12,14 @@ public partial class MainForm : BasicForm
     {
         InitializeComponent();
 
-        SetStyle(
-            ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer |
-            ControlStyles.UserPaint | ControlStyles.ResizeRedraw,
-            true);
+        // Thin edges around the view show the work area color; the view lies under the scroll bars.
+        BackColor = Settings.Colors.WorkArea;
+        sheetView.SendToBack();
+        documentsTabsBar.TabCloseRequested += (_, e) =>
+        {
+            if (Core.Instance.Documents.FirstOrDefault(document => document.Id == e.Tab.Id) is { } document)
+                Core.Instance.CloseDocument(document);
+        };
     }
 
     /// <summary>Set once the main window starts closing, so that tool windows close instead of hiding.</summary>
@@ -29,20 +34,28 @@ public partial class MainForm : BasicForm
 
     public TabsPanel DocumentsTabs => documentsTabsBar;
 
-    /// <summary>Work area: the client area below the document tabs, without the rulers.</summary>
+    public SheetView SheetView => sheetView;
+
+    /// <summary>Work area: the part of the sheet view not covered by the rulers, in client coordinates.</summary>
     public override Rectangle InnerRectangle
     {
         get
         {
             int rulersSize = Settings.Environment.Rulers ? Settings.Environment.RulersSize : 0;
-            int tabsHeight = documentsTabsBar.Height;
-            Rectangle rect = base.InnerRectangle;
+            Rectangle view = ViewBounds;
 
-            return new Rectangle(
-                rect.Left + rulersSize,
-                rect.Top + rulersSize + tabsHeight,
-                rect.Width - rulersSize,
-                rect.Height - rulersSize - tabsHeight);
+            return new Rectangle(view.Left + rulersSize, view.Top + rulersSize, view.Width - rulersSize, view.Height - rulersSize);
+        }
+    }
+
+    /// <summary>The client area below the document tabs, between the toolbar and the status bar.</summary>
+    private Rectangle ViewBounds
+    {
+        get
+        {
+            Rectangle rect = base.InnerRectangle;
+            int tabsHeight = documentsTabsBar.Height;
+            return new Rectangle(rect.Left, rect.Top + tabsHeight, rect.Width, Math.Max(0, rect.Height - tabsHeight));
         }
     }
 
@@ -60,10 +73,12 @@ public partial class MainForm : BasicForm
         }
     }
 
-    protected override void OnPaint(PaintEventArgs e)
+    protected override void OnLayout(LayoutEventArgs levent)
     {
-        base.OnPaint(e);
-        Core.Instance.Paint(e.Graphics);
+        base.OnLayout(levent);
+
+        if (sheetView is not null)
+            sheetView.Bounds = ViewBounds;
     }
 
     private void MainForm_Load(object? sender, EventArgs e)
@@ -81,8 +96,8 @@ public partial class MainForm : BasicForm
         MenuLoader.LoadMainMenu(this);
         MenuLoader.LoadSecondaryMenu(this);
 
-        // Documents passed on the command line were opened before the menus existed.
-        Core.Instance.ActiveSheet?.UpdateGlyphsCommands();
+        // Documents passed on the command line were opened before the window and its menus were ready.
+        Core.Instance.RefreshDocumentState();
 
         Core.Instance.GetWindowAsChild<GlyphsForm>().Show();
         Core.Instance.GetWindowAsChild<PropertiesForm>().Show();
@@ -113,6 +128,12 @@ public partial class MainForm : BasicForm
         if (IsClosing)
             return;
 
+        if (!Core.Instance.ConfirmCloseAll())
+        {
+            e.Cancel = true;
+            return;
+        }
+
         SaveWindowParamsToRegistry();
         IsClosing = true;
 
@@ -133,14 +154,44 @@ public partial class MainForm : BasicForm
 
     private void MainForm_Move(object? sender, EventArgs e) => UpdateDockedWindows();
 
-    private void MainForm_MouseDown(object? sender, MouseEventArgs e) =>
-        Core.Instance.ActiveSheet?.MouseDown(Core.Instance.ClientToSheet(e.Location));
+    private void sheetView_MouseDown(object? sender, MouseEventArgs e)
+    {
+        sheetView.Focus();
 
-    private void MainForm_MouseMove(object? sender, MouseEventArgs e) =>
+        if (e.Button == MouseButtons.Left)
+            Core.Instance.ActiveSheet?.MouseDown(Core.Instance.ClientToSheet(e.Location));
+    }
+
+    private void sheetView_MouseMove(object? sender, MouseEventArgs e) =>
         Core.Instance.ActiveSheet?.MouseMove(Core.Instance.ClientToSheet(e.Location));
 
-    private void MainForm_MouseUp(object? sender, MouseEventArgs e) =>
-        Core.Instance.ActiveSheet?.MouseUp();
+    private void sheetView_MouseUp(object? sender, MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left)
+            Core.Instance.ActiveSheet?.MouseUp();
+    }
+
+    /// <summary>The wheel scrolls the sheet (with Shift horizontally); with Ctrl it zooms.</summary>
+    private void sheetView_MouseWheel(object? sender, MouseEventArgs e)
+    {
+        if (!Core.Instance.HasDocuments || e.Delta == 0)
+            return;
+
+        if ((ModifierKeys & Keys.Control) != 0)
+        {
+            Command command = e.Delta > 0 ? Command.GetInstance<ZoomInCommand>() : Command.GetInstance<ZoomOutCommand>();
+            command.Execute();
+            return;
+        }
+
+        ScrollBar scrollBar = (ModifierKeys & Keys.Shift) != 0 ? hScrollBar : vScrollBar;
+        if (!scrollBar.Visible)
+            return;
+
+        int maximum = scrollBar.Maximum - scrollBar.LargeChange + 1;
+        scrollBar.Value = Math.Clamp(scrollBar.Value - Math.Sign(e.Delta) * scrollBar.SmallChange, scrollBar.Minimum, maximum);
+        Core.Instance.Redraw();
+    }
 
     private void hScrollBar_Scroll(object? sender, ScrollEventArgs e) => Core.Instance.Redraw();
 

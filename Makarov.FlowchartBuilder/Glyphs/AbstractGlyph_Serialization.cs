@@ -16,6 +16,9 @@ public abstract partial class AbstractGlyph
         node.Attributes.Append(className);
         node.SetAttribute(Settings.Xml.Attributes.Id, Id);
 
+        if (Fixed)
+            node.SetAttribute(Settings.Xml.Attributes.Fixed, bool.TrueString);
+
         foreach (var property in Metadata.ActiveProperties)
         {
             XmlElement propertyNode = document.CreateElement(Settings.Xml.Tags.Property, Settings.Xml.Namespace);
@@ -38,6 +41,8 @@ public abstract partial class AbstractGlyph
         string id = node.GetAttribute(Settings.Xml.Attributes.Id);
         if (id.Length > 0)
             Id = id;
+
+        Fixed = bool.TryParse(node.GetAttribute(Settings.Xml.Attributes.Fixed), out bool isFixed) && isFixed;
 
         var unknownProperties = new List<string>();
 

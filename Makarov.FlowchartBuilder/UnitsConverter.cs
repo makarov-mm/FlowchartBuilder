@@ -30,6 +30,9 @@ public static class UnitsConverter
 
     public static int MMToPx(float mm) => InchToPx(MMToInch(mm));
 
+    /// <summary>Millimeters to pixels without rounding, for line widths and other fractional sizes.</summary>
+    public static float MMToPxExact(float mm) => MMToInch(mm) * Settings.Environment.Dpi;
+
     public static float PxToMM(float px) => InchToMM(PxToInch(px));
 
     public static float CurrToInch(float curr) => MMToInch(CurrToMM(curr));

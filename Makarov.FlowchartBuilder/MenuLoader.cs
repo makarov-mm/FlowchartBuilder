@@ -86,7 +86,7 @@ public static class MenuLoader
                 Image = command.GetIcon(subcommand),
             };
 
-            item.Click += (_, _) => command.Run(subcommand);
+            item.Click += (_, _) => command.Execute(subcommand);
             menu.DropDownItems.Add(item);
         }
 
@@ -115,7 +115,7 @@ public static class MenuLoader
             ? toggle.IsOn
             : node.HasAttribute(Settings.Xml.Attributes.Checked) && bool.Parse(node.GetAttribute(Settings.Xml.Attributes.Checked));
 
-        item.Click += (_, _) => command.Run();
+        item.Click += (_, _) => command.Execute();
     }
 
     private static void SetIcon(ToolStripItem item, XmlElement node)

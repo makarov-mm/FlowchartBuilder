@@ -1,4 +1,5 @@
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 using Makarov.Framework.Graphics.Primitives;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Flowchart;
@@ -12,7 +13,7 @@ public sealed class SubroutineGlyph : AbstractFlowchartGlyph
     protected override Primitive CreatePrimitive(int x, int y, int width, int height) =>
         new Framework.Graphics.Primitives.Rectangle(x, y, width, height);
 
-    protected override void DrawDetails(Graphics graphics, Pen pen)
+    protected override void DrawDetails(Canvas canvas, Stroke stroke)
     {
         int width = ScaledWidth;
         int top = ScaledY - ScaledHeight / 2;
@@ -20,16 +21,16 @@ public sealed class SubroutineGlyph : AbstractFlowchartGlyph
         int left = ScaledX - width / 2 + width / 8;
         int right = ScaledX + width / 2 - width / 8;
 
-        graphics.DrawLine(pen, left, top, left, bottom);
-        graphics.DrawLine(pen, right, top, right, bottom);
+        canvas.DrawLine(new PointF(left, top), new PointF(left, bottom), stroke);
+        canvas.DrawLine(new PointF(right, top), new PointF(right, bottom), stroke);
     }
 
-    protected override void DrawThumbnailDetails(Graphics graphics, RectangleF bounds)
+    protected override void DrawThumbnailDetails(Canvas canvas, RectangleF bounds)
     {
         float left = bounds.Left + bounds.Width / 8f;
         float right = bounds.Left + bounds.Width * 7f / 8f;
 
-        graphics.DrawLine(Settings.Pens.ThumbnailBorder, left, bounds.Top, left, bounds.Bottom);
-        graphics.DrawLine(Settings.Pens.ThumbnailBorder, right, bounds.Top, right, bounds.Bottom);
+        canvas.DrawLine(new PointF(left, bounds.Top), new PointF(left, bounds.Bottom), Settings.Strokes.ThumbnailBorder);
+        canvas.DrawLine(new PointF(right, bounds.Top), new PointF(right, bounds.Bottom), Settings.Strokes.ThumbnailBorder);
     }
 }

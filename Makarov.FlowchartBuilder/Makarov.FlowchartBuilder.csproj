@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Data\**;Icons\**;Graphics\**;Translations\**;*.ico;License.txt">
+    <None Update="Data\**;Icons\**;Translations\**;*.ico;License.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -12,7 +12,7 @@ public partial class PropertiesForm : DockingForm
     public PropertiesForm()
     {
         InitializeComponent();
-        gridView.BrowsableAttributes = new AttributeCollection(new ActivePropertyAttribute());
+        gridView.BrowsableAttributes = new AttributeCollection(new ActivePropertyAttribute(), BrowsableAttribute.Yes);
     }
 
     public PropertyGrid Grid => gridView;
@@ -30,5 +30,9 @@ public partial class PropertiesForm : DockingForm
         Command.GetInstance<PropertiesWindowCommand>().Enabled = true;
     }
 
-    private void gridView_PropertyValueChanged(object? sender, PropertyValueChangedEventArgs e) => Core.Instance.Redraw();
+    private void gridView_PropertyValueChanged(object? sender, PropertyValueChangedEventArgs e)
+    {
+        Core.Instance.CommitChange();
+        Core.Instance.Redraw();
+    }
 }

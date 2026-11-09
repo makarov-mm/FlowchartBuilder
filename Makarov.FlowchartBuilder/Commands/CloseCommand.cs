@@ -1,9 +1,11 @@
 namespace Makarov.FlowchartBuilder.Commands;
 
-/// <summary>Closing a document is not implemented yet; the menu item stays disabled.</summary>
+/// <summary>Closes the current document, offering to save its changes.</summary>
 public sealed class CloseCommand : Command
 {
     public override void Run()
     {
+        if (Core.Instance.HasDocuments)
+            Core.Instance.CloseDocument(Core.Instance.CurrentDocument);
     }
 }

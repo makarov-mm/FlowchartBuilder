@@ -2,5 +2,14 @@ using Makarov.FlowchartBuilder.API.Attributes;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Simple;
 
+/// <summary>Smooth curved arrow.</summary>
 [GlyphName("Arrow")]
-public sealed class ArrowGlyph : AbstractLinkGlyph;
+[GlyphOrder(1)]
+public sealed class ArrowGlyph : AbstractLinkGlyph
+{
+    public ArrowGlyph()
+    {
+        Routing = ConnectorRouting.Curved;
+        ArrowHead = true;
+    }
+}

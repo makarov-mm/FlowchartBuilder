@@ -1,5 +1,5 @@
-using System.Drawing.Drawing2D;
 using System.Reflection;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder;
 
@@ -35,8 +35,6 @@ public static class Settings
         public static string Data => Path.Combine(Main, "Data");
 
         public static string Icons => Path.Combine(Main, "Icons");
-
-        public static string Graphics => Path.Combine(Main, "Graphics");
 
         public static string Plugins => Path.Combine(Main, "Plugins");
 
@@ -91,25 +89,25 @@ public static class Settings
         public static readonly Color Selection = Color.FromArgb(32, SelectionBorder);
         public static readonly Color GroupSelection = Color.FromArgb(32, GroupSelectionBorder);
         public static readonly Color SheetGrid = Color.FromArgb(24, SelectionBorder);
+        public static readonly Color SheetShadow = Color.FromArgb(128, 0, 0, 0);
+        public static readonly Color RulersText = Color.Black;
+        public static readonly Color Connector = Color.Black;
+        public static readonly Color SelectedConnector = Color.DodgerBlue;
+        public static readonly Color ConnectorCaptionBackground = Color.FromArgb(220, 255, 255, 255);
+        public static readonly Color LinkPoint = Color.White;
+        public static readonly Color LinkPointBorder = Color.SteelBlue;
     }
 
-    /// <summary>Shared pens. They live for the whole session: never dispose or modify them.</summary>
-    public static class Pens
+    /// <summary>Outline styles shared by the renderer.</summary>
+    public static class Strokes
     {
-        public static readonly Pen SheetBorder = new(Colors.SheetBorder);
-        public static readonly Pen SheetGrid = new(Colors.SheetGrid) { DashPattern = [4f, 1f] };
-        public static readonly Pen RulersBorder = new(Colors.RulersBorder);
-        public static readonly Pen ThumbnailBorder = new(Colors.ThumbnailBorder) { LineJoin = LineJoin.Bevel };
-        public static readonly Pen SelectionBorder = new(Colors.SelectionBorder) { LineJoin = LineJoin.Bevel };
-        public static readonly Pen GroupSelectionBorder = new(Colors.GroupSelectionBorder);
-    }
-
-    /// <summary>Shared brushes. They live for the whole session: never dispose or modify them.</summary>
-    public static class Brushes
-    {
-        public static readonly Brush Selection = new SolidBrush(Colors.Selection);
-        public static readonly Brush GroupSelection = new SolidBrush(Colors.GroupSelection);
-        public static readonly Brush RulersBackground = new SolidBrush(Colors.RulersBackground);
+        public static readonly Stroke SheetBorder = new(Colors.SheetBorder);
+        public static readonly Stroke SheetGrid = new(Colors.SheetGrid) { Dash = new DashPattern(4f, 1f) };
+        public static readonly Stroke RulersBorder = new(Colors.RulersBorder);
+        public static readonly Stroke RulersTick = new(Colors.RulersText);
+        public static readonly Stroke ThumbnailBorder = new(Colors.ThumbnailBorder) { Join = StrokeJoin.Bevel };
+        public static readonly Stroke SelectionBorder = new(Colors.SelectionBorder) { Join = StrokeJoin.Bevel };
+        public static readonly Stroke GroupSelectionBorder = new(Colors.GroupSelectionBorder);
     }
 
     public static class Environment
@@ -266,6 +264,7 @@ public static class Settings
             public const string Value = "fb:Value";
             public const string ClassName = "fb:ClassName";
             public const string Id = "id";
+            public const string Fixed = "fixed";
             public const string SheetWidth = "Width";
             public const string SheetHeight = "Height";
             public const string ProgramVersion = "Version";

@@ -1,9 +1,9 @@
 using System.ComponentModel;
-using System.Drawing.Drawing2D;
 using System.Globalization;
 using Makarov.FlowchartBuilder.API.Attributes;
 using Makarov.FlowchartBuilder.Extensions;
 using Makarov.Framework.Core;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder.Glyphs;
 
@@ -21,11 +21,12 @@ public class BlockGlyph : AbstractGlyph
     private const int CenterMarkSize = 10;
     private const int LockMarkerOffset = 2;
 
-    private static readonly Brush PlaceholderBrush = new SolidBrush(Color.FromArgb(10, Color.Blue));
-    private static readonly Pen PlaceholderPen = new(Color.Silver) { DashPattern = [4f, 2f] };
-    private static readonly Brush SelectionLabelBrush = new SolidBrush(Settings.Colors.SelectionBorder);
-    private static readonly Brush GroupSelectionLabelBrush = new SolidBrush(Settings.Colors.GroupSelectionBorder);
-    private static Font? _labelFont;
+    private static readonly Color PlaceholderFill = Color.FromArgb(10, Color.Blue);
+    private static readonly Stroke PlaceholderStroke = new(Color.Silver) { Dash = new DashPattern(4f, 2f) };
+    private static readonly Stroke CenterMarkStroke = new(Color.Silver);
+    private static readonly TextStyle LabelStyle = new("Arial", 7f);
+    private static readonly Color LockColor = Color.FromArgb(255, 80, 80, 80);
+    private static readonly Color LockFill = Color.FromArgb(255, 250, 215, 90);
 
     private float _width;
     private float _height;
@@ -62,7 +63,8 @@ public class BlockGlyph : AbstractGlyph
     [ActiveProperty]
     public float BorderWidthInMM { get; set; }
 
-    public int ScaledBorderWidth => (BorderWidthInMM * ScaleFactor).MMToPx();
+    /// <summary>Border width in pixels at the current zoom; at least one pixel.</summary>
+    public float ScaledBorderWidth => Math.Max(1f, UnitsConverter.MMToPxExact(BorderWidthInMM * ScaleFactor));
 
     [Description("Border color.")]
     [Category("Appearance")]
@@ -136,7 +138,13 @@ public class BlockGlyph : AbstractGlyph
     public float Angle
     {
         get => _angle;
-        set => _angle = Math.Abs(value) > 360 ? (float)(value - Math.Truncate(value / 360.0) * 360) : value;
+        set
+        {
+            if (!CanRotate)
+                value = 0f;
+
+            _angle = Math.Abs(value) > 360 ? (float)(value - Math.Truncate(value / 360.0) * 360) : value;
+        }
     }
 
     public int Width => WidthInMM.MMToPx();
@@ -328,54 +336,44 @@ public class BlockGlyph : AbstractGlyph
 
     #region Drawing
 
-    protected override void ApplyRotation(Graphics graphics)
-    {
-        if (!CanRotate || Angle == 0)
-            return;
+    protected internal override bool IsPropertyVisible(string propertyName) =>
+        propertyName != nameof(Angle) || CanRotate;
 
-        graphics.TranslateTransform(ScaledX, ScaledY);
-        graphics.RotateTransform(Angle);
-        graphics.TranslateTransform(-ScaledX, -ScaledY);
-    }
+    protected override CanvasScope ApplyRotation(Canvas canvas) =>
+        CanRotate && Angle != 0f ? canvas.Rotate(Angle, new PointF(ScaledX, ScaledY)) : default;
 
     /// <summary>Placeholder look for block glyphs that do not draw themselves.</summary>
-    protected override void DrawGlyph(Graphics graphics)
+    protected override void DrawGlyph(Canvas canvas)
     {
         Rectangle bounds = ScaledBounds;
-        graphics.FillRectangle(PlaceholderBrush, bounds);
-        graphics.DrawRectangle(PlaceholderPen, bounds);
+        canvas.FillRectangle(bounds, PlaceholderFill);
+        canvas.DrawRectangle(bounds, PlaceholderStroke);
 
-        graphics.DrawLine(Pens.Silver, ScaledX - CenterMarkSize, ScaledY, ScaledX + CenterMarkSize, ScaledY);
-        graphics.DrawLine(Pens.Silver, ScaledX, ScaledY - CenterMarkSize, ScaledX, ScaledY + CenterMarkSize);
+        canvas.DrawLine(new PointF(ScaledX - CenterMarkSize, ScaledY), new PointF(ScaledX + CenterMarkSize, ScaledY), CenterMarkStroke);
+        canvas.DrawLine(new PointF(ScaledX, ScaledY - CenterMarkSize), new PointF(ScaledX, ScaledY + CenterMarkSize), CenterMarkStroke);
     }
 
-    protected override void DrawText(Graphics graphics)
-    {
-        using var brush = new SolidBrush(ForegroundColor);
-        graphics.DrawString(Caption, TextFont, brush, InnerRegion);
-    }
+    /// <summary>The caption inside <see cref="InnerRegion"/>, scaled with the zoom.</summary>
+    protected override void DrawText(Canvas canvas) =>
+        canvas.DrawText(Caption, TextStyle.FromFont(TextFont).Scale(ScaleFactor), InnerRegion, ForegroundColor);
 
-    protected override void DrawDots(Graphics graphics)
+    protected override void DrawDots(Canvas canvas)
     {
         bool inGroup = InGroup;
-        Pen pen = inGroup ? Settings.Pens.GroupSelectionBorder : Settings.Pens.SelectionBorder;
-        Brush brush = inGroup ? Settings.Brushes.GroupSelection : Settings.Brushes.Selection;
+        Stroke stroke = inGroup ? Settings.Strokes.GroupSelectionBorder : Settings.Strokes.SelectionBorder;
+        Color fill = inGroup ? Settings.Colors.GroupSelection : Settings.Colors.Selection;
 
         float halfSize = MathF.Ceiling(ManipulationPointSize / 2f);
         var size = (int)ManipulationPointSize;
 
         foreach (ManipPoint point in ManipulationPoints)
         {
-            GraphicsState state = graphics.Save();
-            graphics.TranslateTransform(point.Coords.X, point.Coords.Y);
-            graphics.RotateTransform(Angle);
-            graphics.TranslateTransform(-point.Coords.X, -point.Coords.Y);
-
-            var square = new Rectangle((int)(point.Coords.X - halfSize), (int)(point.Coords.Y - halfSize), size, size);
-            graphics.FillRectangle(brush, square);
-            graphics.DrawRectangle(pen, square);
-
-            graphics.Restore(state);
+            using (canvas.Rotate(Angle, point.Coords))
+            {
+                var square = new Rectangle((int)(point.Coords.X - halfSize), (int)(point.Coords.Y - halfSize), size, size);
+                canvas.FillRectangle(square, fill);
+                canvas.DrawRectangle(square, stroke);
+            }
         }
 
         if (!CanRotate)
@@ -385,15 +383,12 @@ public class BlockGlyph : AbstractGlyph
         float radius = RotationPointSize / 2f;
         var handle = new RectangleF(stem[3].X - radius, stem[3].Y - radius, RotationPointSize, RotationPointSize);
 
-        graphics.DrawEllipse(pen, handle);
-        graphics.FillEllipse(brush, handle);
-
-        using var dashPen = (Pen)pen.Clone();
-        dashPen.DashPattern = [3f, 3f];
-        graphics.DrawLine(dashPen, stem[1], stem[2]);
+        canvas.FillEllipse(handle, fill);
+        canvas.DrawEllipse(handle, stroke);
+        canvas.DrawLine(stem[1], stem[2], stroke with { Dash = new DashPattern(3f, 3f) });
     }
 
-    protected override void DrawHelpers(Graphics graphics)
+    protected override void DrawHelpers(Canvas canvas)
     {
         if (!Settings.Environment.SizeLocationLabel || Direction == MoveDirection.None)
             return;
@@ -405,25 +400,33 @@ public class BlockGlyph : AbstractGlyph
             ? $"[x:{Format(XInMM)}{units}, y:{Format(YInMM)}{units}]"
             : $"[{translator["width"]}:{Format(WidthInMM)}{units}, {translator["height"]}:{Format(HeightInMM)}{units}]";
 
-        graphics.DrawString(
+        canvas.DrawText(
             label,
-            _labelFont ??= Fonts.Create("Arial", 7),
-            InGroup ? GroupSelectionLabelBrush : SelectionLabelBrush,
-            ScaledX - (ScaledWidth >> 1) - ManipulationPointSize,
-            ScaledY + (ScaledHeight >> 1) + ManipulationPointSize);
+            LabelStyle,
+            new PointF(ScaledX - (ScaledWidth >> 1) - ManipulationPointSize, ScaledY + (ScaledHeight >> 1) + ManipulationPointSize),
+            InGroup ? Settings.Colors.GroupSelectionBorder : Settings.Colors.SelectionBorder);
 
         static string Format(float mm) => mm.MMToCurr().ToString("F1", CultureInfo.CurrentCulture);
     }
 
-    /// <summary>Lock icon in the top-right corner of a fixed glyph.</summary>
-    protected override void DrawLockMarker(Graphics graphics)
+    /// <summary>Padlock in the top-right corner of a fixed glyph.</summary>
+    protected override void DrawLockMarker(Canvas canvas)
     {
-        Bitmap image = Core.Instance.Images["Lock"];
+        float right = ScaledX + (ScaledWidth >> 1) - LockMarkerOffset;
+        float top = ScaledY - (ScaledHeight >> 1) + LockMarkerOffset;
+        var body = new RectangleF(right - 10f, top + 5f, 10f, 7f);
+        var stroke = new Stroke(LockColor, 1.5f);
 
-        graphics.DrawImageUnscaled(
-            image,
-            ScaledX + (ScaledWidth >> 1) - image.Width - LockMarkerOffset,
-            ScaledY - (ScaledHeight >> 1) + LockMarkerOffset);
+        using Geometry shackle = new GeometryBuilder()
+            .BeginFigure(new PointF(body.Left + 2f, body.Top), filled: false)
+            .Arc(new RectangleF(body.Left + 2f, top, 6f, 6f), 180f, 180f)
+            .LineTo(new PointF(body.Right - 2f, body.Top))
+            .EndFigure(closed: false)
+            .ToGeometry();
+
+        canvas.DrawGeometry(shackle, stroke);
+        canvas.FillRectangle(body, LockFill);
+        canvas.DrawRectangle(body, stroke with { Width = 1f });
     }
 
     #endregion

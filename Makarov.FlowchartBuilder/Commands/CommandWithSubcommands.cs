@@ -15,6 +15,13 @@ public abstract class CommandWithSubcommands : Command
 
     public abstract void Run(string subcommand);
 
+    /// <summary>Runs the subcommand and records the change it made to the document, if any, as one undo step.</summary>
+    public void Execute(string subcommand)
+    {
+        Run(subcommand);
+        Core.Instance.CommitChange();
+    }
+
     /// <summary>Icon of a subcommand item; the caller owns the bitmap.</summary>
     public virtual Bitmap? GetIcon(string subcommand) => null;
 }

@@ -1,10 +1,10 @@
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Containers;
 
 /// <summary>
-/// Container drawn as a faint tinted area; when selected it gets a dashed frame.
+/// Container drawn as a faint tinted area; when selected it gets a dashed frame. Containers are never rotated.
 /// </summary>
 [GlyphFamily("Containers")]
 [GlyphDefaultWidth(60)]
@@ -13,10 +13,12 @@ public abstract class AbstractContainerGlyph : ContainerGlyph
 {
     private const int ThumbnailFrameInset = 5;
 
-    private static readonly Brush AreaBrush = new SolidBrush(Color.FromArgb(5, Color.Blue));
-    private static readonly Brush SelectedAreaBrush = new SolidBrush(Color.FromArgb(15, Color.Blue));
-    private static readonly Pen SelectedFramePen = new(Color.Silver) { DashPattern = [4, 2] };
-    private static readonly Brush ThumbnailFrameBrush = new SolidBrush(Color.FromArgb(128, Color.LightGray));
+    private static readonly Color AreaColor = Color.FromArgb(5, Color.Blue);
+    private static readonly Color SelectedAreaColor = Color.FromArgb(15, Color.Blue);
+    private static readonly Stroke SelectedFrameStroke = new(Color.Silver) { Dash = new DashPattern(4f, 2f) };
+    private static readonly Color ThumbnailFrameColor = Color.FromArgb(128, Color.LightGray);
+
+    public override bool CanRotate => false;
 
     /// <summary>Area of the palette image the container occupies.</summary>
     protected Rectangle ThumbnailFrame =>
@@ -26,30 +28,33 @@ public abstract class AbstractContainerGlyph : ContainerGlyph
             ThumbnailWidth - (ThumbnailFrameInset << 1),
             ThumbnailHeight - (ThumbnailFrameInset << 1));
 
-    protected override void DrawGlyph(Graphics graphics) =>
-        graphics.FillRectangle(AreaBrush, ScaledBounds);
+    protected override void DrawGlyph(Canvas canvas) =>
+        canvas.FillRectangle(ScaledBounds, AreaColor);
 
-    protected override void DrawSelectedGlyph(Graphics graphics)
+    protected override void DrawSelectedGlyph(Canvas canvas)
     {
         Rectangle bounds = ScaledBounds;
-        graphics.FillRectangle(SelectedAreaBrush, bounds);
-        graphics.DrawRectangle(SelectedFramePen, bounds);
+        canvas.FillRectangle(bounds, SelectedAreaColor);
+        canvas.DrawRectangle(bounds, SelectedFrameStroke);
     }
 
-    /// <summary>Fills the palette image frame; the border is left to the caller.</summary>
-    protected static void FillThumbnailFrame(Graphics graphics, Rectangle frame) =>
-        graphics.FillRectangle(ThumbnailFrameBrush, frame);
+    /// <summary>Palette image background and the container frame filled; the frame border is drawn by the caller.</summary>
+    protected void DrawThumbnailFrame(Canvas canvas)
+    {
+        base.DrawThumbnail(canvas);
+        canvas.FillRectangle(ThumbnailFrame, ThumbnailFrameColor);
+    }
 
     /// <summary>Draws one slot of a stack or a table in the palette image.</summary>
-    protected static void DrawThumbnailCell(Graphics graphics, Rectangle cell)
+    protected static void DrawThumbnailCell(Canvas canvas, Rectangle cell)
     {
-        using var brush = new LinearGradientBrush(
+        canvas.FillRectangle(
             cell,
-            Settings.Colors.ThumbnailGradientStart,
-            Settings.Colors.ThumbnailObjectGradientEnd,
-            90f);
-
-        graphics.FillRectangle(brush, cell);
-        graphics.DrawRectangle(Settings.Pens.ThumbnailBorder, cell);
+            new LinearGradient(
+                new PointF(cell.Left, cell.Top),
+                new PointF(cell.Left, cell.Bottom),
+                Settings.Colors.ThumbnailGradientStart,
+                Settings.Colors.ThumbnailObjectGradientEnd));
+        canvas.DrawRectangle(cell, Settings.Strokes.ThumbnailBorder);
     }
 }

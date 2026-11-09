@@ -43,7 +43,7 @@ public sealed class ExportImageCommand : Command
 
         try
         {
-            using Bitmap image = sheet.DrawUnscaled(Core.Instance.MainWindow.InnerRectangle.Size);
+            using Bitmap image = sheet.RenderImage(Core.Instance.MainWindow.InnerRectangle.Size);
             image.Save(dialog.FileName, format);
             _lastFileName = dialog.FileName;
         }

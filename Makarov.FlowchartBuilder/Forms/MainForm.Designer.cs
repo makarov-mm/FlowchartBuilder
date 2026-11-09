@@ -22,6 +22,7 @@ namespace Makarov.FlowchartBuilder.Forms
             this.hScrollBar = new System.Windows.Forms.HScrollBar();
             this.vScrollBar = new System.Windows.Forms.VScrollBar();
             this.documentsTabsBar = new Makarov.Framework.Components.TabsPanel();
+            this.sheetView = new Makarov.FlowchartBuilder.Forms.SheetView();
             this.SuspendLayout();
 
             this.hScrollBar.Location = new System.Drawing.Point(0, 307);
@@ -46,9 +47,19 @@ namespace Makarov.FlowchartBuilder.Forms
             this.documentsTabsBar.Size = new System.Drawing.Size(501, 24);
             this.documentsTabsBar.TabIndex = 5;
 
+            this.sheetView.Location = new System.Drawing.Point(0, 73);
+            this.sheetView.Name = "sheetView";
+            this.sheetView.Size = new System.Drawing.Size(501, 251);
+            this.sheetView.TabIndex = 6;
+            this.sheetView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.sheetView_MouseDown);
+            this.sheetView.MouseMove += new System.Windows.Forms.MouseEventHandler(this.sheetView_MouseMove);
+            this.sheetView.MouseUp += new System.Windows.Forms.MouseEventHandler(this.sheetView_MouseUp);
+            this.sheetView.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.sheetView_MouseWheel);
+
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(501, 346);
+            this.Controls.Add(this.sheetView);
             this.Controls.Add(this.documentsTabsBar);
             this.Controls.Add(this.hScrollBar);
             this.Controls.Add(this.vScrollBar);
@@ -58,9 +69,6 @@ namespace Makarov.FlowchartBuilder.Forms
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.Shown += new System.EventHandler(this.MainForm_Shown);
-            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
-            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseMove);
-            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseUp);
             this.Move += new System.EventHandler(this.MainForm_Move);
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.Controls.SetChildIndex(this.vScrollBar, 0);
@@ -76,6 +84,7 @@ namespace Makarov.FlowchartBuilder.Forms
         private System.Windows.Forms.HScrollBar hScrollBar;
         private System.Windows.Forms.VScrollBar vScrollBar;
         private Framework.Components.TabsPanel documentsTabsBar;
+        private SheetView sheetView;
 
     }
 }

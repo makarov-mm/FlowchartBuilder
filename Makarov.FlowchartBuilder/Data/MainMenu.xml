@@ -8,13 +8,14 @@
     <fb:Command Class="ExportImageCommand" Caption="Command_ExportImage" Enabled="false" />
     <fb:Separator />
     <fb:Command Class="SaveCommand" Caption="Command_Save" Icon="Save" Enabled="false" Shortcut="Ctrl+S" />
-    <fb:Command Class="SaveAllCommand" Caption="Command_SaveAll" Icon="SaveAll" Enabled="false" />
+    <fb:Command Class="SaveAsCommand" Caption="Command_SaveAs" Enabled="false" />
+    <fb:Command Class="SaveAllCommand" Caption="Command_SaveAll" Icon="SaveAll" Enabled="false" Shortcut="Ctrl+Shift+S" />
     <fb:Separator />
-    <fb:Command Class="CloseCommand" Caption="Command_Close" Enabled="false" />
+    <fb:Command Class="CloseCommand" Caption="Command_Close" Enabled="false" Shortcut="Ctrl+F4" />
     <fb:Command Class="CloseAllCommand" Caption="Command_CloseAll" Enabled="false" />
     <fb:Separator />
     <fb:Command Class="PageSetupCommand" Caption="Command_PageSetup" Icon="PageSetup" Enabled="false" />
-    <fb:Command Class="PrintCommand" Caption="Command_Print" Icon="Print" Enabled="false" />
+    <fb:Command Class="PrintCommand" Caption="Command_Print" Icon="Print" Enabled="false" Shortcut="Ctrl+P" />
     <fb:Separator />
     <fb:Command Class="ExitCommand" Caption="Command_Exit" />
   </fb:Menu>

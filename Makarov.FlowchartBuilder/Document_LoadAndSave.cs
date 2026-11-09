@@ -22,37 +22,61 @@ public sealed partial class Document
     /// <exception cref="InvalidDataException">The file is not a valid document or uses glyph types that are not installed.</exception>
     public static Document Load(string fileName)
     {
-        var xml = new XmlDocument();
+        XmlDocument xml = new();
         xml.Load(fileName);
+
+        Sheet sheet;
+        bool skippedProperties;
 
         try
         {
-            return Load(xml, fileName);
+            sheet = ReadSheet(xml, fileName, out skippedProperties);
         }
         catch (Exception e) when (e is FormatException or OverflowException or ArgumentException or KeyNotFoundException)
         {
             throw Invalid(fileName, e.Message, e);
         }
+
+        return new Document(sheet)
+        {
+            Name = Path.GetFileNameWithoutExtension(fileName),
+            FileName = fileName,
+            HasSkippedProperties = skippedProperties,
+        };
     }
 
-    private static Document Load(XmlDocument xml, string fileName)
+    public void Save(string fileName)
+    {
+        CommitChange();
+        CreateXml().Save(fileName);
+
+        FileName = fileName;
+        Name = Path.GetFileNameWithoutExtension(fileName);
+        _savedSnapshot = History.Current;
+    }
+
+    private static XmlDocument ParseXml(string text)
+    {
+        XmlDocument xml = new();
+        xml.LoadXml(text);
+        return xml;
+    }
+
+    /// <summary>Builds the sheet with its glyphs, connectors and groups from a document.</summary>
+    private static Sheet ReadSheet(XmlDocument xml, string fileName, out bool skippedProperties)
     {
         XmlElement root = xml.DocumentElement ?? throw Invalid(fileName, "the document element is missing");
         XmlElement sheetNode = ChildElements(root, Settings.Xml.Tags.Sheet).FirstOrDefault()
             ?? throw Invalid(fileName, "the sheet element is missing");
 
         Sheet sheet = CreateSheet(sheetNode, fileName);
-        var document = new Document(sheet)
-        {
-            Name = Path.GetFileNameWithoutExtension(fileName),
-            FileName = fileName,
-        };
+        skippedProperties = false;
 
         var glyphs = new List<AbstractGlyph>();
         foreach (XmlElement glyphNode in sheetNode.ChildNodes.OfType<XmlElement>())
         {
             AbstractGlyph glyph = CreateInstance<AbstractGlyph>(glyphNode.GetAttribute(Settings.Xml.Attributes.ClassName), fileName);
-            document.HasSkippedProperties |= glyph.Deserialize(glyphNode).Count > 0;
+            skippedProperties |= glyph.Deserialize(glyphNode).Count > 0;
             glyphs.Add(glyph);
         }
 
@@ -64,10 +88,12 @@ public sealed partial class Document
         sheet.RemoveOrphanConnectors();
         LoadGroups(root, sheet);
 
-        return document;
+        return sheet;
     }
 
-    public void Save(string fileName)
+    private string CreateSnapshot() => CreateXml().OuterXml;
+
+    private XmlDocument CreateXml()
     {
         var xml = new XmlDocument();
 
@@ -91,9 +117,7 @@ public sealed partial class Document
 
         root.AppendChild(sheetNode);
         SaveGroups(xml, root);
-
-        xml.Save(fileName);
-        FileName = fileName;
+        return xml;
     }
 
     private static Sheet CreateSheet(XmlElement sheetNode, string fileName)

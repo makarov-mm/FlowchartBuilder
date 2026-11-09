@@ -1,22 +1,31 @@
-using System.Drawing.Drawing2D;
+using System.ComponentModel;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder.Glyphs;
 
 /// <summary>
-/// Arrow between the link ports of two block glyphs. Only the glyph ids and port numbers are saved;
-/// <see cref="Relink"/> resolves them back to glyph instances after loading.
+/// Line between link ports of two block glyphs. It follows the blocks when they move; its routing, arrowhead and
+/// line can be changed in the Properties window, and its caption is shown in the middle of the line.
 /// </summary>
 public class ConnectorGlyph : AbstractGlyph
 {
-    private const int PortCount = 4;
+    /// <summary>Link ports of a block: [0] top, [1] right, [2] bottom, [3] left.</summary>
+    public const int PortCount = 4;
 
-    private static readonly Pen PreviewPen = CreateArrowPen(Color.DodgerBlue, 1.5f, DashStyle.Dash, LineCap.Flat);
-    private static readonly Pen NormalPen = CreateArrowPen(Color.Black, 1.5f, DashStyle.Solid, LineCap.Round);
-    private static readonly Pen SelectedPen = CreateArrowPen(Color.DodgerBlue, 2f, DashStyle.Solid, LineCap.Round);
+    private const float SpacingInMM = 6f;
+    private const float ArrowLengthInMM = 3f;
+    private const float ArrowWidthRatio = 0.75f;
+    private const float HitTolerance = 4f;
+    private const float HandleSize = 6f;
+    private const float CaptionPadding = 2f;
+
+    private static readonly PointF[] PortNormals = [new(0f, -1f), new(1f, 0f), new(0f, 1f), new(-1f, 0f)];
+    private static readonly TextStyle CaptionStyle = new("Arial", 8f);
 
     private BlockGlyph? _source;
     private BlockGlyph? _target;
+    private float _lineWidth = 0.4f;
 
     public ConnectorGlyph()
     {
@@ -24,10 +33,7 @@ public class ConnectorGlyph : AbstractGlyph
 
     public ConnectorGlyph(BlockGlyph source, int sourcePort, BlockGlyph target, int targetPort)
     {
-        Source = source;
-        Target = target;
-        SourcePort = sourcePort;
-        TargetPort = targetPort;
+        Connect(source, sourcePort, target, targetPort);
     }
 
     public BlockGlyph? Source
@@ -50,26 +56,110 @@ public class ConnectorGlyph : AbstractGlyph
         }
     }
 
+    [Browsable(false)]
     [ActiveProperty]
     public string? SourceGlyphId { get; set; }
 
+    [Browsable(false)]
     [ActiveProperty]
     public string? TargetGlyphId { get; set; }
 
+    [Browsable(false)]
     [ActiveProperty]
     public int SourcePort { get; set; }
 
+    [Browsable(false)]
     [ActiveProperty]
     public int TargetPort { get; set; }
 
-    public bool IsResolved => _source is not null && _target is not null;
+    [Description("How the line runs between the blocks.")]
+    [Category("Appearance")]
+    [DisplayName("Routing")]
+    [ActiveProperty]
+    public ConnectorRouting Routing { get; set; } = ConnectorRouting.Curved;
 
-    /// <summary>Pen for the arrow being dragged out of a port before it is attached.</summary>
-    public static Pen DragPreviewPen => PreviewPen;
+    [Description("Arrowhead at the target end.")]
+    [Category("Appearance")]
+    [DisplayName("Arrow")]
+    [ActiveProperty]
+    public bool ArrowHead { get; set; } = true;
+
+    [Description("Line color.")]
+    [Category("Appearance")]
+    [DisplayName("Line Color")]
+    [ActiveProperty]
+    public Color LineColor { get; set; } = Settings.Colors.Connector;
+
+    [Description("Line width in mm.")]
+    [Category("Appearance")]
+    [DisplayName("Line Width")]
+    [ActiveProperty]
+    public float LineWidthInMM
+    {
+        get => _lineWidth;
+        set
+        {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
+            _lineWidth = value;
+        }
+    }
+
+    private static float ScaleFactor => Core.Instance.CurrentDocument.DocumentSheet.ScaleFactor;
+
+    /// <summary>Outward direction of a link port.</summary>
+    public static PointF PortNormal(int port) => PortNormals[Math.Clamp(port, 0, PortCount - 1)];
+
+    public static PointF PortLocation(BlockGlyph glyph, int port) => glyph.LinkPointsScaled[Math.Clamp(port, 0, PortCount - 1)];
+
+    /// <summary>Route from a port of <paramref name="source"/> to any point, at the zoom of the current document.</summary>
+    public static ConnectorRoute CreateRoute(
+        ConnectorRouting routing, BlockGlyph source, int sourcePort, PointF end, PointF endNormal, RectangleF endBounds) =>
+        ConnectorRoute.Create(
+            routing,
+            PortLocation(source, sourcePort),
+            PortNormal(sourcePort),
+            source.ScaledBounds,
+            end,
+            endNormal,
+            endBounds,
+            Math.Max(8f, UnitsConverter.MMToPxExact(SpacingInMM * ScaleFactor)));
+
+    /// <summary>Arrowhead length in pixels for a line of the given width, at the zoom of the current document.</summary>
+    public static float ArrowLength(float lineWidth) =>
+        Math.Max(Math.Max(6f, lineWidth * 4f), UnitsConverter.MMToPxExact(ArrowLengthInMM * ScaleFactor));
+
+    /// <summary>Draws a route with an optional arrowhead; also used for the preview while a connector is dragged.</summary>
+    public static void DrawRoute(Canvas canvas, ConnectorRoute route, Stroke stroke, bool arrowHead, float arrowLength)
+    {
+        using (Geometry line = route.CreateGeometry(arrowHead ? arrowLength * 0.9f : 0f))
+            canvas.DrawGeometry(line, stroke);
+
+        if (arrowHead)
+        {
+            using Geometry head = route.CreateArrowhead(arrowLength, arrowLength * ArrowWidthRatio);
+            canvas.FillGeometry(head, stroke.Color);
+        }
+    }
+
+    /// <summary>Line style of connectors at the current zoom.</summary>
+    public static Stroke CreateStroke(Color color, float widthInMM) =>
+        new(color, Math.Max(1f, UnitsConverter.MMToPxExact(widthInMM * ScaleFactor)))
+        {
+            Join = StrokeJoin.Round,
+            Cap = StrokeCap.Round,
+        };
+
+    public void Connect(BlockGlyph source, int sourcePort, BlockGlyph target, int targetPort)
+    {
+        Source = source;
+        Target = target;
+        SourcePort = sourcePort;
+        TargetPort = targetPort;
+    }
 
     public bool Connects(AbstractGlyph glyph) => ReferenceEquals(glyph, _source) || ReferenceEquals(glyph, _target);
 
-    /// <summary>Finds the source and target glyphs by their saved ids.</summary>
+    /// <summary>Finds the source and target among <paramref name="glyphs"/> by their saved ids.</summary>
     public void Relink(IEnumerable<AbstractGlyph> glyphs)
     {
         _source = null;
@@ -85,44 +175,84 @@ public class ConnectorGlyph : AbstractGlyph
         }
     }
 
-    public bool HitTest(PointF point, float tolerance) =>
-        _source is not null && _target is not null &&
-        DistanceToSegment(point, PortLocation(_source, SourcePort), PortLocation(_target, TargetPort)) <= tolerance;
+    public bool HitTest(PointF point) =>
+        CreateRoute() is { } route && route.DistanceTo(point) <= HitTolerance + CreateStroke(LineColor, LineWidthInMM).Width / 2f;
 
-    protected override void DrawGlyph(Graphics graphics)
+    protected override void DrawGlyph(Canvas canvas)
     {
-        if (_source is null || _target is null)
+        if (CreateRoute() is { } route)
+        {
+            Stroke stroke = CreateStroke(LineColor, LineWidthInMM);
+            DrawRoute(canvas, route, stroke, ArrowHead, ArrowLength(stroke.Width));
+        }
+    }
+
+    protected override void DrawSelectedGlyph(Canvas canvas)
+    {
+        if (CreateRoute() is { } route)
+        {
+            Stroke stroke = CreateStroke(Settings.Colors.SelectedConnector, LineWidthInMM * 1.5f);
+            DrawRoute(canvas, route, stroke, ArrowHead, ArrowLength(stroke.Width));
+        }
+    }
+
+    protected override void DrawText(Canvas canvas)
+    {
+        if (string.IsNullOrWhiteSpace(Caption) || CreateRoute() is not { } route)
             return;
 
-        graphics.DrawLine(Selected ? SelectedPen : NormalPen, PortLocation(_source, SourcePort), PortLocation(_target, TargetPort));
+        TextStyle style = CaptionStyle.Scale(ScaleFactor);
+        SizeF size = Canvas.MeasureText(Caption, style);
+        PointF middle = route.Midpoint;
+        var box = new RectangleF(
+            middle.X - size.Width / 2f - CaptionPadding,
+            middle.Y - size.Height / 2f - CaptionPadding,
+            size.Width + CaptionPadding * 2f,
+            size.Height + CaptionPadding * 2f);
+
+        canvas.FillRectangle(box, Settings.Colors.ConnectorCaptionBackground);
+        canvas.DrawText(Caption, style, box, LineColor, TextAlignment.Center, ParagraphAlignment.Center, wrap: false);
     }
 
-    private static PointF PortLocation(BlockGlyph glyph, int port) =>
-        glyph.LinkPointsScaled[Math.Clamp(port, 0, PortCount - 1)];
-
-    private static float DistanceToSegment(PointF point, PointF start, PointF end)
+    /// <summary>Handles on both ends of a selected connector.</summary>
+    protected override void DrawDots(Canvas canvas)
     {
-        float dx = end.X - start.X;
-        float dy = end.Y - start.Y;
-        float lengthSquared = dx * dx + dy * dy;
+        if (CreateRoute() is not { } route)
+            return;
 
-        float t = lengthSquared <= 0.0001f
-            ? 0f
-            : Math.Clamp(((point.X - start.X) * dx + (point.Y - start.Y) * dy) / lengthSquared, 0f, 1f);
-
-        float ex = point.X - (start.X + t * dx);
-        float ey = point.Y - (start.Y + t * dy);
-        return MathF.Sqrt(ex * ex + ey * ey);
-    }
-
-    private static Pen CreateArrowPen(Color color, float width, DashStyle dashStyle, LineCap startCap)
-    {
-        using var arrowCap = new AdjustableArrowCap(4f, 5f, true);
-        return new Pen(color, width)
+        foreach (PointF end in (ReadOnlySpan<PointF>)[route.Start, route.End])
         {
-            StartCap = startCap,
-            DashStyle = dashStyle,
-            CustomEndCap = arrowCap,
-        };
+            var handle = new RectangleF(end.X - HandleSize / 2f, end.Y - HandleSize / 2f, HandleSize, HandleSize);
+            canvas.FillRectangle(handle, Settings.Colors.Selection);
+            canvas.DrawRectangle(handle, Settings.Strokes.SelectionBorder);
+        }
+    }
+
+    protected override void DrawThumbnail(Canvas canvas)
+    {
+        base.DrawThumbnail(canvas);
+
+        ConnectorRoute route = ConnectorRoute.Create(
+            Routing,
+            new PointF(7f, ThumbnailHeight - 12f),
+            new PointF(1f, 0f),
+            RectangleF.Empty,
+            new PointF(ThumbnailWidth - 7f, 12f),
+            new PointF(-1f, 0f),
+            RectangleF.Empty,
+            10f);
+
+        var stroke = new Stroke(Settings.Colors.ThumbnailBorder, 1.5f) { Join = StrokeJoin.Round, Cap = StrokeCap.Round };
+        DrawRoute(canvas, route, stroke, ArrowHead, arrowLength: 8f);
+        DrawThumbnailBorder(canvas);
+    }
+
+    private ConnectorRoute? CreateRoute()
+    {
+        if (_source is null || _target is null)
+            return null;
+
+        return CreateRoute(
+            Routing, _source, SourcePort, PortLocation(_target, TargetPort), PortNormal(TargetPort), _target.ScaledBounds);
     }
 }

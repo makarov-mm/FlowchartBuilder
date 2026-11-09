@@ -1,5 +1,5 @@
 ; Installer for FlowchartBuilder. Requires Inno Setup 6.3 or later; run Make.cmd to build the
-; application first. The installed application needs the .NET 10 Desktop Runtime.
+; application first. The installed application needs the .NET 11 Desktop Runtime.
 
 #define AppName "FlowchartBuilder"
 #define AppExe "Makarov.FlowchartBuilder.exe"

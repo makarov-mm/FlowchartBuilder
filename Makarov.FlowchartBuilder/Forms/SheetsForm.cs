@@ -44,7 +44,7 @@ public partial class SheetsForm : Form
             foreach (Sheet sheet in family.OrderBy(sheet => sheet.Name, StringComparer.CurrentCulture))
             {
                 string imageKey = $"[{sheet.Family}] {sheet.Name}";
-                images.Images.Add(imageKey, sheet.Thumbnail);
+                images.Images.Add(imageKey, sheet.CreateThumbnail());
 
                 string caption = sheet is FixedSheet fixedSheet
                     ? $"{translator[sheet.Name]}{Environment.NewLine}[{fixedSheet.DefaultWidthInMM} x {fixedSheet.DefaultHeightInMM}]"
@@ -61,7 +61,7 @@ public partial class SheetsForm : Form
             return;
 
         Enabled = false;
-        Core.Instance.AddDocument(new Document((Sheet)Activator.CreateInstance(sheetType)!));
+        Core.Instance.AddDocument(new Document((Sheet)Activator.CreateInstance(sheetType)!) { Name = Core.Instance.CreateUntitledName() });
         Command.GetInstance<ActualSizeCommand>().Run();
         Close();
     }

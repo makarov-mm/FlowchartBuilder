@@ -1,5 +1,5 @@
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 using Makarov.Framework.Graphics.Primitives;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Shapes;
@@ -17,45 +17,36 @@ public abstract class AbstractShapeGlyph : BlockGlyph
         BackgroundColor = Color.Yellow;
     }
 
-    public override Bitmap Thumbnail
-    {
-        get
-        {
-            Bitmap bitmap = base.Thumbnail;
-
-            using Graphics graphics = Graphics.FromImage(bitmap);
-            using GraphicsPath path = CreateThumbnailPrimitive().Create();
-            using var brush = new LinearGradientBrush(
-                Point.Empty,
-                new Point(ThumbnailWidth, ThumbnailHeight),
-                Settings.Colors.ThumbnailObjectGradientStart,
-                Settings.Colors.ThumbnailObjectGradientEnd);
-
-            graphics.FillPath(brush, path);
-            graphics.DrawPath(Settings.Pens.ThumbnailBorder, path);
-            DrawThumbnailBorder(graphics);
-
-            return bitmap;
-        }
-    }
-
     /// <summary>Vertical margin of the shape in the palette image; flat shapes use a larger one.</summary>
     protected virtual int ThumbnailInsetY => ThumbnailHeight >> 3;
 
     /// <summary>Creates the outline fitted into the given box.</summary>
     protected abstract Primitive CreatePrimitive(int x, int y, int width, int height);
 
-    protected override void DrawGlyph(Graphics graphics)
+    protected override void DrawThumbnail(Canvas canvas)
     {
-        using GraphicsPath path = CreatePrimitive(ScaledX, ScaledY, ScaledWidth, ScaledHeight).CreateCentered();
-        using var brush = new SolidBrush(BackgroundColor);
-        using var pen = new Pen(BorderColor, ScaledBorderWidth);
+        base.DrawThumbnail(canvas);
 
-        graphics.FillPath(brush, path);
-        graphics.DrawPath(pen, path);
+        using Geometry outline = CreateThumbnailPrimitive().Create();
+        canvas.FillGeometry(
+            outline,
+            new LinearGradient(
+                PointF.Empty,
+                new PointF(ThumbnailWidth, ThumbnailHeight),
+                Settings.Colors.ThumbnailObjectGradientStart,
+                Settings.Colors.ThumbnailObjectGradientEnd));
+        canvas.DrawGeometry(outline, Settings.Strokes.ThumbnailBorder);
+        DrawThumbnailBorder(canvas);
     }
 
-    protected override void DrawText(Graphics graphics)
+    protected override void DrawGlyph(Canvas canvas)
+    {
+        using Geometry outline = CreatePrimitive(ScaledX, ScaledY, ScaledWidth, ScaledHeight).CreateCentered();
+        canvas.FillGeometry(outline, BackgroundColor);
+        canvas.DrawGeometry(outline, new Stroke(BorderColor, ScaledBorderWidth));
+    }
+
+    protected override void DrawText(Canvas canvas)
     {
     }
 

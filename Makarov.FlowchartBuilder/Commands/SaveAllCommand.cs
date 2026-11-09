@@ -1,9 +1,7 @@
 namespace Makarov.FlowchartBuilder.Commands;
 
-/// <summary>Saving all documents at once is not implemented yet; the menu item stays disabled.</summary>
+/// <summary>Saves every document with unsaved changes.</summary>
 public sealed class SaveAllCommand : Command
 {
-    public override void Run()
-    {
-    }
+    public override void Run() => Core.Instance.SaveAllDocuments();
 }

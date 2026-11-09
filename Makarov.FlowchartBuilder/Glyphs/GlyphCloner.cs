@@ -25,10 +25,10 @@ public static class GlyphCloner
                      copies.GetValueOrDefault(source) is BlockGlyph sourceCopy &&
                      copies.GetValueOrDefault(target) is BlockGlyph targetCopy)
             {
-                result.Add(new ConnectorGlyph(sourceCopy, connector.SourcePort, targetCopy, connector.TargetPort)
-                {
-                    Caption = connector.Caption,
-                });
+                // The copy keeps the connector type and style and is attached to the copied blocks.
+                var copy = (ConnectorGlyph)connector.Clone();
+                copy.Connect(sourceCopy, connector.SourcePort, targetCopy, connector.TargetPort);
+                result.Add(copy);
             }
         }
 

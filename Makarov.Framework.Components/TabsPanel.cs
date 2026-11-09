@@ -23,6 +23,9 @@ public class TabsPanel : Control
 
     public event EventHandler? SelectedTabChanged;
 
+    /// <summary>Raised when the close button of a tab is clicked or the tab is clicked with the middle button.</summary>
+    public event EventHandler<TabEventArgs>? TabCloseRequested;
+
     [DefaultValue(200)]
     public int MinimumTabWidth
     {
@@ -69,6 +72,37 @@ public class TabsPanel : Control
         SelectedIndex = _tabs.Count - 1;
     }
 
+    public void RemoveTab(int id)
+    {
+        int index = _tabs.FindIndex(tab => tab.Id == id);
+        if (index < 0)
+            return;
+
+        _tabs.RemoveAt(index);
+
+        // Keep the same tab selected, or the nearest one when the selected tab was removed.
+        if (index < _selectedIndex || _selectedIndex >= _tabs.Count)
+            _selectedIndex--;
+
+        Invalidate();
+    }
+
+    public void SelectTab(int id)
+    {
+        int index = _tabs.FindIndex(tab => tab.Id == id);
+        if (index >= 0)
+            SelectedIndex = index;
+    }
+
+    public void SetCaption(int id, string caption)
+    {
+        if (_tabs.Find(tab => tab.Id == id) is { } tab && tab.Caption != caption)
+        {
+            tab.Caption = caption;
+            Invalidate();
+        }
+    }
+
     protected override void OnPaint(PaintEventArgs e)
     {
         base.OnPaint(e);
@@ -90,9 +124,19 @@ public class TabsPanel : Control
         for (int i = 0; i < _tabs.Count; i++)
         {
             int width = TabWidth(_tabs[i]);
-            if (e.X >= left && e.X < left + width)
+            var bounds = new Rectangle(left, 0, width, Height - 1);
+
+            if (bounds.Contains(e.Location))
             {
-                SelectedIndex = i;
+                Tab tab = _tabs[i];
+                Rectangle close = Tab.GetCloseButton(bounds);
+                close.Inflate(3, 3);
+
+                if (e.Button == MouseButtons.Middle || (e.Button == MouseButtons.Left && close.Contains(e.Location)))
+                    TabCloseRequested?.Invoke(this, new TabEventArgs(tab));
+                else if (e.Button == MouseButtons.Left)
+                    SelectedIndex = i;
+
                 return;
             }
 

@@ -10,6 +10,7 @@
   <fb:Word Key="Command_Open">Open...</fb:Word>
   <fb:Word Key="Command_ExportImage">Export Image...</fb:Word>
   <fb:Word Key="Command_Save">Save</fb:Word>
+  <fb:Word Key="Command_SaveAs">Save As...</fb:Word>
   <fb:Word Key="Command_SaveAll">Save All</fb:Word>
   <fb:Word Key="Command_Close">Close</fb:Word>
   <fb:Word Key="Command_CloseAll">Close All</fb:Word>
@@ -116,6 +117,7 @@
 
   <fb:Word Key="Msg_Error">Error</fb:Word>
   <fb:Word Key="Msg_Info">Information</fb:Word>
+  <fb:Word Key="Msg_SaveChanges">Save changes to &quot;{0}&quot;?</fb:Word>
   <fb:Word Key="Msg_InvalidImageExtension">Invalid image file extension.</fb:Word>
   <fb:Word Key="Msg_Need_Restart_Application">Please, restart application.</fb:Word>
 

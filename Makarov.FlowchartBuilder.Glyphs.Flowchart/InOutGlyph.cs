@@ -1,5 +1,5 @@
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 using Makarov.Framework.Graphics.Primitives;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Flowchart;
@@ -14,7 +14,7 @@ public sealed class InOutGlyph : AbstractFlowchartGlyph
         new BeveledRectangle(x, y, width, height, width >> 3);
 
     /// <summary>In the palette the bevel follows the whole image width, not the inset outline.</summary>
-    protected override GraphicsPath CreateThumbnailOutline()
+    protected override Geometry CreateThumbnailOutline()
     {
         int insetX = ThumbnailWidth >> 3;
         int insetY = ThumbnailInsetY;

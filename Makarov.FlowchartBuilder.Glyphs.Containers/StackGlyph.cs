@@ -1,4 +1,5 @@
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Containers;
 
@@ -10,32 +11,25 @@ public sealed class StackGlyph : AbstractContainerGlyph
     private const int FilledSlots = 3;
     private const int Spacing = 2;
 
-    public override Bitmap Thumbnail
+    protected override void DrawThumbnail(Canvas canvas)
     {
-        get
+        DrawThumbnailFrame(canvas);
+
+        Rectangle frame = ThumbnailFrame;
+        canvas.DrawRectangle(frame, Settings.Strokes.ThumbnailBorder);
+
+        int cellWidth = frame.Width - (Spacing << 1);
+        int cellHeight = (frame.Height - (Slots + 1) * Spacing) / Slots;
+
+        for (int row = 0; row < FilledSlots; row++)
         {
-            Bitmap bitmap = base.Thumbnail;
-            Rectangle frame = ThumbnailFrame;
-
-            using Graphics graphics = Graphics.FromImage(bitmap);
-            FillThumbnailFrame(graphics, frame);
-            graphics.DrawRectangle(Settings.Pens.ThumbnailBorder, frame);
-
-            int cellWidth = frame.Width - (Spacing << 1);
-            int cellHeight = (frame.Height - (Slots + 1) * Spacing) / Slots;
-
-            for (int row = 0; row < FilledSlots; row++)
-            {
-                DrawThumbnailCell(
-                    graphics,
-                    new Rectangle(
-                        frame.Left + Spacing,
-                        frame.Top + (row + 1) * Spacing + row * cellHeight,
-                        cellWidth,
-                        cellHeight));
-            }
-
-            return bitmap;
+            DrawThumbnailCell(
+                canvas,
+                new Rectangle(
+                    frame.Left + Spacing,
+                    frame.Top + (row + 1) * Spacing + row * cellHeight,
+                    cellWidth,
+                    cellHeight));
         }
     }
 }

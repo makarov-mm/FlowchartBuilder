@@ -1,5 +1,3 @@
-using System.Drawing.Drawing2D;
-
 namespace Makarov.Framework.Graphics.Primitives;
 
 /// <summary>Sector of the inscribed ellipse; angles are in degrees, clockwise from the X axis.</summary>
@@ -9,12 +7,10 @@ public sealed class Pie(int x, int y, int width, int height, int startAngle, int
 
     public int SweepAngle { get; } = sweepAngle;
 
-    protected override GraphicsPath CreatePath(int left, int top, int width, int height)
-    {
-        var path = new GraphicsPath();
-        path.StartFigure();
-        path.AddPie(left, top, width, height, StartAngle, SweepAngle);
-        path.CloseFigure();
-        return path;
-    }
+    protected override Geometry CreateGeometry(int left, int top, int width, int height) =>
+        new GeometryBuilder()
+            .BeginFigure(new PointF(left + width / 2f, top + height / 2f))
+            .Arc(new RectangleF(left, top, width, height), StartAngle, SweepAngle)
+            .EndFigure(closed: true)
+            .ToGeometry();
 }

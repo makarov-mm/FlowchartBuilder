@@ -1,25 +1,16 @@
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Containers;
 
 [GlyphName("Group")]
 public sealed class GroupGlyph : AbstractContainerGlyph
 {
-    private static readonly Pen ThumbnailFramePen = new(Settings.Colors.ThumbnailBorder) { DashStyle = DashStyle.Dash };
+    private static readonly Stroke ThumbnailFrameStroke = new(Settings.Colors.ThumbnailBorder) { Dash = new DashPattern(3f, 1f) };
 
-    public override Bitmap Thumbnail
+    protected override void DrawThumbnail(Canvas canvas)
     {
-        get
-        {
-            Bitmap bitmap = base.Thumbnail;
-            Rectangle frame = ThumbnailFrame;
-
-            using Graphics graphics = Graphics.FromImage(bitmap);
-            FillThumbnailFrame(graphics, frame);
-            graphics.DrawRectangle(ThumbnailFramePen, frame);
-
-            return bitmap;
-        }
+        DrawThumbnailFrame(canvas);
+        canvas.DrawRectangle(ThumbnailFrame, ThumbnailFrameStroke);
     }
 }

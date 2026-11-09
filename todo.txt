@@ -1,11 +1,9 @@
 FlowchartBuilder - TODO
 
 Pending:
-- Undo and Redo
-- Close and Close All for documents (menu items and a close button on the document tabs)
-- Save All
-- Page Setup and Print
-- Drawing for the Arrow, Broken Arrow and Link glyphs (Simple plugin), then the Image and Text glyphs
+- Image and Text glyphs (Simple plugin)
+- Print preview; printing large sheets over several pages
+- Move the end points of a connector to other ports or blocks with the mouse
 - Snap the mouse to the manipulation point
 - Proper About dialog
 - Finish translations
@@ -29,9 +27,14 @@ Done:
 - Remove (or minimize) the Framework.Core.Settings class
 - Define all glyphs for the release version
 - Draw manipulation points nicely
-- Document tabs: switching
+- Document tabs: switching and closing
 - Minimize the number of exception classes
 - Fix bug: cannot create two instances of the same glyph consecutively
 - Correct scrolling
 - Export the document to a bitmap
 - Fix bug: copy, then paste + paste - the second paste does nothing
+- Undo and Redo
+- Close, Close All, Save As and Save All, with prompts for unsaved changes
+- Page Setup and Print
+- Connectors as curved, straight and orthogonal arrows (Arrow, Broken Arrow and Link tools)
+- Direct2D rendering instead of GDI+

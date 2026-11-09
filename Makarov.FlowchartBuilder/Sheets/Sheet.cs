@@ -29,8 +29,7 @@ public abstract partial class Sheet
         set
         {
             _scaleFactor = Math.Clamp(value, MinScaleFactor, MaxScaleFactor);
-            Command.GetInstance<ZoomOutCommand>().Enabled = _scaleFactor > MinScaleFactor;
-            Command.GetInstance<ZoomInCommand>().Enabled = _scaleFactor < MaxScaleFactor;
+            UpdateZoomCommands();
         }
     }
 
@@ -63,8 +62,6 @@ public abstract partial class Sheet
     public List<List<BlockGlyph>> Groups { get; } = [];
 
     /// <summary>Picture shown in the "New" dialog; the caller owns the bitmap.</summary>
-    public abstract Bitmap Thumbnail { get; }
-
     /// <summary>Adds the glyph in front of all others.</summary>
     public void Add(AbstractGlyph glyph) => _glyphs.Insert(0, glyph);
 
@@ -120,7 +117,7 @@ public abstract partial class Sheet
 
     /// <summary>Shows the selected block glyphs in the properties window.</summary>
     public void ShowProperties() =>
-        Core.Instance.Windows.GetWindow<PropertiesForm>().Grid.SelectedObjects = [.. SelectedBlockGlyphs];
+        Core.Instance.Windows.GetWindow<PropertiesForm>().Grid.SelectedObjects = [.. SelectedGlyphs];
 
     /// <summary>Enables the commands that make sense for the current selection.</summary>
     public void UpdateGlyphsCommands()
@@ -141,8 +138,29 @@ public abstract partial class Sheet
         SetEnabled<FixAllCommand>(HasGlyphs);
         SetEnabled<UnfixAllCommand>(HasFixedGlyphs);
         SetEnabled<PasteCommand>(Core.Instance.Buffer.Count > 0);
-        SetEnabled<ExportImageCommand>(true);
-        SetEnabled<SaveCommand>(true);
+    }
+
+    public void UpdateZoomCommands()
+    {
+        SetEnabled<ZoomOutCommand>(_scaleFactor > MinScaleFactor);
+        SetEnabled<ZoomInCommand>(_scaleFactor < MaxScaleFactor);
+    }
+
+    /// <summary>Disables the commands that need a sheet, for when no document is open.</summary>
+    public static void DisableGlyphsCommands()
+    {
+        SetEnabled<GroupCommand>(false);
+        SetEnabled<UngroupCommand>(false);
+        SetEnabled<DeleteCommand>(false);
+        SetEnabled<CutCommand>(false);
+        SetEnabled<CopyCommand>(false);
+        SetEnabled<PasteCommand>(false);
+        SetEnabled<FixSelectedCommand>(false);
+        SetEnabled<DeselectCommand>(false);
+        SetEnabled<FixAllCommand>(false);
+        SetEnabled<UnfixAllCommand>(false);
+        SetEnabled<ZoomInCommand>(false);
+        SetEnabled<ZoomOutCommand>(false);
     }
 
     private static void SetEnabled<TCommand>(bool enabled)

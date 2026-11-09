@@ -1,9 +1,8 @@
-using System.Drawing.Drawing2D;
-
 namespace Makarov.Framework.Graphics.Primitives;
 
 /// <summary>
-/// A closed outline that fits into a width x height box. The caller owns the returned <see cref="GraphicsPath"/>.
+/// Immutable shape of a given size that produces its <see cref="Geometry"/> either from a top-left corner
+/// (<see cref="Create"/>) or around a center point (<see cref="CreateCentered"/>).
 /// </summary>
 public abstract class Primitive
 {
@@ -26,20 +25,15 @@ public abstract class Primitive
 
     public int Height { get; }
 
-    /// <summary>Creates the outline with (<see cref="X"/>, <see cref="Y"/>) as the top-left corner.</summary>
-    public GraphicsPath Create() => CreatePath(X, Y, Width, Height);
+    /// <summary>Outline with (<see cref="X"/>, <see cref="Y"/>) as the top-left corner.</summary>
+    public Geometry Create() => CreateGeometry(X, Y, Width, Height);
 
-    /// <summary>Creates the outline with (<see cref="X"/>, <see cref="Y"/>) as the center.</summary>
-    public GraphicsPath CreateCentered() => CreatePath(X - Width / 2, Y - Height / 2, Width, Height);
+    /// <summary>Outline with (<see cref="X"/>, <see cref="Y"/>) as the center.</summary>
+    public Geometry CreateCentered() => CreateGeometry(X - Width / 2, Y - Height / 2, Width, Height);
 
-    protected abstract GraphicsPath CreatePath(int left, int top, int width, int height);
+    protected abstract Geometry CreateGeometry(int left, int top, int width, int height);
 
-    protected static GraphicsPath Polygon(params PointF[] points)
-    {
-        var path = new GraphicsPath();
-        path.StartFigure();
-        path.AddLines(points);
-        path.CloseFigure();
-        return path;
-    }
+    /// <summary>Closed polygon; a last point equal to the first one is dropped.</summary>
+    protected static Geometry Polygon(params ReadOnlySpan<PointF> points) =>
+        points.Length > 1 && points[^1] == points[0] ? Geometry.Polygon(points[..^1]) : Geometry.Polygon(points);
 }

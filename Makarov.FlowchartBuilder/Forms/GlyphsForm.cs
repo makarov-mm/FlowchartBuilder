@@ -54,7 +54,7 @@ public partial class GlyphsForm : DockingForm
             foreach (AbstractGlyph glyph in family.OrderBy(glyph => glyph.Metadata.Order ?? int.MaxValue))
             {
                 string imageKey = $"{glyph.Family}::{glyph.Name}";
-                images.Images.Add(imageKey, glyph.Thumbnail);
+                images.Images.Add(imageKey, glyph.CreateThumbnail());
                 lstView.Items.Add(new ListViewItem(glyph.Name, imageKey) { Tag = glyph.GetType(), Group = group });
             }
         }
@@ -75,7 +75,7 @@ public partial class GlyphsForm : DockingForm
 
                 case CommandedGlyphCommand glyphCommand:
                     glyphCommand.GlyphType = glyphType;
-                    glyphCommand.Run();
+                    glyphCommand.Execute();
                     break;
             }
 
@@ -91,8 +91,12 @@ public partial class GlyphsForm : DockingForm
 
     private void lstView_MouseDoubleClick(object? sender, MouseEventArgs e)
     {
-        if (Core.Instance.CurrentGlyphType is not { } glyphType || Core.Instance.ActiveSheet is not { } sheet)
+        // Only blocks can be placed without a position; links need two blocks to connect.
+        if (Core.Instance.CurrentGlyphType is not { } glyphType || !glyphType.IsAssignableTo(typeof(BlockGlyph)) ||
+            Core.Instance.ActiveSheet is not { } sheet)
+        {
             return;
+        }
 
         var glyph = (AbstractGlyph)Activator.CreateInstance(glyphType)!;
         sheet.DeselectAllGlyphs();
@@ -100,8 +104,9 @@ public partial class GlyphsForm : DockingForm
         sheet.Add(glyph);
         Core.Instance.CurrentGlyphType = null;
 
-        sheet.UpdateGlyphsCommands();
         sheet.ShowProperties();
+        Core.Instance.CommitChange();
+        Core.Instance.UpdateCommands();
         Core.Instance.Redraw();
     }
 

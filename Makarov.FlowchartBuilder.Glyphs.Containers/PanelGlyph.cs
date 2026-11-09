@@ -1,22 +1,14 @@
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Containers;
 
 [GlyphName("Panel")]
 public sealed class PanelGlyph : AbstractContainerGlyph
 {
-    public override Bitmap Thumbnail
+    protected override void DrawThumbnail(Canvas canvas)
     {
-        get
-        {
-            Bitmap bitmap = base.Thumbnail;
-            Rectangle frame = ThumbnailFrame;
-
-            using Graphics graphics = Graphics.FromImage(bitmap);
-            FillThumbnailFrame(graphics, frame);
-            graphics.DrawRectangle(Settings.Pens.ThumbnailBorder, frame);
-
-            return bitmap;
-        }
+        DrawThumbnailFrame(canvas);
+        canvas.DrawRectangle(ThumbnailFrame, Settings.Strokes.ThumbnailBorder);
     }
 }

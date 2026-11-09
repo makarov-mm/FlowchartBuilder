@@ -1,19 +1,19 @@
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 using Makarov.Framework.Graphics.Primitives;
 
 namespace Makarov.FlowchartBuilder.Glyphs.Flowchart;
 
 /// <summary>
-/// Flowchart block: a gradient-filled outline with four link ports that connectors attach to.
+/// Flowchart block: a gradient-filled outline with a centered caption and four link ports that connectors attach to.
+/// Flowchart blocks are never rotated.
 /// </summary>
 [GlyphFamily("Flowchart")]
 [GlyphDefaultWidth(30)]
 [GlyphDefaultHeight(30)]
 public abstract class AbstractFlowchartGlyph : BlockGlyph
 {
-    private static readonly Brush LinkPointBrush = new SolidBrush(Color.White);
-    private static readonly Pen LinkPointPen = new(Color.SteelBlue);
+    private const float LinkPointBorderWidth = 1f;
 
     protected AbstractFlowchartGlyph()
     {
@@ -25,85 +25,99 @@ public abstract class AbstractFlowchartGlyph : BlockGlyph
 
     public override bool SupportsLinks => true;
 
-    public override Bitmap Thumbnail
+    /// <summary>Vertical margin of the block in the palette image.</summary>
+    protected virtual int ThumbnailInsetY => ThumbnailHeight >> 2;
+
+    /// <summary>Part of the block the caption is fitted into.</summary>
+    protected virtual RectangleF TextRegion
     {
         get
         {
-            Bitmap bitmap = base.Thumbnail;
-
-            using Graphics graphics = Graphics.FromImage(bitmap);
-            using GraphicsPath path = CreateThumbnailOutline();
-            using var brush = new LinearGradientBrush(
-                Point.Empty,
-                new Point(ThumbnailWidth, ThumbnailHeight),
-                Settings.Colors.ThumbnailObjectGradientStart,
-                Settings.Colors.ThumbnailObjectGradientEnd);
-
-            graphics.FillPath(brush, path);
-            graphics.DrawPath(Settings.Pens.ThumbnailBorder, path);
-            DrawThumbnailDetails(graphics, path.GetBounds());
-            DrawThumbnailBorder(graphics);
-
-            return bitmap;
+            RectangleF bounds = ScaledBounds;
+            bounds.Inflate(-bounds.Width * 0.08f, -bounds.Height * 0.08f);
+            return bounds;
         }
     }
-
-    /// <summary>Vertical margin of the block in the palette image.</summary>
-    protected virtual int ThumbnailInsetY => ThumbnailHeight >> 2;
 
     /// <summary>Creates the outline fitted into the given box.</summary>
     protected abstract Primitive CreatePrimitive(int x, int y, int width, int height);
 
     /// <summary>Outline on the sheet, centered on the glyph position.</summary>
-    protected virtual GraphicsPath CreateOutline() =>
+    protected virtual Geometry CreateOutline() =>
         CreatePrimitive(ScaledX, ScaledY, ScaledWidth, ScaledHeight).CreateCentered();
 
     /// <summary>Outline in the palette image.</summary>
-    protected virtual GraphicsPath CreateThumbnailOutline()
+    protected virtual Geometry CreateThumbnailOutline()
     {
         int insetX = ThumbnailWidth >> 3;
         int insetY = ThumbnailInsetY;
         return CreatePrimitive(insetX, insetY, ThumbnailWidth - (insetX << 1), ThumbnailHeight - (insetY << 1)).Create();
     }
 
-    protected override void DrawGlyph(Graphics graphics)
+    protected override void DrawThumbnail(Canvas canvas)
     {
-        using GraphicsPath path = CreateOutline();
-        using var brush = new LinearGradientBrush(
-            new PointF(ScaledX - ScaledWidth / 2, ScaledY - ScaledHeight / 2),
-            new PointF(ScaledX + ScaledWidth / 2, ScaledY + ScaledHeight / 2),
-            ForegroundColor,
-            BackgroundColor);
-        using var pen = new Pen(BorderColor, ScaledBorderWidth);
+        base.DrawThumbnail(canvas);
 
-        graphics.FillPath(brush, path);
-        graphics.DrawPath(pen, path);
-        DrawDetails(graphics, pen);
+        using Geometry outline = CreateThumbnailOutline();
+        canvas.FillGeometry(
+            outline,
+            new LinearGradient(
+                PointF.Empty,
+                new PointF(ThumbnailWidth, ThumbnailHeight),
+                Settings.Colors.ThumbnailObjectGradientStart,
+                Settings.Colors.ThumbnailObjectGradientEnd));
+        canvas.DrawGeometry(outline, Settings.Strokes.ThumbnailBorder);
+        DrawThumbnailDetails(canvas, outline.Bounds);
+        DrawThumbnailBorder(canvas);
     }
 
-    /// <summary>Extra lines inside the outline, drawn with the border pen.</summary>
-    protected virtual void DrawDetails(Graphics graphics, Pen pen)
+    protected override void DrawGlyph(Canvas canvas)
+    {
+        using Geometry outline = CreateOutline();
+        var stroke = new Stroke(BorderColor, ScaledBorderWidth);
+
+        canvas.FillGeometry(
+            outline,
+            new LinearGradient(
+                new PointF(ScaledX - ScaledWidth / 2f, ScaledY - ScaledHeight / 2f),
+                new PointF(ScaledX + ScaledWidth / 2f, ScaledY + ScaledHeight / 2f),
+                ForegroundColor,
+                BackgroundColor));
+        canvas.DrawGeometry(outline, stroke);
+        DrawDetails(canvas, stroke);
+    }
+
+    /// <summary>Extra lines inside the outline, drawn with the border stroke.</summary>
+    protected virtual void DrawDetails(Canvas canvas, Stroke stroke)
     {
     }
 
     /// <summary>Extra lines inside the palette image outline.</summary>
-    protected virtual void DrawThumbnailDetails(Graphics graphics, RectangleF bounds)
+    protected virtual void DrawThumbnailDetails(Canvas canvas, RectangleF bounds)
     {
     }
 
-    protected override void DrawText(Graphics graphics)
-    {
-    }
+    /// <summary>The caption centered in the block, in the border color, scaled with the zoom.</summary>
+    protected override void DrawText(Canvas canvas) =>
+        canvas.DrawText(
+            Caption,
+            TextStyle.FromFont(TextFont).Scale(ScaleFactor),
+            TextRegion,
+            BorderColor,
+            TextAlignment.Center,
+            ParagraphAlignment.Center);
 
-    protected override void DrawLinkPoints(Graphics graphics)
+    protected override void DrawLinkPoints(Canvas canvas)
     {
         float size = LinkPointSize;
         float half = size / 2f;
+        var stroke = new Stroke(Settings.Colors.LinkPointBorder, LinkPointBorderWidth);
 
         foreach (PointF point in LinkPointsScaled)
         {
-            graphics.FillEllipse(LinkPointBrush, point.X - half, point.Y - half, size, size);
-            graphics.DrawEllipse(LinkPointPen, point.X - half, point.Y - half, size, size);
+            var bounds = new RectangleF(point.X - half, point.Y - half, size, size);
+            canvas.FillEllipse(bounds, Settings.Colors.LinkPoint);
+            canvas.DrawEllipse(bounds, stroke);
         }
     }
 }

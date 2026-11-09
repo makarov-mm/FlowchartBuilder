@@ -10,6 +10,7 @@
   <fb:Word Key="Command_Open">Открыть...</fb:Word>
   <fb:Word Key="Command_ExportImage">Экспортировать изображение...</fb:Word>
   <fb:Word Key="Command_Save">Сохранить</fb:Word>
+  <fb:Word Key="Command_SaveAs">Сохранить как...</fb:Word>
   <fb:Word Key="Command_SaveAll">Сохранить всё</fb:Word>
   <fb:Word Key="Command_Close">Закрыть</fb:Word>
   <fb:Word Key="Command_CloseAll">Закрыть всё</fb:Word>
@@ -115,6 +116,7 @@
 
   <fb:Word Key="Msg_Error">Ошибка</fb:Word>
   <fb:Word Key="Msg_Info">Информация</fb:Word>
+  <fb:Word Key="Msg_SaveChanges">Сохранить изменения в &quot;{0}&quot;?</fb:Word>
   <fb:Word Key="Msg_InvalidImageExtension">Неправильное расширение графического файла.</fb:Word>
   <fb:Word Key="Msg_Need_Restart_Application">Пожалуйста, перезапустите программу.</fb:Word>
 

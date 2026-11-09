@@ -1,6 +1,5 @@
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
-using Makarov.FlowchartBuilder.Extensions;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder.Sheets;
 
@@ -11,22 +10,12 @@ namespace Makarov.FlowchartBuilder.Sheets;
 [SheetName("Infinite")]
 public sealed class InfiniteSheet : Sheet
 {
-    public override Bitmap Thumbnail
+    protected override void DrawThumbnail(Canvas canvas)
     {
-        get
-        {
-            var bitmap = new Bitmap(ThumbnailWidth, ThumbnailHeight);
-
-            using (Graphics graphics = Graphics.FromImage(bitmap))
-            using (var brush = new LinearGradientBrush(
-                PointF.Empty, new PointF(bitmap.Width, bitmap.Height), Settings.Colors.SheetGradient, Color.White))
-            {
-                graphics.FillRectangle(brush, 0, 0, bitmap.Width, bitmap.Height);
-            }
-
-            bitmap.DrawBorder(Settings.Colors.ThumbnailBorder);
-            return bitmap;
-        }
+        canvas.FillRectangle(
+            new RectangleF(0, 0, ThumbnailWidth, ThumbnailHeight),
+            new LinearGradient(PointF.Empty, new PointF(ThumbnailWidth, ThumbnailHeight), Settings.Colors.SheetGradient, Color.White));
+        DrawThumbnailBorder(canvas);
     }
 
     public override Size GetPixelSize(bool scaled, Size viewport) => viewport;

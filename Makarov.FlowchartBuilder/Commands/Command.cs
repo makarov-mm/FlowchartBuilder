@@ -53,6 +53,13 @@ public abstract class Command
 
     public abstract void Run();
 
+    /// <summary>Runs the command and records the change it made to the document, if any, as one undo step.</summary>
+    public void Execute()
+    {
+        Run();
+        Core.Instance.CommitChange();
+    }
+
     /// <summary>Binds a menu item or toolbar button so that it follows <see cref="Enabled"/> and <see cref="Checked"/>.</summary>
     public void Attach(ToolStripItem item)
     {

@@ -17,8 +17,6 @@ namespace Makarov.FlowchartBuilder;
 /// </summary>
 public sealed partial class Core : IDisposable
 {
-    private const string UntitledDocumentName = "Document";
-
     private static Core? _instance;
 
     private readonly List<Document> _documents = [];
@@ -35,7 +33,6 @@ public sealed partial class Core : IDisposable
     private UnitsManager? _units;
     private SerializerManager? _serializers;
     private PluginLoader? _plugins;
-    private GraphicsManager? _images;
     private GraphicsManager? _icons;
     private IReadOnlyList<Type>? _glyphTypes;
 
@@ -84,8 +81,6 @@ public sealed partial class Core : IDisposable
 
     public PluginLoader Plugins => _plugins ??= new PluginLoader(Settings.Directories.Plugins);
 
-    public GraphicsManager Images => _images ??= new GraphicsManager(Settings.Directories.Graphics);
-
     public GraphicsManager Icons => _icons ??= new GraphicsManager(Settings.Directories.Icons);
 
     /// <summary>Concrete glyph types found in the plugin assemblies.</summary>
@@ -125,56 +120,6 @@ public sealed partial class Core : IDisposable
             TryOpenDocument(fileName);
 
         Application.Run(MainWindow);
-    }
-
-    /// <summary>Opens a document file; reports a failure to the user instead of throwing.</summary>
-    public bool TryOpenDocument(string fileName)
-    {
-        Document document;
-        try
-        {
-            document = Document.Load(fileName);
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException or XmlException or InvalidDataException)
-        {
-            ShowError(e.Message);
-            return false;
-        }
-
-        AddDocument(document);
-
-        if (document.HasSkippedProperties)
-        {
-            MessageBox.Show(
-                MainWindow,
-                "The document was saved by another version of FlowchartBuilder. Properties this version does not support were skipped.",
-                CurrentTranslator["Msg_Info"],
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-        }
-
-        return true;
-    }
-
-    public void AddDocument(Document document)
-    {
-        _documents.Add(document);
-        _currentDocumentIndex = _documents.Count - 1;
-
-        MainWindow.DocumentsTabs.AddTab(document.Name ?? UntitledDocumentName, _currentDocumentIndex);
-        OnCurrentDocumentChanged();
-    }
-
-    public void SelectDocument(int index)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(index);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _documents.Count);
-
-        if (_currentDocumentIndex == index)
-            return;
-
-        _currentDocumentIndex = index;
-        OnCurrentDocumentChanged();
     }
 
     public T GetWindowAsChild<T>()
@@ -224,19 +169,9 @@ public sealed partial class Core : IDisposable
 
         _disposed = true;
         _windows.Dispose();
-        _images?.Dispose();
         _icons?.Dispose();
-        _rulersFont?.Dispose();
         _registryStorage?.Dispose();
         _instance = null;
-    }
-
-    private void OnCurrentDocumentChanged()
-    {
-        Sheet sheet = CurrentDocument.DocumentSheet;
-        sheet.UpdateGlyphsCommands();
-        sheet.ShowProperties();
-        Redraw();
     }
 
     /// <summary>Settings go to the registry; if it is not writable, to an XML file; failing that, to memory.</summary>

@@ -15,7 +15,7 @@ public sealed class SerializerManager
             AddFromAssembly(assembly);
     }
 
-    public bool CanSerialize(Type type) => _serializers.ContainsKey(type);
+    public bool CanSerialize(Type type) => type.IsEnum || _serializers.ContainsKey(type);
 
     public string Serialize(Type type, object? value) => Get(type).Serialize(value);
 
@@ -37,8 +37,16 @@ public sealed class SerializerManager
         }
     }
 
-    private AbstractSerializer Get(Type type) =>
-        _serializers.TryGetValue(type, out AbstractSerializer? serializer)
-            ? serializer
-            : throw new KeyNotFoundException($"No serializer is registered for '{type}'.");
+    private AbstractSerializer Get(Type type)
+    {
+        if (_serializers.TryGetValue(type, out AbstractSerializer? serializer))
+            return serializer;
+
+        if (!type.IsEnum)
+            throw new KeyNotFoundException($"No serializer is registered for '{type}'.");
+
+        serializer = new EnumSerializer(type);
+        _serializers.Add(type, serializer);
+        return serializer;
+    }
 }

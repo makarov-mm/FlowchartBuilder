@@ -10,6 +10,7 @@
   <fb:Word Key="Command_Open">Відчинити...</fb:Word>
   <fb:Word Key="Command_ExportImage">Создати зображення...</fb:Word>
   <fb:Word Key="Command_Save">Сохранити</fb:Word>
+  <fb:Word Key="Command_SaveAs">Зберегти як...</fb:Word>
   <fb:Word Key="Command_SaveAll">Сохранити усе</fb:Word>
   <fb:Word Key="Command_Close">Зачінити</fb:Word>
   <fb:Word Key="Command_CloseAll">Зачінити усе</fb:Word>
@@ -115,6 +116,7 @@
 
   <fb:Word Key="Msg_Error">Помилка</fb:Word>
   <fb:Word Key="Msg_Info">Інформація</fb:Word>
+  <fb:Word Key="Msg_SaveChanges">Зберегти зміни в &quot;{0}&quot;?</fb:Word>
   <fb:Word Key="Msg_InvalidImageExtension">Некоріктне розширення графічного файла.</fb:Word>
   <fb:Word Key="Msg_Need_Restart_Application">Будьласка, перезавантажте програму.</fb:Word>
 

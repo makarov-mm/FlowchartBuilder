@@ -1,7 +1,7 @@
-using System.Drawing.Drawing2D;
 using System.Reflection;
 using Makarov.FlowchartBuilder.API.Attributes;
 using Makarov.FlowchartBuilder.Extensions;
+using Makarov.Framework.Graphics;
 
 namespace Makarov.FlowchartBuilder.Sheets;
 
@@ -47,41 +47,26 @@ public abstract class FixedSheet : Sheet
         }
     }
 
-    public override Bitmap Thumbnail
+    protected override void DrawThumbnail(Canvas canvas)
     {
-        get
-        {
-            const int innerOffset = 8;
-            const int shadowOffset = 2;
+        const int innerOffset = 8;
+        const int shadowOffset = 2;
 
-            var bitmap = new Bitmap(ThumbnailWidth, ThumbnailHeight);
+        int innerWidth = ThumbnailWidth - innerOffset * 2;
+        int innerHeight = ThumbnailHeight - innerOffset * 2;
 
-            using (Graphics graphics = Graphics.FromImage(bitmap))
-            {
-                int innerWidth = bitmap.Width - innerOffset * 2;
-                int innerHeight = bitmap.Height - innerOffset * 2;
+        // All paper formats share one scale (500 mm per thumbnail), so their sizes compare visually.
+        float width = DefaultWidthInMM / 500f * innerWidth;
+        float height = DefaultHeightInMM / 500f * innerHeight;
+        float left = (innerWidth - width) / 2f + innerOffset;
+        float top = (innerHeight - height) / 2f + innerOffset;
+        var paper = new RectangleF(left, top, width, height);
 
-                // All paper formats share one scale (500 mm per thumbnail), so their sizes compare visually.
-                float width = DefaultWidthInMM / 500f * innerWidth;
-                float height = DefaultHeightInMM / 500f * innerHeight;
-                float left = (innerWidth - width) / 2f + innerOffset;
-                float top = (innerHeight - height) / 2f + innerOffset;
-
-                using (var shadow = new SolidBrush(Settings.Colors.ThumbnailBorder))
-                    graphics.FillRectangle(shadow, left + shadowOffset, top + shadowOffset, width, height);
-
-                using (var paper = new LinearGradientBrush(
-                    new PointF(left, top), new PointF(left + width, top + height), Settings.Colors.SheetGradient, Color.White))
-                {
-                    graphics.FillRectangle(paper, left, top, width, height);
-                }
-
-                graphics.DrawRectangle(Settings.Pens.ThumbnailBorder, left, top, width, height);
-            }
-
-            bitmap.DrawBorder(Settings.Colors.ThumbnailBorder);
-            return bitmap;
-        }
+        canvas.FillRectangle(new RectangleF(0, 0, ThumbnailWidth, ThumbnailHeight), Color.White);
+        canvas.FillRectangle(new RectangleF(left + shadowOffset, top + shadowOffset, width, height), Settings.Colors.ThumbnailBorder);
+        canvas.FillRectangle(paper, new LinearGradient(paper.Location, new PointF(paper.Right, paper.Bottom), Settings.Colors.SheetGradient, Color.White));
+        canvas.DrawRectangle(paper, Settings.Strokes.ThumbnailBorder);
+        DrawThumbnailBorder(canvas);
     }
 
     /// <summary>Zoom at which the whole paper fits into <paramref name="fraction"/> of the viewport.</summary>

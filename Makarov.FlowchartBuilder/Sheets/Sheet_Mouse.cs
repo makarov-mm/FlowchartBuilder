@@ -2,29 +2,38 @@ using Makarov.FlowchartBuilder.Glyphs;
 
 namespace Makarov.FlowchartBuilder.Sheets;
 
-/// <summary>
-/// Mouse interaction in sheet pixel coordinates: placing new glyphs, selecting, moving, resizing,
-/// rotating and connecting glyphs.
-/// </summary>
 public abstract partial class Sheet
 {
-    private const float ConnectorHitTolerance = 4f;
-
     private Point _lastMousePosition;
     private Point? _selectionStart;
     private Point _selectionEnd;
     private BlockGlyph? _connectorSource;
     private int _connectorSourcePort;
+    private ConnectorGlyph? _connectorPrototype;
+    private BlockGlyph? _connectorTarget;
+    private int _connectorTargetPort;
     private Point? _connectorCurrent;
 
     public void MouseDown(Point point)
     {
-        if (Core.Instance.CurrentGlyphType is { } glyphType && glyphType.IsAssignableTo(typeof(BlockGlyph)))
-            PlaceNewGlyph(glyphType, point);
-
         _selectionStart = null;
         _lastMousePosition = point;
         UnlockGlyphs();
+
+        if (Core.Instance.CurrentGlyphType is { } glyphType)
+        {
+            if (glyphType.IsAssignableTo(typeof(ConnectorGlyph)))
+            {
+                // A link tool from the palette: drag from any block that has link ports.
+                if (FindLinkableBlock(point, except: null) is { } source)
+                    StartConnector(source, NearestLinkPoint(source, point), glyphType, point);
+
+                return;
+            }
+
+            if (glyphType.IsAssignableTo(typeof(BlockGlyph)))
+                PlaceNewGlyph(glyphType, point);
+        }
 
         if (TryStartConnector(point) || TryHitBlock(point) || TrySelectConnector(point))
             return;
@@ -40,6 +49,8 @@ public abstract partial class Sheet
         if (_connectorSource is not null)
         {
             _connectorCurrent = point;
+            _connectorTarget = FindLinkableBlock(point, except: _connectorSource);
+            _connectorTargetPort = _connectorTarget is null ? 0 : NearestLinkPoint(_connectorTarget, point);
             _lastMousePosition = point;
             Core.Instance.Redraw();
             return;
@@ -77,9 +88,12 @@ public abstract partial class Sheet
             _selectionStart = null;
         }
 
-        Core.Instance.MainWindow.Cursor = Cursors.Arrow;
+        Core.Instance.MainWindow.Cursor = Cursors.Default;
         UnlockGlyphs();
         OnSelectionChanged();
+
+        // Moves, resizes, rotations, new glyphs and connectors become one undo step each.
+        Core.Instance.CommitChange();
     }
 
     private void PlaceNewGlyph(Type glyphType, Point point)
@@ -95,7 +109,7 @@ public abstract partial class Sheet
         Add(glyph);
     }
 
-    /// <summary>A press on a link port of an unselected glyph starts dragging a new connector.</summary>
+    /// <summary>Starts a connector when a link port of an unselected block is pressed.</summary>
     private bool TryStartConnector(Point point)
     {
         foreach (BlockGlyph glyph in NonFixedGlyphs.OfType<BlockGlyph>())
@@ -107,22 +121,52 @@ public abstract partial class Sheet
             if (port < 0)
                 continue;
 
-            _connectorSource = glyph;
-            _connectorSourcePort = port;
-            _connectorCurrent = point;
-
-            DeselectAllGlyphs();
-            Core.Instance.MainWindow.Cursor = Cursors.Cross;
-            OnSelectionChanged();
+            StartConnector(glyph, port, typeof(ConnectorGlyph), point);
             return true;
         }
 
         return false;
     }
 
-    /// <summary>
-    /// Front to back: a selected glyph reacts to its resize and rotation handles first, then any glyph to its body.
-    /// </summary>
+    private void StartConnector(BlockGlyph source, int port, Type connectorType, Point point)
+    {
+        _connectorSource = source;
+        _connectorSourcePort = port;
+        _connectorPrototype = (ConnectorGlyph)Activator.CreateInstance(connectorType)!;
+        _connectorTarget = null;
+        _connectorCurrent = point;
+
+        DeselectAllGlyphs();
+        Core.Instance.MainWindow.Cursor = Cursors.Cross;
+        OnSelectionChanged();
+    }
+
+    private void FinishConnector()
+    {
+        BlockGlyph source = _connectorSource!;
+        ConnectorGlyph connector = _connectorPrototype!;
+
+        if (_connectorCurrent is { } release && FindLinkableBlock(release, except: source) is { } target)
+        {
+            connector.Connect(source, _connectorSourcePort, target, NearestLinkPoint(target, release));
+            Add(connector);
+
+            // A link tool picked in the palette is used once, like the block tools.
+            if (Core.Instance.CurrentGlyphType?.IsAssignableTo(typeof(ConnectorGlyph)) == true)
+                Core.Instance.CurrentGlyphType = null;
+        }
+
+        _connectorSource = null;
+        _connectorPrototype = null;
+        _connectorTarget = null;
+        _connectorCurrent = null;
+    }
+
+    /// <summary>The topmost block under <paramref name="point"/> (or its link ports) that accepts connectors.</summary>
+    private BlockGlyph? FindLinkableBlock(Point point, BlockGlyph? except) =>
+        NonFixedGlyphs.OfType<BlockGlyph>().FirstOrDefault(glyph =>
+            glyph.SupportsLinks && !ReferenceEquals(glyph, except) && (glyph.Contains(point) || HitLinkPoint(glyph, point) >= 0));
+
     private bool TryHitBlock(Point point)
     {
         foreach (BlockGlyph glyph in NonFixedGlyphs.OfType<BlockGlyph>().ToList())
@@ -181,10 +225,6 @@ public abstract partial class Sheet
         return true;
     }
 
-    /// <summary>
-    /// Brings the glyph (or its whole group) to the front, selects it and starts moving it together
-    /// with everything else that is selected.
-    /// </summary>
     private void SelectForMove(BlockGlyph glyph)
     {
         List<BlockGlyph> unit = glyph.Group ?? [glyph];
@@ -210,8 +250,7 @@ public abstract partial class Sheet
 
     private bool TrySelectConnector(Point point)
     {
-        ConnectorGlyph? connector = NonFixedGlyphs.OfType<ConnectorGlyph>()
-            .FirstOrDefault(candidate => candidate.HitTest(point, ConnectorHitTolerance));
+        ConnectorGlyph? connector = NonFixedGlyphs.OfType<ConnectorGlyph>().FirstOrDefault(candidate => candidate.HitTest(point));
         if (connector is null)
             return false;
 
@@ -261,23 +300,6 @@ public abstract partial class Sheet
         }
     }
 
-    private void FinishConnector()
-    {
-        BlockGlyph source = _connectorSource!;
-
-        if (_connectorCurrent is { } release)
-        {
-            BlockGlyph? target = NonFixedGlyphs.OfType<BlockGlyph>()
-                .FirstOrDefault(glyph => glyph.SupportsLinks && !ReferenceEquals(glyph, source) && glyph.Contains(release));
-
-            if (target is not null)
-                Add(new ConnectorGlyph(source, _connectorSourcePort, target, NearestLinkPoint(target, release)));
-        }
-
-        _connectorSource = null;
-        _connectorCurrent = null;
-    }
-
     /// <summary>Selects the block glyphs touching <paramref name="area"/>, extended to whole groups.</summary>
     private void SelectInRectangle(Rectangle area)
     {
@@ -299,7 +321,7 @@ public abstract partial class Sheet
 
     private void OnSelectionChanged()
     {
-        UpdateGlyphsCommands();
+        Core.Instance.UpdateCommands();
         ShowProperties();
         Core.Instance.Redraw();
     }
