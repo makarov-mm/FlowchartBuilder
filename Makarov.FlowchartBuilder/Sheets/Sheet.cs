@@ -12,41 +12,6 @@ namespace Makarov.FlowchartBuilder.Sheets
 
     public abstract partial class Sheet: ICloneable
     {
-        #region Exceptions
-
-        public class SheetException : FlowchartBuilderException
-        {
-
-            public SheetException(string message)
-                : base(message)
-            { }
-        }
-
-        public sealed class InvalidSheetSizeException : InvalidValueException
-        {
-
-            public InvalidSheetSizeException(float width, float height)
-                : base("Sheet", string.Format("[{0}, {1}]", width, height))
-            { }
-        }
-
-        public sealed class UnknownNameException : SheetException
-        {
-
-            public UnknownNameException(Type type)
-                : base(string.Format(@"Unknown sheet '{0}' name.", type.Name))
-            { }
-        }
-
-        public sealed class UnknownFamilyException : SheetException
-        {
-
-            public UnknownFamilyException(Type type)
-                : base(string.Format(@"Unknown sheet '{0}' family.", type.Name))
-            { }
-        }
-        #endregion
-
         #region Constructors
 
         protected Sheet()
@@ -60,7 +25,7 @@ namespace Makarov.FlowchartBuilder.Sheets
 
         #region Private members
 
-        private float _scaleFactor = 0.5f;
+        private float _scaleFactor = 1f;
 
         private readonly List<AbstractGlyph> _glyphs = new List<AbstractGlyph>();
 

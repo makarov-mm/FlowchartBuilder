@@ -11,27 +11,10 @@ namespace Makarov.FlowchartBuilder
     {
         #region Constructors
 
-        public Document(Sheet sheet)
-        {
-
-            DocumentSheet = sheet;
-
-            var historyEvents = new List<HistoryEvent>();
-
-            foreach (AbstractGlyph glyph in sheet.Glyphs)
-            {
-                var snapshot = new GlyphSnapshot(glyph);
-                historyEvents.Add(new HistoryEventCreateGlyph(snapshot));
-            }
-
-            DocumentHistory = new History(historyEvents);
-
-            SaveSnapshots(GetSnapshotsFromSheet());
-        }
-
         public Document()
         {
-            throw new NotImplementedException();
+            DocumentSheet = new InfiniteSheet();
+            DocumentHistory = new History(Array.Empty<HistoryEvent>());
         }
 
         public Document(string fileName)

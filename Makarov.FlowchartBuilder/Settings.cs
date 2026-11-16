@@ -181,15 +181,6 @@ namespace Makarov.FlowchartBuilder
                 get { return "SecWndParams"; }
             }
 
-            public static class NewSheetDialog
-            {
-
-                public static string ShowOnStartup
-                {
-                    get { return "ShowDialogOnStartup"; }
-                }
-            }
-
             public static class MainWindow
             {
 
@@ -286,17 +277,6 @@ namespace Makarov.FlowchartBuilder
         public static class Pens
         {
 
-            public static Pen SheetBorder
-            {
-                get
-                {
-                    if (!Core.Instance.CachedPens.KeyExists("SheetBorder"))
-                        return Core.Instance.CachedPens["SheetBorder"] = new Pen(Colors.SheetBorder);
-
-                    return Core.Instance.CachedPens["SheetBorder"];
-                }
-            }
-
             public static Pen SheetGrid
             {
                 get
@@ -375,22 +355,12 @@ namespace Makarov.FlowchartBuilder
                 get { return Color.White; }
             }
 
-            public static Color SheetBorder
-            {
-                get { return Color.Black; }
-            }
-
             public static Color SheetGrid
             {
                 get
                 {
                     return Color.FromArgb(24, SelectionBorder);
                 }
-            }
-
-            public static Color SheetGradient
-            {
-                get { return Color.FromArgb(255, 220, 220, 230); }
             }
 
             public static Color RulersBackground
@@ -629,10 +599,6 @@ namespace Makarov.FlowchartBuilder
                 }
             }
 
-            public static string LoadedDocumentName
-            {
-                get; set;
-            }
 
             public static bool LimitedHistory
             {
@@ -834,16 +800,6 @@ namespace Makarov.FlowchartBuilder
                 public const string SheetClassName = @"fb:ClassName";
 
                 public const string GlyphClassName = @"fb:ClassName";
-
-                public static string SheetWidth
-                {
-                    get { return "Width"; }
-                }
-
-                public static string SheetHeight
-                {
-                    get { return "Height"; }
-                }
 
                 public static string ProgramVersion
                 {

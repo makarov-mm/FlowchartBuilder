@@ -17,7 +17,7 @@ namespace Makarov.FlowchartBuilder.Commands
             if (!Core.Instance.CurrentDocument.DocumentSheet.SelectedGlyphsExists)
                 throw new InvalidContextException(@"Selected glyphs not exists.");
 
-            int right = 0;
+            int right = int.MinValue;
 
             var lst = new List<BlockGlyph>();
 

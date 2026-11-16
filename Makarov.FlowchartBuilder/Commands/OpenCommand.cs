@@ -15,7 +15,6 @@ namespace Makarov.FlowchartBuilder.Commands
                 if (dialog.ShowDialog(Core.Instance.MainWindow) == DialogResult.OK)
                 {
                     Core.Instance.AddDocument(new Document(dialog.FileName));
-                    GetInstance("ActualSizeCommand").Run();
                     Core.Instance.Redraw();
                 }
             }

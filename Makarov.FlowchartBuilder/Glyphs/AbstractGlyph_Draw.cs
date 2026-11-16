@@ -16,7 +16,7 @@ namespace Makarov.FlowchartBuilder.Glyphs
 
             using (new TempSmoothingMode(gfx, SmoothMode))
             {
-                bool rotated = false;
+                System.Drawing.Drawing2D.GraphicsState beforeRotation = null;
 
                 if (this is BlockGlyph)
                 {
@@ -24,7 +24,7 @@ namespace Makarov.FlowchartBuilder.Glyphs
 
                     if (blockGlyph.CanRotate && blockGlyph.Angle != 0)
                     {
-                        rotated = true;
+                        beforeRotation = gfx.Save();
                         gfx.TranslateTransform(blockGlyph.ScaledX, blockGlyph.ScaledY);
                         gfx.RotateTransform(blockGlyph.Angle);
                         gfx.TranslateTransform(-blockGlyph.ScaledX, -blockGlyph.ScaledY);
@@ -36,8 +36,8 @@ namespace Makarov.FlowchartBuilder.Glyphs
                 else
                     DrawGlyph(gfx);
 
-                if (rotated)
-                    gfx.ResetTransform();
+                if (beforeRotation != null)
+                    gfx.Restore(beforeRotation);
             }
 
             using (new TempTextRenderingHint(gfx, Settings.Environment.Antialiasing

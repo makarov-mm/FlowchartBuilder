@@ -2,90 +2,57 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using Makarov.FlowchartBuilder.API.Attributes;
 using Makarov.FlowchartBuilder.Extensions;
 using Makarov.FlowchartBuilder.Glyphs;
 
 namespace Makarov.FlowchartBuilder.Sheets
 {
-    [SheetFamily("Custom")]
-    [SheetName("Infinite")]
     public sealed class InfiniteSheet : Sheet
     {
-        #region Properties
-
-        public override Bitmap Thumbnail
-        {
-            get
-            {
-                var bmp = new Bitmap(ThumbnailWidth, ThumbnailHeight);
-
-                using (Graphics gfx = Graphics.FromImage(bmp))
-                {
-
-                    int innerWidth = bmp.Width;
-                    int innerHeight = bmp.Height;
-
-                    using (var brush = new LinearGradientBrush(
-                        new PointF(0, 0),
-                        new PointF(innerWidth, innerHeight),
-                        Settings.Colors.SheetGradient,
-                        Color.White))
-                    {
-                        gfx.FillRectangle(
-                            brush,
-                            0, 0,
-                            innerWidth, innerHeight);
-                    }
-                }
-
-                bmp.DrawBorder(Settings.Colors.ThumbnailBorder);
-                return bmp;
-            }
-        }
-        #endregion
-
-        #region Public methods
-
         public override Bitmap Draw(bool scaled)
         {
-            float tmpScaleFactor = ScaleFactor;
+            Size size = Core.Instance.MainWindow.InnerRectangle.Size;
+            if (scaled)
+                return DrawRegion(size, ScaledViewOrigin);
 
-            if (!scaled)
+            float previousScale = ScaleFactor;
+            try
+            {
                 ScaleFactor = 1f;
+                RectangleF bounds = GetContentBounds();
+                if (bounds.IsEmpty)
+                    return DrawRegion(size, ScaledViewOrigin);
 
-            int w = Core.Instance.MainWindow.InnerRectangle.Width;
-            int h = Core.Instance.MainWindow.InnerRectangle.Height;
+                bounds.Inflate(16, 16);
+                var origin = new Point((int)Math.Floor(bounds.Left), (int)Math.Floor(bounds.Top));
+                size = new Size((int)Math.Ceiling(bounds.Right) - origin.X,
+                                (int)Math.Ceiling(bounds.Bottom) - origin.Y);
+                return DrawRegion(size, origin);
+            }
+            finally
+            {
+                ScaleFactor = previousScale;
+            }
+        }
 
-            var bmp = new Bitmap(w, h);
-
+        private Bitmap DrawRegion(Size size, Point origin)
+        {
+            var bmp = new Bitmap(size.Width, size.Height);
             using (Graphics gfx = Graphics.FromImage(bmp))
             {
-
-                using (var brush = new LinearGradientBrush(
-                    new Point(0, 0),
-                    new Point(w, h),
-                    Settings.Colors.Sheet,
-                    Settings.Colors.SheetGradient))
+                gfx.Clear(Settings.Colors.Sheet);
+                if (Settings.Environment.Grid)
                 {
-                    gfx.FillRectangle(brush, 0, 0, w, h);
+                    using var pen = (Pen)Settings.Pens.SheetGrid.Clone();
+                    pen.DashPattern = new[] { 4f, 1f };
+                    float step = Settings.Environment.CurrentUnits.BigStep.CurrToPx() * ScaleFactor;
+                    for (float x = -origin.X % step; x < size.Width; x += step)
+                        gfx.DrawLine(pen, x, 0, x, size.Height);
+                    for (float y = -origin.Y % step; y < size.Height; y += step)
+                        gfx.DrawLine(pen, 0, y, size.Width, y);
                 }
 
-                if (Settings.Environment.Grid)
-                    using (var pen = (Pen)Settings.Pens.SheetGrid.Clone())
-                    {
-                        pen.DashPattern = new[] { 4f, 1f };
-                        float step = scaled
-                                         ? Settings.Environment.CurrentUnits.BigStep.CurrToPx().Scale()
-                                         : Settings.Environment.CurrentUnits.BigStep.CurrToPx();
-
-                        for (float i = step; i < w; i += step)
-                            gfx.DrawLine(pen, i, 0, i, h);
-
-                        for (float i = step; i < h; i += step)
-                            gfx.DrawLine(pen, 0, i, w, i);
-                    }
-
+                gfx.TranslateTransform(-origin.X, -origin.Y);
                 var glyphs = new List<AbstractGlyph>(Glyphs);
                 glyphs.Reverse();
                 foreach (AbstractGlyph glyph in glyphs)
@@ -128,9 +95,6 @@ namespace Makarov.FlowchartBuilder.Sheets
                 }
             }
 
-            if (!scaled)
-                ScaleFactor = tmpScaleFactor;
-
             return bmp;
         }
 
@@ -138,6 +102,5 @@ namespace Makarov.FlowchartBuilder.Sheets
         {
             return new InfiniteSheet();
         }
-        #endregion
     }
 }

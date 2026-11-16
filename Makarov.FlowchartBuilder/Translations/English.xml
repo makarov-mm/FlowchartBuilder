@@ -6,7 +6,7 @@
   <fb:Word Key="FlowchartBuilder_Caption">FlowchartBuilder</fb:Word>
 
   <fb:Word Key="Menu_File">File</fb:Word>
-  <fb:Word Key="Command_New">New...</fb:Word>
+  <fb:Word Key="Command_New">New</fb:Word>
   <fb:Word Key="Command_Open">Open...</fb:Word>
   <fb:Word Key="Command_ExportImage">Export Image...</fb:Word>
   <fb:Word Key="Command_Save">Save</fb:Word>
@@ -45,13 +45,6 @@
   <fb:Word Key="Command_AlignTop">Align Top</fb:Word>
   <fb:Word Key="Command_AlignBottom">Align Bottom</fb:Word>
 
-  <fb:Word Key="Menu_AlignOnSheet">Align On Sheet</fb:Word>
-  <fb:Word Key="Command_AlignLeftSheet">Align Left on Sheet</fb:Word>
-  <fb:Word Key="Command_AlignRightSheet">Align Right on Sheet</fb:Word>
-  <fb:Word Key="Command_AlignCenterHorizontalSheet">Align Center (Horizontal) on Sheet</fb:Word>
-  <fb:Word Key="Command_AlignCenterVerticalSheet">Align Center (Vertical) on Sheet</fb:Word>
-  <fb:Word Key="Command_AlignTopSheet">Align Top on Sheet</fb:Word>
-  <fb:Word Key="Command_AlignBottomSheet">Align Bottom on Sheet</fb:Word>
   
   <fb:Word Key="Menu_View">View</fb:Word>
   <fb:Word Key="Command_ZoomIn">Zoom In</fb:Word>
@@ -131,8 +124,6 @@
 
   <fb:Word Key="UndefinedGlyphName">*undefined*</fb:Word>
   <fb:Word Key="UndefinedGlyphFamily">Other</fb:Word>
-  <fb:Word Key="UndefinedSheetName">*undefined*</fb:Word>
-  <fb:Word Key="UndefinedSheetFamily">Other</fb:Word>
 
   <fb:Word Key="English">English</fb:Word>
   <fb:Word Key="Russian">Russian</fb:Word>

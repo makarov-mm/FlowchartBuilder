@@ -2,10 +2,7 @@ using System.ComponentModel;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using Makarov.FlowchartBuilder.Extensions;
-using Makarov.FlowchartBuilder.Sheets.Iso;
 using Makarov.Framework.Components;
-using BaseSettings = Makarov.Framework.Core.Settings;
 
 namespace Makarov.FlowchartBuilder.Forms
 {
@@ -104,53 +101,10 @@ namespace Makarov.FlowchartBuilder.Forms
             }
         }
 
-        public Rectangle InnerRectangleWithScrollbars
-        {
-            get
-            {
-                int hScrollHeight = hScrollBar.Visible ? hScrollBar.Height : 0;
-                int vScrollWidth = vScrollBar.Visible ? vScrollBar.Width : 0;
-                var rect = InnerRectangle;
-                return new Rectangle(
-                    rect.Left,
-                    rect.Top,
-                    rect.Width - vScrollWidth,
-                    rect.Height - hScrollHeight);
-            }
-        }
-
-        public Rectangle WorkRectangleWithScrollbars
-        {
-            get
-            {
-                int hScrollHeight = hScrollBar.Visible ? hScrollBar.Height : 0;
-                int vScrollWidth = vScrollBar.Visible ? vScrollBar.Width : 0;
-                var rect = WorkRectangle;
-                return new Rectangle(
-                    rect.Left,
-                    rect.Top,
-                    rect.Width - vScrollWidth,
-                    rect.Height - hScrollHeight);
-            }
-        }
-
         private void FBMainWindow_Shown(object sender, EventArgs e)
         {
-
-            if (!Framework.Core.Settings.Environment.IsMono)
-            {
-
-                string showOnStartup = Core.Instance.CachedSettingsStorage[Settings.RegistryKeys.NewSheetDialog.ShowOnStartup];
-                if (string.IsNullOrEmpty(showOnStartup) || bool.Parse(showOnStartup))
-                    if (string.IsNullOrEmpty(Settings.Environment.LoadedDocumentName))
-                        Core.Instance.GetWindowAsChild<SheetsForm>().ShowDialog(this);
-            }
-            else
-            {
-
-                Core.Instance.AddDocument(new Document(new VerticalA4()));
-                Core.Instance.Redraw();
-            }
+            if (!Core.Instance.IsDocumentsExists)
+                Core.Instance.AddDocument(new Document());
 
             if (Core.Instance.IsFirstRun)
                 Core.Instance.SetDefaultWindowsPos();
@@ -164,50 +118,66 @@ namespace Makarov.FlowchartBuilder.Forms
             Core.Instance.Redraw();
         }
 
-        private Point CoordinatesInSheet(Point pt)
+        private Point? _panStart;
+
+        private Point CoordinatesInSheet(Point client)
         {
-            if (Core.Instance.CurrentDocument.DocumentSheet is IScaledSize)
-            {
-                var sizedSheet = (IScaledSize)Core.Instance.CurrentDocument.DocumentSheet;
-
-                var hbar = HorizontalScrollBar;
-                var vbar = VerticalScrollBar;
-                int xScrollbarOffset = hbar.Visible ? hbar.Value - (hbar.Maximum >> 1) : 0;
-                int yScrollbarOffset = vbar.Visible ? vbar.Value - (vbar.Maximum >> 1) : 0;
-
-                int x = pt.X - InnerRectangle.Left -
-                        ((InnerRectangle.Width - sizedSheet.ScaledWidth.MMToPx())/2) +
-                        xScrollbarOffset;
-                int y = pt.Y - InnerRectangle.Top -
-                        ((InnerRectangle.Height - sizedSheet.ScaledHeight.MMToPx())/2) +
-                        yScrollbarOffset;
-
-                return new Point(x, y);
-            }
-            else
-            {
-                int x = pt.X - InnerRectangle.Left;
-                int y = pt.Y - InnerRectangle.Top;
-                return new Point(x, y);
-            }
+            Point origin = Core.Instance.CurrentDocument.DocumentSheet.ScaledViewOrigin;
+            return new Point(client.X - InnerRectangle.Left + origin.X,
+                             client.Y - InnerRectangle.Top + origin.Y);
         }
 
         private void FBMainWindow_MouseDown(object sender, MouseEventArgs e)
         {
-            if (Core.Instance.IsDocumentsExists)
-                Core.Instance.CurrentDocument.DocumentSheet.MouseDown(CoordinatesInSheet(new Point(e.X, e.Y)));
+            if (!Core.Instance.IsDocumentsExists || !InnerRectangle.Contains(e.Location))
+                return;
+
+            if (e.Button == MouseButtons.Middle)
+            {
+                _panStart = e.Location;
+                Capture = true;
+                Cursor = Cursors.Hand;
+            }
+            else if (e.Button == MouseButtons.Left && !_panStart.HasValue)
+                Core.Instance.CurrentDocument.DocumentSheet.MouseDown(CoordinatesInSheet(e.Location));
         }
 
         private void FBMainWindow_MouseUp(object sender, MouseEventArgs e)
         {
-            if (Core.Instance.IsDocumentsExists)
+            if (e.Button == MouseButtons.Middle && _panStart.HasValue)
+            {
+                _panStart = null;
+                Capture = false;
+                Cursor = Cursors.Default;
+            }
+            else if (e.Button == MouseButtons.Left && Core.Instance.IsDocumentsExists)
                 Core.Instance.CurrentDocument.DocumentSheet.MouseUp();
+        }
+
+        protected override void OnMouseCaptureChanged(EventArgs e)
+        {
+            base.OnMouseCaptureChanged(e);
+            if (!Capture && _panStart.HasValue)
+            {
+                _panStart = null;
+                Cursor = Cursors.Default;
+            }
         }
 
         private void FBMainWindow_MouseMove(object sender, MouseEventArgs e)
         {
-            if (Core.Instance.IsDocumentsExists)
-                Core.Instance.CurrentDocument.DocumentSheet.MouseMove(CoordinatesInSheet(new Point(e.X, e.Y)));
+            if (!Core.Instance.IsDocumentsExists) return;
+            var sheet = Core.Instance.CurrentDocument.DocumentSheet;
+            if (_panStart is Point start)
+            {
+                sheet.ViewOrigin = new PointF(
+                    sheet.ViewOrigin.X + (start.X - e.X) / sheet.ScaleFactor,
+                    sheet.ViewOrigin.Y + (start.Y - e.Y) / sheet.ScaleFactor);
+                _panStart = e.Location;
+                Core.Instance.Redraw();
+            }
+            else
+                sheet.MouseMove(CoordinatesInSheet(e.Location));
         }
 
         private void FBMainWindow_Move(object sender, EventArgs e)
@@ -220,26 +190,6 @@ namespace Makarov.FlowchartBuilder.Forms
 
                     dockingWnd.UpdateDockedWindowPosition();
                 }
-        }
-
-        public HScrollBar HorizontalScrollBar
-        {
-            get { return hScrollBar; }
-        }
-
-        public VScrollBar VerticalScrollBar
-        {
-            get { return vScrollBar; }
-        }
-
-        private void vScrollBar_Scroll(object sender, ScrollEventArgs e)
-        {
-            Core.Instance.Redraw();
-        }
-
-        private void hScrollBar_Scroll(object sender, ScrollEventArgs e)
-        {
-            Core.Instance.Redraw();
         }
 
         public FormWindowState OldWindowState

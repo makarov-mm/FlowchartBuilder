@@ -1,12 +1,38 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\makar\\Desktop\\repo\\FlowchartBuilder\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A864EFD8-C516-4078-B4B8-3D0EFA280D76}|Makarov.FlowchartBuilder.Glyphs.Shapes\\Makarov.FlowchartBuilder.Glyphs.Shapes.csproj|c:\\users\\makar\\desktop\\repo\\flowchartbuilder\\makarov.flowchartbuilder.glyphs.shapes\\rhombusglyph.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A864EFD8-C516-4078-B4B8-3D0EFA280D76}|Makarov.FlowchartBuilder.Glyphs.Shapes\\Makarov.FlowchartBuilder.Glyphs.Shapes.csproj|solutionrelative:makarov.flowchartbuilder.glyphs.shapes\\rhombusglyph.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "RhombusGlyph.cs",
+              "DocumentMoniker": "C:\\Users\\makar\\Desktop\\repo\\FlowchartBuilder\\Makarov.FlowchartBuilder.Glyphs.Shapes\\RhombusGlyph.cs",
+              "RelativeDocumentMoniker": "Makarov.FlowchartBuilder.Glyphs.Shapes\\RhombusGlyph.cs",
+              "ToolTip": "C:\\Users\\makar\\Desktop\\repo\\FlowchartBuilder\\Makarov.FlowchartBuilder.Glyphs.Shapes\\RhombusGlyph.cs",
+              "RelativeToolTip": "Makarov.FlowchartBuilder.Glyphs.Shapes\\RhombusGlyph.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-16T12:55:39.881Z",
+              "EditorCaption": "",
+              "OwnerCaption": "%2"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

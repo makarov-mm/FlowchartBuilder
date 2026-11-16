@@ -6,7 +6,7 @@
   <fb:Word Key="FlowchartBuilder_Caption">Редактор діаграм</fb:Word>
 
   <fb:Word Key="Menu_File">Файл</fb:Word>
-  <fb:Word Key="Command_New">Новий...</fb:Word>
+  <fb:Word Key="Command_New">Новий</fb:Word>
   <fb:Word Key="Command_Open">Відчинити...</fb:Word>
   <fb:Word Key="Command_ExportImage">Создати зображення...</fb:Word>
   <fb:Word Key="Command_Save">Сохранити</fb:Word>
@@ -45,13 +45,6 @@
   <fb:Word Key="Command_AlignTop">Вирівняти по верхньому краю</fb:Word>
   <fb:Word Key="Command_AlignBottom">Вирівняти по нижньому краю</fb:Word>
 
-  <fb:Word Key="Menu_AlignOnSheet">Вирівняти по аркушу</fb:Word>
-  <fb:Word Key="Command_AlignLeftSheet">Вирівняти по лівому краю аркуша</fb:Word>
-  <fb:Word Key="Command_AlignRightSheet">Вирівняти по правому краю аркуша</fb:Word>
-  <fb:Word Key="Command_AlignCenterHorizontalSheet">Вирівняти по центру аркуша (горизонтально)</fb:Word>
-  <fb:Word Key="Command_AlignCenterVerticalSheet">Вирівняти по центру аркуша (вертикально)</fb:Word>
-  <fb:Word Key="Command_AlignTopSheet">Вирівняти по верхньому краю аркуша</fb:Word>
-  <fb:Word Key="Command_AlignBottomSheet">Вирівняти по нижньому краю аркуша</fb:Word>
 
   <fb:Word Key="Menu_View">Вид</fb:Word>
   <fb:Word Key="Command_ZoomIn">Збільшити</fb:Word>
@@ -131,8 +124,6 @@
 
   <fb:Word Key="UndefinedGlyphName">*безіменний*</fb:Word>
   <fb:Word Key="UndefinedGlyphFamily">Інші</fb:Word>
-  <fb:Word Key="UndefinedSheetName">*безіменний*</fb:Word>
-  <fb:Word Key="UndefinedSheetFamily">Інші</fb:Word>
 
   <fb:Word Key="English">Англійська</fb:Word>
   <fb:Word Key="Russian">Російська</fb:Word>

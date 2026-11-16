@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using Makarov.FlowchartBuilder.API.Attributes;
 using Makarov.FlowchartBuilder.Commands;
-using Makarov.FlowchartBuilder.Extensions;
 using Makarov.FlowchartBuilder.Glyphs;
 using System.Linq;
 
@@ -196,62 +194,26 @@ namespace Makarov.FlowchartBuilder.Sheets
             get { return new Rectangle(SelectionStart, SelectionSize); }
         }
 
-        public virtual Bitmap Thumbnail
+        // Top-left of the viewport, in document pixels at 100% zoom.
+        public PointF ViewOrigin { get; set; }
+
+        public Point ScaledViewOrigin => Point.Round(new PointF(
+            ViewOrigin.X * ScaleFactor, ViewOrigin.Y * ScaleFactor));
+
+        public RectangleF GetContentBounds()
         {
-            get
+            RectangleF bounds = RectangleF.Empty;
+            foreach (var block in Glyphs.OfType<BlockGlyph>())
             {
-                var bmp = new Bitmap(ThumbnailWidth, ThumbnailHeight);
-                bmp.DrawBorder(Settings.Colors.ThumbnailBorder);
-                return bmp;
+                double angle = block.Angle * Math.PI / 180;
+                float cos = (float)Math.Abs(Math.Cos(angle));
+                float sin = (float)Math.Abs(Math.Sin(angle));
+                float width = block.Width * cos + block.Height * sin;
+                float height = block.Width * sin + block.Height * cos;
+                var box = new RectangleF(block.X - width / 2, block.Y - height / 2, width, height);
+                bounds = bounds.IsEmpty ? box : RectangleF.Union(bounds, box);
             }
-        }
-
-        public static int ThumbnailWidth
-        {
-            get { return 100; }
-        }
-
-        public static int ThumbnailHeight
-        {
-            get { return 100; }
-        }
-
-        public string Name
-        {
-            get
-            {
-                Type type = GetType();
-                object[] attribs = type.GetCustomAttributes(typeof(SheetNameAttribute), true);
-
-                if (attribs.Length == 0)
-                {
-                    if (Settings.Environment.IsDebug)
-                        throw new UnknownNameException(type);
-
-                    return Core.Instance.CurrentTranslator["UndefinedSheetName"];
-                }
-
-                return ((SheetNameAttribute)attribs[attribs.Length - 1]).Name;
-            }
-        }
-
-        public string Family
-        {
-            get
-            {
-                Type type = GetType();
-                object[] attribs = type.GetCustomAttributes(typeof(SheetFamilyAttribute), true);
-
-                if (attribs.Length == 0)
-                {
-                    if (Settings.Environment.IsDebug)
-                        throw new UnknownFamilyException(type);
-
-                    return Core.Instance.CurrentTranslator["UndefinedSheetFamily"];
-                }
-
-                return ((SheetFamilyAttribute)attribs[attribs.Length - 1]).Family;
-            }
+            return bounds;
         }
 
         public List<List<BlockGlyph>> Groups

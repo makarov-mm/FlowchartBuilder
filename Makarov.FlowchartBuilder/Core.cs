@@ -40,8 +40,6 @@ namespace Makarov.FlowchartBuilder
                 if (!string.IsNullOrEmpty(arg))
                 {
                     AddDocument(new Document(arg));
-
-                    Settings.Environment.LoadedDocumentName = arg;
                 }
             }
 
@@ -136,7 +134,8 @@ namespace Makarov.FlowchartBuilder
             if (wndMain.ClientSize.Width <= 0 || wndMain.ClientSize.Height <= 0)
                 return;
 
-            Point scrollbarsOffset = UpdateScrollbars(wndMain);
+            Rectangle clientRect = wndMain.InnerRectangle;
+            if (clientRect.Width <= 0 || clientRect.Height <= 0) return;
 
             using (var tmp = new Bitmap(wndMain.ClientSize.Width, wndMain.ClientSize.Height))
             {
@@ -148,49 +147,16 @@ namespace Makarov.FlowchartBuilder
 
                     gtmp.Clear(Settings.Colors.WorkArea);
 
-                    Rectangle clientRect = wndMain.InnerRectangle;
-
-                    int leftOffset = 0;
-                    int topOffset = 0;
-
+                    Point origin = Point.Empty;
                     if (IsDocumentsExists)
-                        using (Bitmap sheet = CurrentDocument.DocumentSheet.Draw())
-                        {
-                            leftOffset = clientRect.Left + ((clientRect.Width - sheet.Width) >> 1) - scrollbarsOffset.X;
-                            topOffset = clientRect.Top + ((clientRect.Height - sheet.Height) >> 1) - scrollbarsOffset.Y;
+                    {
+                        var canvas = CurrentDocument.DocumentSheet;
+                        using (Bitmap frame = canvas.Draw())
+                            gtmp.DrawImageUnscaled(frame, clientRect.Location);
+                        origin = canvas.ScaledViewOrigin;
+                    }
 
-                            const int shadowSize = 3;
-                            gtmp.FillRectangle(Brushes.Black, leftOffset + sheet.Width, topOffset + shadowSize,
-                                               shadowSize, sheet.Height);
-                            gtmp.FillRectangle(Brushes.Black, leftOffset + shadowSize, topOffset + sheet.Height,
-                                               sheet.Width - shadowSize, shadowSize);
-
-                            if (Settings.Environment.CanUseNative)
-                            {
-                                using (Graphics sourceGfx = Graphics.FromImage(sheet))
-                                {
-                                    Gdi.BitBlt(
-                                        sheet, sourceGfx,
-                                        0, 0,
-                                        gtmp,
-                                        leftOffset, topOffset,
-                                        sheet.Width, sheet.Height);
-                                }
-                            }
-                            else
-                            {
-                                gtmp.DrawImageUnscaled(sheet, leftOffset, topOffset);
-                            }
-
-                            gtmp.DrawRectangle(
-                                Settings.Pens.SheetBorder,
-                                leftOffset - 1,
-                                topOffset - 1,
-                                sheet.Width + 1,
-                                sheet.Height + 1);
-                        }
-
-                    DrawRulers(gtmp, clientRect, leftOffset, topOffset);
+                    DrawRulers(gtmp, clientRect, origin);
 
                     if (EndRedraw != null)
                         EndRedraw(gtmp, tmp.Width, tmp.Height);
@@ -213,7 +179,7 @@ namespace Makarov.FlowchartBuilder
         public void AddDocument(Document doc)
         {
 
-            _documents.Insert(0, doc);
+            _documents.Add(doc);
 
             if (DocumentAdded != null)
                 DocumentAdded(doc);

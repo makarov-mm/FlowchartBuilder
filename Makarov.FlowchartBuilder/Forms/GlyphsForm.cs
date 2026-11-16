@@ -187,6 +187,13 @@ namespace Makarov.FlowchartBuilder.Forms
 
             Core.Instance.CurrentDocument.DocumentSheet.DeselectAllGlyphs();
             var glyph = (AbstractGlyph) Activator.CreateInstance(Core.Instance.CurrentGlyphType);
+            if (glyph is BlockGlyph block)
+            {
+                var sheet = Core.Instance.CurrentDocument.DocumentSheet;
+                Size size = Core.Instance.MainWindow.InnerRectangle.Size;
+                block.ScaledX = sheet.ScaledViewOrigin.X + size.Width / 2;
+                block.ScaledY = sheet.ScaledViewOrigin.Y + size.Height / 2;
+            }
             glyph.Selected = true;
             Core.Instance.CurrentDocument.DocumentSheet.Add(glyph);
             Core.Instance.CurrentGlyphType = null;

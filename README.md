@@ -1,6 +1,8 @@
 # FlowchartBuilder
 
-A modular WinForms diagram editor with a custom .NET framework underneath.
+A modular WinForms diagram editor with an infinite canvas. Start drawing immediately
+or press Ctrl+N for another canvas. Drag with the middle mouse button to pan in
+any direction. Zoom To Window brings the diagram back into view.
 
 Developed 2008–2011 as a deep exploration of plugin architecture, declarative
 metadata, and pluggable rendering — well before MEF, modern DI containers, or `System.Text.Json` were available in the .NET ecosystem.
@@ -18,9 +20,9 @@ declarative metadata for extensions — were not yet standard practice in
 
 ## Solution Layout
 
-The repository contains **21 projects** split into two layers:
+The solution contains 16 projects across two layers.
 
-### Makarov Framework (10 projects) — a small custom application framework
+### Makarov Framework — a small custom application framework
 
 | Project | Role |
 |---|---|
@@ -35,25 +37,20 @@ The repository contains **21 projects** split into two layers:
 | `Makarov.Framework.Launcher` | Generic launcher |
 | `Makarov.Framework.VersionUpdater` | Auto-updater (separate process to bypass file-locks on the main executable) |
 
-### FlowchartBuilder (11 projects on top of the framework)
+### FlowchartBuilder
 
 | Project | Role |
 |---|---|
-| `Makarov.FlowchartBuilder.API` | Declarative attributes for extensions: `[GlyphName]`, `[GlyphDefaultWidth]`, `[GlyphFamilyAttribute]`, `[GlyphGroupOrderAttribute]`, `[CommandGlyphAttribute]`, `[VisibleGlyphAttribute]`, `[SheetName]`, `[SheetWidth]`, … |
-| `Makarov.FlowchartBuilder` | Application core with `Core` split across partial classes by concern; **60 command classes** in a clean Command pattern |
+| `Makarov.FlowchartBuilder.API` | Declarative attributes for extensions: `[GlyphName]`, `[GlyphDefaultWidth]`, `[GlyphFamilyAttribute]`, `[GlyphGroupOrderAttribute]`, `[CommandGlyphAttribute]`, `[VisibleGlyphAttribute]`, … |
+| `Makarov.FlowchartBuilder` | Application core with `Core` split across partial classes by concern; editor commands in a clean Command pattern |
 | `Makarov.FlowchartBuilder.Box` | Glyph palette helper |
 | `Makarov.FlowchartBuilder.Glyphs.Flowchart` | If, Operation, Begin, End, InOut, Subroutine |
 | `Makarov.FlowchartBuilder.Glyphs.Shapes` | 16 geometric shapes (Rhombus, Ellipse, Trapezoid, Star, Hourglass, Pie, Triangle, Rounded Rectangle, …) |
 | `Makarov.FlowchartBuilder.Glyphs.Simple` | Arrow, BrokenArrow, Link, Image, Text |
 | `Makarov.FlowchartBuilder.Glyphs.Containers` | Group, Panel, Stack, Table |
-| `Makarov.FlowchartBuilder.Sheets.Iso` | ISO paper formats |
-| `Makarov.FlowchartBuilder.Sheets.Ansi` | ANSI paper formats |
-| `Makarov.FlowchartBuilder.Sheets.Other` | Other paper formats |
 | `MakeFlowchartBuilder` | Build pipeline + InnoSetup installer script + Mono compatibility script |
 
-Glyphs and sheets are independent plugin assemblies — drop a new DLL into the
-plugins folder and it becomes a new shape or paper format. No host
-recompilation required.
+Glyphs are independent plugin assemblies. Drop a glyph library into the plugins folder to extend the palette.
 
 ## Architecture Highlights
 
@@ -68,8 +65,7 @@ public class IfGlyph : AbstractFlowchartGlyph { ... }
 ```
 
 The host enumerates plugin assemblies, reflects over their types, reads the
-attributes, and builds the palette dynamically. The same mechanism applies
-to sheet formats. Conceptually similar to MEF — predates the team's adoption
+attributes, and builds the palette dynamically. Conceptually similar to MEF — predates the team's adoption
 of it.
 
 **Pluggable graphics backends.** The `Makarov.Framework.Graphics` project
@@ -82,8 +78,8 @@ abstraction layers.
 `AbstractSerializer`, written years before `System.Text.Json` (2019) became
 part of the runtime. Registered through a `SerializerManager`.
 
-**Command pattern at full scale.** 60 command classes — Undo/Redo, Cut/Copy/
-Paste, alignment (6 directions × {glyph, sheet}), Group/Ungroup, Fix/Unfix,
+**Command pattern at full scale.** Editor commands — Undo/Redo, Cut/Copy/
+Paste, glyph alignment, Group/Ungroup, Fix/Unfix,
 Zoom, PageSetup, Print, ExportImage, language switching, units of
 measurement — all sharing one `Command` base, all decoupled from UI.
 
@@ -129,7 +125,7 @@ dotnet build FlowchartBuilder.sln -c Release
 
 The application is a Windows desktop app (`net10.0-windows`, WinForms), so it
 builds and runs on Windows. Runtime assets (`Data`, `Icons`, `Graphics`,
-`Translations`) are copied next to the executable on build; glyph and sheet
+`Translations`) are copied next to the executable on build; glyph
 plugin assemblies are loaded at runtime from the `Plugins` folder.
 
 ## Project Status

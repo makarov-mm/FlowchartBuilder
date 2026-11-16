@@ -19,24 +19,8 @@ namespace Makarov.FlowchartBuilder.Forms
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            this.hScrollBar = new System.Windows.Forms.HScrollBar();
-            this.vScrollBar = new System.Windows.Forms.VScrollBar();
             this.documentsTabsBar = new Makarov.Framework.Components.TabsPanel();
             this.SuspendLayout();
-
-            this.hScrollBar.Location = new System.Drawing.Point(0, 307);
-            this.hScrollBar.Name = "hScrollBar";
-            this.hScrollBar.Size = new System.Drawing.Size(467, 17);
-            this.hScrollBar.TabIndex = 3;
-            this.hScrollBar.Visible = false;
-            this.hScrollBar.Scroll += new System.Windows.Forms.ScrollEventHandler(this.hScrollBar_Scroll);
-
-            this.vScrollBar.Location = new System.Drawing.Point(479, 79);
-            this.vScrollBar.Name = "vScrollBar";
-            this.vScrollBar.Size = new System.Drawing.Size(17, 209);
-            this.vScrollBar.TabIndex = 4;
-            this.vScrollBar.Visible = false;
-            this.vScrollBar.Scroll += new System.Windows.Forms.ScrollEventHandler(this.vScrollBar_Scroll);
 
             this.documentsTabsBar.BackColor = System.Drawing.SystemColors.Control;
             this.documentsTabsBar.Dock = System.Windows.Forms.DockStyle.Top;
@@ -50,8 +34,6 @@ namespace Makarov.FlowchartBuilder.Forms
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(501, 346);
             this.Controls.Add(this.documentsTabsBar);
-            this.Controls.Add(this.hScrollBar);
-            this.Controls.Add(this.vScrollBar);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainForm";
             this.Text = "FBMainWindow";
@@ -65,8 +47,6 @@ namespace Makarov.FlowchartBuilder.Forms
             this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.FBMainWindow_MouseUp);
             this.Move += new System.EventHandler(this.FBMainWindow_Move);
             this.Resize += new System.EventHandler(this.FBMainWindow_Resize);
-            this.Controls.SetChildIndex(this.vScrollBar, 0);
-            this.Controls.SetChildIndex(this.hScrollBar, 0);
             this.Controls.SetChildIndex(this.documentsTabsBar, 0);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -75,8 +55,6 @@ namespace Makarov.FlowchartBuilder.Forms
 
         #endregion
 
-        private System.Windows.Forms.HScrollBar hScrollBar;
-        private System.Windows.Forms.VScrollBar vScrollBar;
         private Framework.Components.TabsPanel documentsTabsBar;
 
     }

@@ -5,7 +5,6 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using Makarov.FlowchartBuilder.API.Attributes;
 using Makarov.FlowchartBuilder.Extensions;
-using Makarov.FlowchartBuilder.Sheets;
 using Makarov.Framework.Core;
 
 namespace Makarov.FlowchartBuilder.Glyphs
@@ -217,17 +216,7 @@ namespace Makarov.FlowchartBuilder.Glyphs
                 if (!InGroup)
                     throw new InvalidContextException();
 
-                Sheet sheet = Core.Instance.CurrentDocument.DocumentSheet;
-
-                float left = sheet is FixedSheet
-                               ? ((FixedSheet)sheet).Width
-                               : Core.Instance.MainWindow.Width.PxToMM();
-
-                foreach (var glyph in Group)
-                    if (glyph.XInMM - glyph.WidthInMM / 2 < left)
-                        left = glyph.XInMM - glyph.WidthInMM / 2;
-
-                return left;
+                return Group.Min(g => g.XInMM - g.WidthInMM / 2);
             }
         }
 
@@ -239,13 +228,7 @@ namespace Makarov.FlowchartBuilder.Glyphs
                 if (!InGroup)
                     throw new InvalidContextException();
 
-                float right = 0;
-
-                foreach (var glyph in Group)
-                    if (glyph.XInMM + glyph.WidthInMM / 2 > right)
-                        right = glyph.XInMM + glyph.WidthInMM / 2;
-
-                return right;
+                return Group.Max(g => g.XInMM + g.WidthInMM / 2);
             }
         }
 
@@ -257,17 +240,7 @@ namespace Makarov.FlowchartBuilder.Glyphs
                 if (!InGroup)
                     throw new InvalidContextException();
 
-                Sheet sheet = Core.Instance.CurrentDocument.DocumentSheet;
-
-                float top = sheet is FixedSheet
-                               ? ((FixedSheet)sheet).Height
-                               : Core.Instance.MainWindow.Height.PxToMM();
-
-                foreach (var glyph in Group)
-                    if (glyph.YInMM - glyph.HeightInMM / 2 < top)
-                        top = glyph.YInMM - glyph.HeightInMM / 2;
-
-                return top;
+                return Group.Min(g => g.YInMM - g.HeightInMM / 2);
             }
         }
 
@@ -279,13 +252,7 @@ namespace Makarov.FlowchartBuilder.Glyphs
                 if (!InGroup)
                     throw new InvalidContextException();
 
-                float bottom = 0;
-
-                foreach (var glyph in Group)
-                    if (glyph.YInMM + glyph.HeightInMM / 2 > bottom)
-                        bottom = glyph.YInMM + glyph.HeightInMM / 2;
-
-                return bottom;
+                return Group.Max(g => g.YInMM + g.HeightInMM / 2);
             }
         }
 
@@ -505,14 +472,8 @@ namespace Makarov.FlowchartBuilder.Glyphs
         {
             get
             {
-                if (Core.Instance.CurrentDocument.DocumentSheet is ISize)
-                {
-                    var sizedSheet = (ISize)Core.Instance.CurrentDocument.DocumentSheet;
-                    float sheetWidth = sizedSheet.Width;
-                    return RandomGenerator.Instance.NextFloat(WidthInMM/2, sheetWidth - WidthInMM/2);
-                }
-
-                throw new InvalidContextException();
+                var sheet = Core.Instance.CurrentDocument.DocumentSheet;
+                return (sheet.ViewOrigin.X + Core.Instance.MainWindow.InnerRectangle.Width / (2 * sheet.ScaleFactor)).PxToMM();
             }
         }
 
@@ -535,14 +496,8 @@ namespace Makarov.FlowchartBuilder.Glyphs
         {
             get
             {
-                if (Core.Instance.CurrentDocument.DocumentSheet is ISize)
-                {
-                    var sizedSheet = (ISize)Core.Instance.CurrentDocument.DocumentSheet;
-                    float sheetHeight = sizedSheet.Height;
-                    return RandomGenerator.Instance.NextFloat(HeightInMM/2, sheetHeight - HeightInMM/2);
-                }
-
-                throw new InvalidContextException();
+                var sheet = Core.Instance.CurrentDocument.DocumentSheet;
+                return (sheet.ViewOrigin.Y + Core.Instance.MainWindow.InnerRectangle.Height / (2 * sheet.ScaleFactor)).PxToMM();
             }
         }
 

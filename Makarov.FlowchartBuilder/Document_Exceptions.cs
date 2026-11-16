@@ -34,13 +34,6 @@ namespace Makarov.FlowchartBuilder
             { }
         }
 
-        public sealed class SheetNotLoadedException : IncorrectSavedDocumentException
-        {
-            public SheetNotLoadedException()
-                : base(@"Sheet not loaded")
-            { }
-        }
-
         public sealed class GlyphTypeNotFoundException : IncorrectSavedDocumentException
         {
 

@@ -9,6 +9,7 @@
 
   <PropertyGroup>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Properties\AssemblyInfo.cs</DefaultItemExcludes>
     <Company>Michael Makarov</Company>
     <Authors>Michael Makarov</Authors>
     <Product>FlowchartBuilder</Product>

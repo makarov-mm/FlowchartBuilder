@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
@@ -43,33 +45,21 @@ namespace Makarov.FlowchartBuilder
             if (sheetNode == null)
                 throw new SheetNodeNotFoundException();
 
-            var sheetClassAttrib = sheetNode.Attributes[Settings.Xml.Attributes.SheetClassName];
-
-            var sheetWidthAttrib = sheetNode.Attributes[Settings.Xml.Attributes.SheetWidth];
-            var sheetHeightAttrib = sheetNode.Attributes[Settings.Xml.Attributes.SheetHeight];
-
-            var sheetType = Type.GetType(sheetClassAttrib.Value);
-
-            DocumentSheet = null;
-
-            if (sheetType.IsSubclassOf(typeof(Sheet)))
+            // Older files may describe a paper size. Glyph coordinates use the same space.
+            DocumentSheet = new InfiniteSheet();
+            if (TryReadViewValue("ViewX", out float x) && TryReadViewValue("ViewY", out float y) &&
+                TryReadViewValue("Zoom", out float zoom) && zoom > 0)
             {
-
-                if (sheetWidthAttrib != null && sheetHeightAttrib != null)
-                {
-                    var fixedSheet = (FixedSheet)Activator.CreateInstance(sheetType);
-                    fixedSheet.Width = float.Parse(sheetWidthAttrib.Value);
-                    fixedSheet.Height = float.Parse(sheetHeightAttrib.Value);
-                    DocumentSheet = fixedSheet;
-                }
-                else
-                    DocumentSheet = (Sheet)Activator.CreateInstance(sheetType);
+                DocumentSheet.ScaleFactor = zoom;
+                DocumentSheet.ViewOrigin = new PointF(x, y);
             }
 
-            if (DocumentSheet == null)
-                throw new SheetNotLoadedException();
+            bool TryReadViewValue(string name, out float value) =>
+                float.TryParse(sheetNode.GetAttribute(name), NumberStyles.Float, CultureInfo.InvariantCulture, out value)
+                && float.IsFinite(value);
 
-            foreach (XmlNode glyphNode in sheetNode)
+            // Add inserts at the front. Read back-to-front to retain the saved stacking order.
+            foreach (XmlElement glyphNode in sheetNode.ChildNodes.OfType<XmlElement>().Reverse())
             {
 
                 var glyphTypeAttrib = glyphNode.Attributes[Settings.Xml.Attributes.GlyphClassName];
@@ -132,6 +122,7 @@ namespace Makarov.FlowchartBuilder
             }
 
             DocumentHistory = new History(historyEvents);
+            SaveSnapshots(GetSnapshotsFromSheet());
 
         }
 
@@ -162,16 +153,9 @@ namespace Makarov.FlowchartBuilder
             sheetClassAttrib.Value = sheet.GetType().ToString();
             sheetNode.Attributes.Append(sheetClassAttrib);
 
-            if (sheet is FixedSheet fixedSheet)
-            {
-                var sheetWidthAttrib = doc.CreateAttribute(Settings.Xml.Attributes.SheetWidth);
-                sheetWidthAttrib.Value = fixedSheet.Width.ToString();
-                sheetNode.Attributes.Append(sheetWidthAttrib);
-
-                var sheetHeightAttrib = doc.CreateAttribute(Settings.Xml.Attributes.SheetHeight);
-                sheetHeightAttrib.Value = fixedSheet.Height.ToString();
-                sheetNode.Attributes.Append(sheetHeightAttrib);
-            }
+            sheetNode.SetAttribute("ViewX", XmlConvert.ToString(sheet.ViewOrigin.X));
+            sheetNode.SetAttribute("ViewY", XmlConvert.ToString(sheet.ViewOrigin.Y));
+            sheetNode.SetAttribute("Zoom", XmlConvert.ToString(sheet.ScaleFactor));
 
             foreach (var glyph in sheet.Glyphs)
                 sheetNode.AppendChild(glyph.Serialize(doc));

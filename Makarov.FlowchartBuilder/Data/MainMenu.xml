@@ -50,14 +50,6 @@
       <fb:Command Class="AlignTopCommand" Caption="Command_AlignTop" Icon="AlignTop" />
       <fb:Command Class="AlignBottomCommand" Caption="Command_AlignBottom" Icon="AlignBottom" />
     </fb:Menu>
-      <fb:Menu Caption="Menu_AlignOnSheet">
-      <fb:Command Class="AlignLeftSheetCommand" Caption="Command_AlignLeftSheet" Icon="AlignLeftSheet" />
-      <fb:Command Class="AlignRightSheetCommand" Caption="Command_AlignRightSheet" Icon="AlignRightSheet" />
-      <fb:Command Class="AlignCenterHorizontalSheetCommand" Caption="Command_AlignCenterHorizontalSheet" Icon="AlignCenterHorizontalSheet" />
-      <fb:Command Class="AlignCenterVerticalSheetCommand" Caption="Command_AlignCenterVerticalSheet" Icon="AlignCenterVerticalSheet" />
-      <fb:Command Class="AlignTopSheetCommand" Caption="Command_AlignTopSheet" Icon="AlignTopSheet" />
-      <fb:Command Class="AlignBottomSheetCommand" Caption="Command_AlignBottomSheet" Icon="AlignBottomSheet" />
-    </fb:Menu>
   </fb:Menu>
   <fb:Menu Caption="Menu_View">
     <fb:Command Class="ZoomInCommand" Caption="Command_ZoomIn" Icon="ZoomIn" />

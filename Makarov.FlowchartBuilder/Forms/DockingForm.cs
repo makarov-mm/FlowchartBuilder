@@ -194,16 +194,16 @@ namespace Makarov.FlowchartBuilder.Forms
         public void UpdateDockedWindowPosition()
         {
             if (DockLeft)
-                Left = Core.Instance.MainWindow.WorkRectangleWithScrollbars.Left;
+                Left = Core.Instance.MainWindow.WorkRectangle.Left;
 
             if (DockTop)
-                Top = Core.Instance.MainWindow.WorkRectangleWithScrollbars.Top;
+                Top = Core.Instance.MainWindow.WorkRectangle.Top;
 
             if (DockRight)
-                Left = Core.Instance.MainWindow.WorkRectangleWithScrollbars.Right - Width;
+                Left = Core.Instance.MainWindow.WorkRectangle.Right - Width;
 
             if (DockBottom)
-                Top = Core.Instance.MainWindow.WorkRectangleWithScrollbars.Bottom - Height;
+                Top = Core.Instance.MainWindow.WorkRectangle.Bottom - Height;
         }
 
         private void DockingForm_Move(object sender, EventArgs e)

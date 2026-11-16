@@ -6,7 +6,7 @@
   <fb:Word Key="FlowchartBuilder_Caption">Редактор Диаграмм</fb:Word>
 
   <fb:Word Key="Menu_File">Файл</fb:Word>
-  <fb:Word Key="Command_New">Новый...</fb:Word>
+  <fb:Word Key="Command_New">Новый</fb:Word>
   <fb:Word Key="Command_Open">Открыть...</fb:Word>
   <fb:Word Key="Command_ExportImage">Экспортировать изображение...</fb:Word>
   <fb:Word Key="Command_Save">Сохранить</fb:Word>
@@ -45,13 +45,6 @@
   <fb:Word Key="Command_AlignTop">Выровнять по верхнему краю</fb:Word>
   <fb:Word Key="Command_AlignBottom">Выровнять по нижнему краю</fb:Word>
 
-  <fb:Word Key="Menu_AlignOnSheet">Выровнять по листу</fb:Word>
-  <fb:Word Key="Command_AlignLeftSheet">Выровнять по левому краю листа</fb:Word>
-  <fb:Word Key="Command_AlignRightSheet">Выровнять по правому краю листа</fb:Word>
-  <fb:Word Key="Command_AlignCenterHorizontalSheet">Выровнять по центру листа (горизонтально)</fb:Word>
-  <fb:Word Key="Command_AlignCenterVerticalSheet">Выровнять по центру листа (вертикально)</fb:Word>
-  <fb:Word Key="Command_AlignTopSheet">Выровнять по верхнему краю листа</fb:Word>
-  <fb:Word Key="Command_AlignBottomSheet">Выровнять по нижнему краю листа</fb:Word>
 
   <fb:Word Key="Menu_View">Вид</fb:Word>
   <fb:Word Key="Command_ZoomIn">Увеличить</fb:Word>
@@ -131,8 +124,6 @@
 
   <fb:Word Key="UndefinedGlyphName">*безымянный*</fb:Word>
   <fb:Word Key="UndefinedGlyphFamily">Другие</fb:Word>
-  <fb:Word Key="UndefinedSheetName">*безымянный*</fb:Word>
-  <fb:Word Key="UndefinedSheetFamily">Другие</fb:Word>
   
   <fb:Word Key="English">Английский</fb:Word>
   <fb:Word Key="Russian">Русский</fb:Word>

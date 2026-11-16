@@ -1,5 +1,3 @@
-using Makarov.FlowchartBuilder.Forms;
-
 namespace Makarov.FlowchartBuilder.Commands
 {
 
@@ -9,8 +7,8 @@ namespace Makarov.FlowchartBuilder.Commands
         public override void Run()
         {
 
-            using (var form = new SheetsForm())
-                form.ShowDialog(Core.Instance.MainWindow);
+            Core.Instance.AddDocument(new Document());
+            Core.Instance.Redraw();
         }
     }
 }
