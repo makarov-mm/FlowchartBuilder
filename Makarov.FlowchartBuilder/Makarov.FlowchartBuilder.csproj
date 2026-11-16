@@ -23,4 +23,24 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <BundledGlyphProject Include="../Makarov.FlowchartBuilder.Glyphs.*/*.csproj" />
+    <BundledGlyphSource Include="../Makarov.FlowchartBuilder.Glyphs.*/**/*.cs"
+                        Exclude="../Makarov.FlowchartBuilder.Glyphs.*/obj/**;../Makarov.FlowchartBuilder.Glyphs.*/bin/**" />
+    <UpToDateCheckInput Include="@(BundledGlyphProject);@(BundledGlyphSource)" />
+    <UpToDateCheckOutput Include="@(BundledGlyphProject->'$(OutputPath)Plugins/%(Filename).dll')" />
+  </ItemGroup>
+
+  <!-- F5 and dotnet run can build only the startup project. Plugins reference the editor,
+       so build them after its assembly exists, without recursively building their references. -->
+  <Target Name="BuildBundledGlyphs" AfterTargets="Build"
+          Condition="'$(DesignTimeBuild)' != 'true' and ('$(BuildingSolutionFile)' != 'true' or '$(BuildingInsideVisualStudio)' == 'true')"
+          Inputs="$(TargetPath);@(BundledGlyphProject);@(BundledGlyphSource);$(MSBuildThisFileDirectory)../Directory.Build.props"
+          Outputs="@(BundledGlyphProject->'$(TargetDir)Plugins/%(Filename).dll')">
+    <MSBuild Projects="@(BundledGlyphProject)" Targets="Restore"
+             Properties="Configuration=$(Configuration);RestoreRecursive=false;BuildingInsideVisualStudio=false" />
+    <MSBuild Projects="@(BundledGlyphProject)" Targets="Build"
+             Properties="Configuration=$(Configuration);BuildProjectReferences=false;BuildingInsideVisualStudio=false" />
+  </Target>
+
 </Project>

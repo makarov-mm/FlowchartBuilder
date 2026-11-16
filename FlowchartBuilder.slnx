@@ -10,6 +10,7 @@
   </Folder>
   <Folder Name="/Plugins/">
     <Project Path="Makarov.FlowchartBuilder.Glyphs.Containers/Makarov.FlowchartBuilder.Glyphs.Containers.csproj" />
+    <Project Path="Makarov.FlowchartBuilder.Glyphs.Electrical/Makarov.FlowchartBuilder.Glyphs.Electrical.csproj" />
     <Project Path="Makarov.FlowchartBuilder.Glyphs.Flowchart/Makarov.FlowchartBuilder.Glyphs.Flowchart.csproj" />
     <Project Path="Makarov.FlowchartBuilder.Glyphs.Shapes/Makarov.FlowchartBuilder.Glyphs.Shapes.csproj" />
     <Project Path="Makarov.FlowchartBuilder.Glyphs.Simple/Makarov.FlowchartBuilder.Glyphs.Simple.csproj" />

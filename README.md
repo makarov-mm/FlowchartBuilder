@@ -33,6 +33,7 @@ Drag the divider to resize a docked panel. Escape cancels a drag. The layout is 
 | `Makarov.FlowchartBuilder` | The application: documents, an infinite canvas, glyph base classes, editor commands, windows |
 | `Makarov.FlowchartBuilder.API` | Attributes that describe glyphs: `[GlyphName]`, `[GlyphFamily]`, `[GlyphDefaultWidth]`, `[VisibleGlyph]`, `[CommandGlyph]`, `[ActiveProperty]` and others |
 | `Makarov.FlowchartBuilder.Glyphs.Flowchart` | Begin, End, If, In/Out, Operation, Subroutine |
+| `Makarov.FlowchartBuilder.Glyphs.Electrical` | Electrical components, wire junctions and orthogonal wires |
 | `Makarov.FlowchartBuilder.Glyphs.Shapes` | 14 geometric shapes |
 | `Makarov.FlowchartBuilder.Glyphs.Containers` | Group, Panel, Stack, Table |
 | `Makarov.FlowchartBuilder.Glyphs.Simple` | Link tools: Arrow (curved), Broken Arrow (horizontal and vertical segments) and Link (straight, no arrowhead); embedded images and editable text |
@@ -75,6 +76,8 @@ drag from block to block. The route leaves and enters the blocks at right angles
 follows them when they move. To move an end, select the connector and drag the square handle at
 that end to another port of the same block or to another block. Routing, arrowhead, color, width
 and a caption shown in the middle of the line can be changed in the Properties window.
+
+**Electrical schematics.** Pick a component in the Electrical palette. Drag from a terminal to another component to draw a wire, or select the Wire tool first. Use Wire junction for branches. Terminals follow a component when moved or rotated. Set its reference in Caption and its rating or part number in Component value. Switch contacts can be drawn open or closed.
 
 **Undo.** Every change (mouse edits, menu commands, property edits) is one undo step. A step is a
 snapshot of the document XML, so undo is exact for any operation; the last 100 steps are kept.

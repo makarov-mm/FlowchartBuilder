@@ -136,7 +136,7 @@ public abstract partial class Sheet
             if (port < 0)
                 continue;
 
-            StartConnector(glyph, port, typeof(ConnectorGlyph), point);
+            StartConnector(glyph, port, glyph.DefaultConnectorType, point);
             return true;
         }
 

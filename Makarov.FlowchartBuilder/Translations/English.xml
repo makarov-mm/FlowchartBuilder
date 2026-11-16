@@ -191,4 +191,21 @@
   <fb:Word Key="Curved">Curved</fb:Word>
   <fb:Word Key="Straight">Straight</fb:Word>
   <fb:Word Key="Orthogonal">Orthogonal</fb:Word>
+  <fb:Word Key="Electrical">Electrical</fb:Word>
+  <fb:Word Key="Resistor">Resistor</fb:Word>
+  <fb:Word Key="Capacitor">Capacitor</fb:Word>
+  <fb:Word Key="Inductor">Inductor</fb:Word>
+  <fb:Word Key="Diode">Diode</fb:Word>
+  <fb:Word Key="Ground">Ground</fb:Word>
+  <fb:Word Key="DC voltage source">DC voltage source</fb:Word>
+  <fb:Word Key="AC voltage source">AC voltage source</fb:Word>
+  <fb:Word Key="Battery">Battery</fb:Word>
+  <fb:Word Key="Lamp">Lamp</fb:Word>
+  <fb:Word Key="Switch">Switch</fb:Word>
+  <fb:Word Key="Fuse">Fuse</fb:Word>
+  <fb:Word Key="NPN transistor">NPN transistor</fb:Word>
+  <fb:Word Key="Wire junction">Wire junction</fb:Word>
+  <fb:Word Key="Wire">Wire</fb:Word>
+  <fb:Word Key="Component value">Component value</fb:Word>
+  <fb:Word Key="Contacts closed">Contacts closed</fb:Word>
 </fb:Translation>

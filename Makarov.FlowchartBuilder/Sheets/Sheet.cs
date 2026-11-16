@@ -39,12 +39,7 @@ public abstract partial class Sheet
         RectangleF bounds = RectangleF.Empty;
         foreach (BlockGlyph block in Glyphs.OfType<BlockGlyph>())
         {
-            float angle = block.Angle * MathF.PI / 180f;
-            float cos = MathF.Abs(MathF.Cos(angle));
-            float sin = MathF.Abs(MathF.Sin(angle));
-            float width = cos * block.Width + sin * block.Height;
-            float height = sin * block.Width + cos * block.Height;
-            var box = new RectangleF(block.X - width / 2, block.Y - height / 2, width, height);
+            var box = block.RoutingBounds(false);
             float edge = Math.Max(1f, UnitsConverter.MMToPxExact(block.BorderWidthInMM)) / 2;
             box.Inflate(edge, edge);
             bounds = bounds.IsEmpty ? box : RectangleF.Union(bounds, box);
@@ -55,13 +50,10 @@ public abstract partial class Sheet
         foreach (var link in Glyphs.OfType<ConnectorGlyph>())
         {
             if (link.Source is not { } source || link.Target is not { } target) continue;
-            RectangleF Box(BlockGlyph block) => new(block.X - block.Width / 2, block.Y - block.Height / 2, block.Width, block.Height);
-            PointF Port(BlockGlyph block, PointF normal) =>
-                new(block.X + normal.X * (block.Width / 2), block.Y + normal.Y * (block.Height / 2));
-            var a = ConnectorGlyph.PortNormal(link.SourcePort);
-            var b = ConnectorGlyph.PortNormal(link.TargetPort);
-            var route = ConnectorRoute.Create(link.Routing, Port(source, a), a, Box(source),
-                Port(target, b), b, Box(target), Math.Max(8f, UnitsConverter.MMToPxExact(6f)));
+            var route = ConnectorRoute.Create(link.Routing,
+                source.PortPosition(link.SourcePort, false), source.PortDirection(link.SourcePort), source.RoutingBounds(false),
+                target.PortPosition(link.TargetPort, false), target.PortDirection(link.TargetPort), target.RoutingBounds(false),
+                Math.Max(8f, UnitsConverter.MMToPxExact(6f)));
             float pad = UnitsConverter.MMToPxExact(link.LineWidthInMM) * 2f;
             foreach (var point in route.Polyline)
                 bounds = RectangleF.Union(bounds, new RectangleF(point.X-pad, point.Y-pad, pad*2, pad*2));

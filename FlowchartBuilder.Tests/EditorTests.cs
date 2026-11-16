@@ -168,6 +168,65 @@ public class EditorTests
     }
 
     [Fact]
+    public void ElectricalPaletteContainsAllSymbolsAndRendersEachThumbnail()
+    {
+        var core = Core.Initialize(new MemoryStorage());
+        var glyphs = core.GlyphTypes.Where(t => GlyphMetadata.Of(t).Family == "Electrical")
+            .Select(t => (AbstractGlyph)Activator.CreateInstance(t)!).ToArray();
+        string[] expected = ["Resistor", "Capacitor", "Inductor", "Diode", "Ground", "DC voltage source",
+            "AC voltage source", "Battery", "Lamp", "Switch", "Fuse", "NPN transistor", "Wire junction", "Wire"];
+        Assert.Equal(expected, glyphs.OrderBy(g => g.Metadata.Order).Select(g => g.Name));
+        foreach (var glyph in glyphs)
+        {
+            Assert.True(glyph.Metadata.IsVisible);
+            Assert.True(core.CurrentTranslator.Contains(glyph.Name));
+            using var icon = glyph.CreateThumbnail();
+            Assert.Contains(Enumerable.Range(3, icon.Width - 6), x =>
+                Enumerable.Range(3, icon.Height - 6).Any(y => icon.GetPixel(x, y).ToArgb() != icon.GetPixel(2, 2).ToArgb()));
+        }
+    }
+
+    [Fact]
+    public void CircuitWireKeepsRotatedEmitterAndGroundThroughDocumentRoundTrip()
+    {
+        var core = Core.Initialize(new MemoryStorage());
+        BlockGlyph Create(string name) => (BlockGlyph)Activator.CreateInstance(
+            core.GlyphTypes.Single(t => GlyphMetadata.Of(t).Name == name))!;
+        var transistor = Create("NPN transistor");
+        var ground = Create("Ground");
+        transistor.XInMM = 40;
+        transistor.YInMM = 15;
+        transistor.Angle = 90;
+        transistor.Caption = "Q1";
+        var value = transistor.Metadata.FindActiveProperty("Value")!;
+        value.SetValue(transistor, "BC547");
+        var emitter = transistor.PortPosition(2, false);
+        Assert.Equal(transistor.X - transistor.Height / 2, emitter.X, 3);
+        Assert.Equal(transistor.Y + 0.55f * (transistor.Width / 2), emitter.Y, 3);
+        Assert.Equal(-1f, transistor.PortDirection(2).X, 4);
+        Assert.Equal(ground.PortPosition(0, false), ground.PortPosition(2, false));
+        var wire = (ConnectorGlyph)Activator.CreateInstance(transistor.DefaultConnectorType)!;
+        Assert.Equal(ConnectorRouting.Orthogonal, wire.Routing);
+        Assert.False(wire.ArrowHead);
+        wire.Connect(transistor, 2, ground, 0);
+        var doc = new Document();
+        doc.DocumentSheet.AddToBack([transistor, ground, wire]);
+        Assert.True(doc.DocumentSheet.GetContentBounds().Contains(Point.Round(emitter)));
+        string file = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".mfb");
+        try
+        {
+            doc.Save(file);
+            var restored = Assert.Single(Document.Load(file).DocumentSheet.Glyphs.OfType<ConnectorGlyph>());
+            Assert.Equal("Wire", restored.Name);
+            Assert.Equal(2, restored.SourcePort);
+            Assert.Equal(emitter, restored.Source!.PortPosition(restored.SourcePort, false));
+            Assert.Equal("BC547", value.GetValue(restored.Source));
+            Assert.Equal(ground.Id, restored.Target!.Id);
+        }
+        finally { File.Delete(file); }
+    }
+
+    [Fact]
     public void ClipboardRejectsExternalEntities()
     {
         Assert.Throws<XmlException>(() => Document.ReadClipboard("<!DOCTYPE x [<!ENTITY a SYSTEM 'file:///test'>]><x>&a;</x>"));

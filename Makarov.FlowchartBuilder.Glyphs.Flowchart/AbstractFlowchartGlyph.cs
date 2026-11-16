@@ -13,8 +13,6 @@ namespace Makarov.FlowchartBuilder.Glyphs.Flowchart;
 [GlyphDefaultHeight(30)]
 public abstract class AbstractFlowchartGlyph : BlockGlyph
 {
-    private const float LinkPointBorderWidth = 1f;
-
     protected AbstractFlowchartGlyph()
     {
         BackgroundColor = Color.Silver;
@@ -107,18 +105,4 @@ public abstract class AbstractFlowchartGlyph : BlockGlyph
             BorderColor,
             TextAlignment.Center,
             ParagraphAlignment.Center);
-
-    protected override void DrawLinkPoints(Canvas canvas)
-    {
-        float size = LinkPointSize;
-        float half = size / 2f;
-        var stroke = new Stroke(Settings.Colors.LinkPointBorder, LinkPointBorderWidth);
-
-        foreach (PointF point in LinkPointsScaled)
-        {
-            var bounds = new RectangleF(point.X - half, point.Y - half, size, size);
-            canvas.FillEllipse(bounds, Settings.Colors.LinkPoint);
-            canvas.DrawEllipse(bounds, stroke);
-        }
-    }
 }

@@ -297,22 +297,43 @@ public class BlockGlyph : AbstractGlyph
 
     public virtual float LinkPointSize => 7f;
 
-    /// <summary>Connection ports in sheet pixels: [0] top, [1] right, [2] bottom, [3] left.</summary>
-    public PointF[] LinkPointsScaled
-    {
-        get
-        {
-            int halfWidth = ScaledWidth >> 1;
-            int halfHeight = ScaledHeight >> 1;
+    public virtual Type DefaultConnectorType => typeof(ConnectorGlyph);
 
-            return
-            [
-                new(ScaledX, ScaledY - halfHeight),
-                new(ScaledX + halfWidth, ScaledY),
-                new(ScaledX, ScaledY + halfHeight),
-                new(ScaledX - halfWidth, ScaledY),
-            ];
-        }
+    private static readonly ConnectionPort[] CardinalPorts =
+        [ConnectionPort.Top, ConnectionPort.Right, ConnectionPort.Bottom, ConnectionPort.Left];
+
+    protected virtual IReadOnlyList<ConnectionPort> Ports => CardinalPorts;
+
+    public PointF[] LinkPointsScaled => [.. Enumerable.Range(0, Ports.Count).Select(i => PortPosition(i, scaled: true))];
+
+    public PointF PortPosition(int index, bool scaled)
+    {
+        PointF anchor = Ports[Math.Clamp(index, 0, Ports.Count - 1)].Anchor;
+        float dx = anchor.X * ((scaled ? ScaledWidth : Width) / 2);
+        float dy = anchor.Y * ((scaled ? ScaledHeight : Height) / 2);
+        PointF offset = RotateVector(dx, dy);
+        return new PointF((scaled ? ScaledX : X) + offset.X, (scaled ? ScaledY : Y) + offset.Y);
+    }
+
+    public PointF PortDirection(int index)
+    {
+        var direction = Ports[Math.Clamp(index, 0, Ports.Count - 1)].Direction;
+        return RotateVector(direction.X, direction.Y);
+    }
+
+    public RectangleF RoutingBounds(bool scaled)
+    {
+        float w = scaled ? ScaledWidth : Width, h = scaled ? ScaledHeight : Height;
+        var axis = RotateVector(1, 0);
+        float width = Math.Abs(axis.X) * w + Math.Abs(axis.Y) * h;
+        float height = Math.Abs(axis.Y) * w + Math.Abs(axis.X) * h;
+        return new RectangleF((scaled ? ScaledX : X) - width / 2, (scaled ? ScaledY : Y) - height / 2, width, height);
+    }
+
+    private PointF RotateVector(float x, float y)
+    {
+        var (sin, cos) = MathF.SinCos(float.DegreesToRadians(Angle));
+        return new PointF(x * cos - y * sin, x * sin + y * cos);
     }
 
     #endregion
@@ -326,14 +347,16 @@ public class BlockGlyph : AbstractGlyph
             && bounds.Bottom >= rect.Y && bounds.Y <= rect.Bottom;
     }
 
-    /// <summary>Hit test against the unrotated bounds, edges included (sheet pixels).</summary>
+    /// <summary>Hit test against the rotated block, edges included (sheet pixels).</summary>
     public bool Contains(Point point)
     {
         int halfWidth = ScaledWidth >> 1;
         int halfHeight = ScaledHeight >> 1;
 
-        return point.X >= ScaledX - halfWidth && point.X <= ScaledX + halfWidth
-            && point.Y >= ScaledY - halfHeight && point.Y <= ScaledY + halfHeight;
+        var axis = RotateVector(1, 0);
+        float dx = point.X - ScaledX, dy = point.Y - ScaledY;
+        return Math.Abs(dx * axis.X + dy * axis.Y) <= halfWidth
+            && Math.Abs(-dx * axis.Y + dy * axis.X) <= halfHeight;
     }
 
     #region Drawing
@@ -366,6 +389,21 @@ public class BlockGlyph : AbstractGlyph
     /// <summary>The caption inside <see cref="InnerRegion"/>, scaled with the zoom.</summary>
     protected override void DrawText(Canvas canvas) =>
         canvas.DrawText(Caption, TextStyle.FromFont(TextFont).Scale(ScaleFactor), InnerRegion, ForegroundColor);
+
+    protected override void DrawLinkPoints(Canvas canvas)
+    {
+        if (!SupportsLinks) return;
+        float size = LinkPointSize;
+        float half = size / 2f;
+        var stroke = new Stroke(Settings.Colors.LinkPointBorder, 1f);
+
+        foreach (PointF point in LinkPointsScaled)
+        {
+            var bounds = new RectangleF(point.X - half, point.Y - half, size, size);
+            canvas.FillEllipse(bounds, Settings.Colors.LinkPoint);
+            canvas.DrawEllipse(bounds, stroke);
+        }
+    }
 
     protected override void DrawDots(Canvas canvas)
     {

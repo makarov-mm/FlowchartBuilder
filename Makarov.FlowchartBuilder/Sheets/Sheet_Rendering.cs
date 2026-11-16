@@ -128,11 +128,11 @@ public abstract partial class Sheet
 
         var (start, startNormal, startBounds) = _draggedEnd == ConnectorEnd.Source
             ? GetMovingEnd(point, towards: targetPort)
-            : (sourcePort, ConnectorGlyph.PortNormal(connector.SourcePort), source.ScaledBounds);
+            : (sourcePort, source.PortDirection(connector.SourcePort), source.RoutingBounds(true));
 
         var (end, endNormal, endBounds) = _draggedEnd == ConnectorEnd.Target
             ? GetMovingEnd(point, towards: sourcePort)
-            : (targetPort, ConnectorGlyph.PortNormal(connector.TargetPort), target.ScaledBounds);
+            : (targetPort, target.PortDirection(connector.TargetPort), target.RoutingBounds(true));
 
         ConnectorRoute route = ConnectorGlyph.CreateRoute(connector.Routing, start, startNormal, startBounds, end, endNormal, endBounds);
         Stroke stroke = ConnectorGlyph.CreateStroke(Settings.Colors.SelectedConnector, connector.LineWidthInMM * 1.5f);
@@ -148,7 +148,7 @@ public abstract partial class Sheet
     private (PointF Location, PointF Normal, RectangleF Bounds) GetMovingEnd(Point point, PointF towards)
     {
         if (_hoveredBlock is { } block)
-            return (ConnectorGlyph.PortLocation(block, _hoveredPort), ConnectorGlyph.PortNormal(_hoveredPort), block.ScaledBounds);
+            return (ConnectorGlyph.PortLocation(block, _hoveredPort), block.PortDirection(_hoveredPort), block.RoutingBounds(true));
 
         float dx = towards.X - point.X;
         float dy = towards.Y - point.Y;

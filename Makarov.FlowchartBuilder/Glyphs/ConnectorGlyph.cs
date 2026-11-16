@@ -109,7 +109,7 @@ public class ConnectorGlyph : AbstractGlyph
     /// <summary>Outward direction of a link port.</summary>
     public static PointF PortNormal(int port) => PortNormals[Math.Clamp(port, 0, PortCount - 1)];
 
-    public static PointF PortLocation(BlockGlyph glyph, int port) => glyph.LinkPointsScaled[Math.Clamp(port, 0, PortCount - 1)];
+    public static PointF PortLocation(BlockGlyph glyph, int port) => glyph.PortPosition(port, scaled: true);
 
     /// <summary>Route between two points with outward normals, at the zoom of the current document.</summary>
     public static ConnectorRoute CreateRoute(
@@ -133,7 +133,7 @@ public class ConnectorGlyph : AbstractGlyph
     /// <summary>Route from a port of <paramref name="source"/> to any point, at the zoom of the current document.</summary>
     public static ConnectorRoute CreateRoute(
         ConnectorRouting routing, BlockGlyph source, int sourcePort, PointF end, PointF endNormal, RectangleF endBounds) =>
-        CreateRoute(routing, PortLocation(source, sourcePort), PortNormal(sourcePort), source.ScaledBounds, end, endNormal, endBounds);
+        CreateRoute(routing, PortLocation(source, sourcePort), source.PortDirection(sourcePort), source.RoutingBounds(true), end, endNormal, endBounds);
 
     /// <summary>Arrowhead length in pixels for a line of the given width, at the zoom of the current document.</summary>
     public static float ArrowLength(float lineWidth) =>
@@ -310,6 +310,6 @@ public class ConnectorGlyph : AbstractGlyph
             return null;
 
         return CreateRoute(
-            Routing, _source, SourcePort, PortLocation(_target, TargetPort), PortNormal(TargetPort), _target.ScaledBounds);
+            Routing, _source, SourcePort, PortLocation(_target, TargetPort), _target.PortDirection(TargetPort), _target.RoutingBounds(true));
     }
 }

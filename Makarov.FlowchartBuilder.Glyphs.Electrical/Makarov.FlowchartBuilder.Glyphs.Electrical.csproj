@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Makarov.FlowchartBuilder.API\Makarov.FlowchartBuilder.API.csproj" />
+    <ProjectReference Include="..\Makarov.FlowchartBuilder\Makarov.FlowchartBuilder.csproj" />
+  </ItemGroup>
+
+</Project>

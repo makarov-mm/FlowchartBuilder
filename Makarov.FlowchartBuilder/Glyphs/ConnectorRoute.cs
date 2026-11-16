@@ -144,6 +144,11 @@ public sealed class ConnectorRoute
         PointF start, PointF startNormal, RectangleF startBounds, PointF end, PointF endNormal, RectangleF endBounds, float spacing)
     {
         // Leave both ports along their normals first, then join the two stubs with horizontal and vertical segments.
+        // A rotated terminal still leaves an orthogonal wire along its nearest cardinal axis.
+        static PointF Cardinal(PointF n) => MathF.Abs(n.X) >= MathF.Abs(n.Y)
+            ? new PointF(Math.Sign(n.X), 0) : new PointF(0, Math.Sign(n.Y));
+        startNormal = Cardinal(startNormal);
+        endNormal = Cardinal(endNormal);
         PointF a = Add(start, Multiply(startNormal, spacing));
         PointF b = Add(end, Multiply(endNormal, spacing));
         bool startHorizontal = startNormal.X != 0f;

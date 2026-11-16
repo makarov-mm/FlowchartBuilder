@@ -190,4 +190,21 @@
   <fb:Word Key="Curved">Крива</fb:Word>
   <fb:Word Key="Straight">Пряма</fb:Word>
   <fb:Word Key="Orthogonal">Ортогональна</fb:Word>
+  <fb:Word Key="Electrical">Електричні схеми</fb:Word>
+  <fb:Word Key="Resistor">Резистор</fb:Word>
+  <fb:Word Key="Capacitor">Конденсатор</fb:Word>
+  <fb:Word Key="Inductor">Котушка індуктивності</fb:Word>
+  <fb:Word Key="Diode">Діод</fb:Word>
+  <fb:Word Key="Ground">Земля</fb:Word>
+  <fb:Word Key="DC voltage source">Джерело постійної напруги</fb:Word>
+  <fb:Word Key="AC voltage source">Джерело змінної напруги</fb:Word>
+  <fb:Word Key="Battery">Батарея</fb:Word>
+  <fb:Word Key="Lamp">Лампа</fb:Word>
+  <fb:Word Key="Switch">Вимикач</fb:Word>
+  <fb:Word Key="Fuse">Запобіжник</fb:Word>
+  <fb:Word Key="NPN transistor">NPN-транзистор</fb:Word>
+  <fb:Word Key="Wire junction">Вузол з’єднання</fb:Word>
+  <fb:Word Key="Wire">Провід</fb:Word>
+  <fb:Word Key="Component value">Номінал</fb:Word>
+  <fb:Word Key="Contacts closed">Контакти замкнені</fb:Word>
 </fb:Translation>
