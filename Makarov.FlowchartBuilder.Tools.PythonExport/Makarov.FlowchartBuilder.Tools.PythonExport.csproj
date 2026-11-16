@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../Makarov.FlowchartBuilder/Makarov.FlowchartBuilder.csproj" />
+    <InternalsVisibleTo Include="FlowchartBuilder.Tests" />
+  </ItemGroup>
+</Project>

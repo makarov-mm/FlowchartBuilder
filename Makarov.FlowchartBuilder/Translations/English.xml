@@ -208,4 +208,6 @@
   <fb:Word Key="Wire">Wire</fb:Word>
   <fb:Word Key="Component value">Component value</fb:Word>
   <fb:Word Key="Contacts closed">Contacts closed</fb:Word>
+  <fb:Word Key="Menu_Plugins">Plugins</fb:Word>
+  <fb:Word Key="Menu_Examples">Examples</fb:Word>
 </fb:Translation>

@@ -29,13 +29,13 @@
     <OutputPath>$(MSBuildThisFileDirectory)Build\$(Configuration)\</OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$(MSBuildProjectName.StartsWith('Makarov.FlowchartBuilder.Glyphs.'))">
+  <PropertyGroup Condition="$(MSBuildProjectName.StartsWith('Makarov.FlowchartBuilder.Glyphs.')) Or $(MSBuildProjectName.StartsWith('Makarov.FlowchartBuilder.Tools.'))">
     <OutputPath>$(MSBuildThisFileDirectory)Build\$(Configuration)\Plugins\</OutputPath>
   </PropertyGroup>
 
   <!-- Keep the Plugins folder clean: plugins must not copy their references next to themselves,
        otherwise the plugin loader would load duplicate copies of the host assemblies. -->
-  <ItemDefinitionGroup Condition="$(MSBuildProjectName.StartsWith('Makarov.FlowchartBuilder.Glyphs.'))">
+  <ItemDefinitionGroup Condition="$(MSBuildProjectName.StartsWith('Makarov.FlowchartBuilder.Glyphs.')) Or $(MSBuildProjectName.StartsWith('Makarov.FlowchartBuilder.Tools.'))">
     <ProjectReference>
       <Private>false</Private>
     </ProjectReference>

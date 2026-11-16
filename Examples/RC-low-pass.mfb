@@ -1,0 +1,74 @@
+<fb:FlowchartBuilderDocument Version="2.0.0.0" xmlns:fb="http://flowchartbuilder.blogspot.com">
+  <fb:Sheet fb:ClassName="Makarov.FlowchartBuilder.Sheets.InfiniteSheet">
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Electrical.AcSourceGlyph" id="v">
+      <fb:Property fb:Value="Caption">V1</fb:Property>
+      <fb:Property fb:Value="Value">5V 50Hz</fb:Property>
+      <fb:Property fb:Value="XInMM">30</fb:Property>
+      <fb:Property fb:Value="YInMM">55</fb:Property>
+      <fb:Property fb:Value="Angle">90</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Electrical.ResistorGlyph" id="r">
+      <fb:Property fb:Value="Caption">R1</fb:Property>
+      <fb:Property fb:Value="Value">1k</fb:Property>
+      <fb:Property fb:Value="XInMM">75</fb:Property>
+      <fb:Property fb:Value="YInMM">25</fb:Property>
+      <fb:Property fb:Value="Angle">0</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Electrical.CapacitorGlyph" id="c">
+      <fb:Property fb:Value="Caption">C1</fb:Property>
+      <fb:Property fb:Value="Value">1uF</fb:Property>
+      <fb:Property fb:Value="XInMM">120</fb:Property>
+      <fb:Property fb:Value="YInMM">55</fb:Property>
+      <fb:Property fb:Value="Angle">90</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Electrical.JunctionGlyph" id="j">
+      <fb:Property fb:Value="Caption"></fb:Property>
+      <fb:Property fb:Value="Value"></fb:Property>
+      <fb:Property fb:Value="XInMM">75</fb:Property>
+      <fb:Property fb:Value="YInMM">88</fb:Property>
+      <fb:Property fb:Value="Angle">0</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Electrical.GroundGlyph" id="g">
+      <fb:Property fb:Value="Caption"></fb:Property>
+      <fb:Property fb:Value="Value"></fb:Property>
+      <fb:Property fb:Value="XInMM">75</fb:Property>
+      <fb:Property fb:Value="YInMM">110</fb:Property>
+      <fb:Property fb:Value="Angle">0</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Electrical.WireGlyph" id="e1">
+      <fb:Property fb:Value="SourceGlyphId">v</fb:Property>
+      <fb:Property fb:Value="SourcePort">0</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">r</fb:Property>
+      <fb:Property fb:Value="TargetPort">0</fb:Property>
+      <fb:Property fb:Value="Caption"></fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Electrical.WireGlyph" id="e2">
+      <fb:Property fb:Value="SourceGlyphId">r</fb:Property>
+      <fb:Property fb:Value="SourcePort">1</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">c</fb:Property>
+      <fb:Property fb:Value="TargetPort">0</fb:Property>
+      <fb:Property fb:Value="Caption"></fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Electrical.WireGlyph" id="e3">
+      <fb:Property fb:Value="SourceGlyphId">v</fb:Property>
+      <fb:Property fb:Value="SourcePort">1</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">j</fb:Property>
+      <fb:Property fb:Value="TargetPort">3</fb:Property>
+      <fb:Property fb:Value="Caption"></fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Electrical.WireGlyph" id="e4">
+      <fb:Property fb:Value="SourceGlyphId">c</fb:Property>
+      <fb:Property fb:Value="SourcePort">1</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">j</fb:Property>
+      <fb:Property fb:Value="TargetPort">1</fb:Property>
+      <fb:Property fb:Value="Caption"></fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Electrical.WireGlyph" id="e5">
+      <fb:Property fb:Value="SourceGlyphId">j</fb:Property>
+      <fb:Property fb:Value="SourcePort">2</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">g</fb:Property>
+      <fb:Property fb:Value="TargetPort">0</fb:Property>
+      <fb:Property fb:Value="Caption"></fb:Property>
+    </fb:Glyph>
+  </fb:Sheet>
+</fb:FlowchartBuilderDocument>

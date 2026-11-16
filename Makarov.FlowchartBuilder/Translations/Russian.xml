@@ -207,4 +207,6 @@
   <fb:Word Key="Wire">Провод</fb:Word>
   <fb:Word Key="Component value">Номинал</fb:Word>
   <fb:Word Key="Contacts closed">Контакты замкнуты</fb:Word>
+  <fb:Word Key="Menu_Plugins">Плагины</fb:Word>
+  <fb:Word Key="Menu_Examples">Примеры</fb:Word>
 </fb:Translation>

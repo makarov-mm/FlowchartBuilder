@@ -1,3 +1,4 @@
+using Tools = Makarov.FlowchartBuilder.Tools;
 using System.Xml;
 using System.Xml.Linq;
 using Makarov.FlowchartBuilder;
@@ -224,6 +225,110 @@ public class EditorTests
             Assert.Equal(ground.Id, restored.Target!.Id);
         }
         finally { File.Delete(file); }
+    }
+
+    private static Document OpenExample(string file)
+    {
+        Core.Initialize(new MemoryStorage());
+        return Document.Load(Path.Combine(AppContext.BaseDirectory, "Examples", file));
+    }
+
+    [Fact]
+    public void RcExampleMatchesAnalyticGainAndPhase()
+    {
+        var network = Tools.CircuitSimulation.CircuitNetwork.From(OpenExample("RC-low-pass.mfb"));
+        var model = Tools.CircuitSimulation.CircuitSimulator.Build(network);
+        Assert.Empty(model.Warnings);
+        var cap = network.Parts.Single(p => p.DisplayName == "C1");
+        Assert.Equal(0, cap.NodeB);
+        var atCutoff = model.SolveAc(1 / (2 * Math.PI * 1000 * 1e-6));
+        var voltage = Tools.CircuitSimulation.CircuitSimulator.GetAcNodeVoltage(atCutoff, cap.NodeA);
+        Assert.Equal(5 / Math.Sqrt(2), voltage.Magnitude, 4);
+        Assert.Equal(-Math.PI / 4, voltage.Phase, 5);
+        for (int i = 0; i < 50; i++) model.Step(0.0001);
+        Assert.InRange(model.GetNodeVoltage(cap.NodeA), 4.4, 4.8);
+        model.Reset();
+        Assert.Equal(0, model.Time);
+    }
+
+    [Fact]
+    public void DcDividerSolvesNodeVoltageAndDeliveredCurrent()
+    {
+        var source = new Tools.CircuitSimulation.CircuitPart("V1", Tools.CircuitSimulation.SymbolKind.DcSource, "9V", 1, 0);
+        var r1 = new Tools.CircuitSimulation.CircuitPart("R1", Tools.CircuitSimulation.SymbolKind.Resistor, "1k", 1, 2);
+        var r2 = new Tools.CircuitSimulation.CircuitPart("R2", Tools.CircuitSimulation.SymbolKind.Resistor, "2k", 2, 0);
+        var model = Tools.CircuitSimulation.CircuitSimulator.Build(new(["GND", "supply", "output"], [source, r1, r2]));
+        model.SolveOperatingPoint();
+        Assert.Equal(6, model.GetNodeVoltage(2), 4);
+        Assert.Equal(0.003, model.GetCurrent(source)!.Value, 7);
+        Assert.Equal(0.003, model.GetCurrent(r2)!.Value, 7);
+    }
+
+    [Fact]
+    public void BridgeChargesReservoirOnBothHalfCycles()
+    {
+        var parts = new List<Tools.CircuitSimulation.CircuitPart>
+        {
+            new("V1", Tools.CircuitSimulation.SymbolKind.AcSource, "15V 50Hz", 1, 2),
+            new("D1", Tools.CircuitSimulation.SymbolKind.Diode, "", 1, 3),
+            new("D2", Tools.CircuitSimulation.SymbolKind.Diode, "", 2, 3),
+            new("D3", Tools.CircuitSimulation.SymbolKind.Diode, "", 0, 1),
+            new("D4", Tools.CircuitSimulation.SymbolKind.Diode, "", 0, 2),
+            new("C1", Tools.CircuitSimulation.SymbolKind.Capacitor, "220uF", 3, 0),
+            new("R1", Tools.CircuitSimulation.SymbolKind.Resistor, "1k", 3, 0)
+        };
+        var model = Tools.CircuitSimulation.CircuitSimulator.Build(new(["GND", "AC1", "AC2", "out"], parts));
+        for (int i = 0; i < 150; i++)
+        {
+            model.Step(0.0001);
+            if (i is 49 or 149) Assert.InRange(model.GetNodeVoltage(3), 13.4, 13.7);
+        }
+    }
+
+    [Fact]
+    public void SwitchCurrentTracksSessionToggleAndOverloadBlowsFuse()
+    {
+        var source = new Tools.CircuitSimulation.CircuitPart("V", Tools.CircuitSimulation.SymbolKind.DcSource, "5V", 1, 0);
+        var sw = new Tools.CircuitSimulation.CircuitPart("S", Tools.CircuitSimulation.SymbolKind.Switch, "", 1, 2);
+        var load = new Tools.CircuitSimulation.CircuitPart("R", Tools.CircuitSimulation.SymbolKind.Resistor, "10", 2, 3);
+        var fuse = new Tools.CircuitSimulation.CircuitPart("F", Tools.CircuitSimulation.SymbolKind.Fuse, "0.25A", 3, 0);
+        var model = Tools.CircuitSimulation.CircuitSimulator.Build(new(["GND", "supply", "switch", "load"], [source, sw, load, fuse]));
+        model.Step(1e-4);
+        Assert.False(model.IsFuseBlown(fuse));
+        sw.StateOn = true;
+        model.Step(1e-4);
+        Assert.InRange(model.GetCurrent(sw)!.Value, 0.49, 0.51);
+        Assert.True(model.IsFuseBlown(fuse));
+        model.Reset();
+        Assert.False(model.IsFuseBlown(fuse));
+    }
+
+    [Fact]
+    public void SimulationRejectsMissingGround()
+    {
+        var doc = OpenExample("RC-low-pass.mfb");
+        var ground = doc.DocumentSheet.Glyphs.Single(g => g.Name == "Ground");
+        ground.Selected = true;
+        doc.DocumentSheet.DeleteSelectedGlyphs();
+        Assert.Contains("Ground", Assert.Throws<InvalidDataException>(() => Tools.CircuitSimulation.CircuitNetwork.From(doc)).Message);
+    }
+
+    [Fact]
+    public void CountdownExportPreservesBothBranchesAndLoopBack()
+    {
+        var code = Tools.PythonExport.PythonGenerator.Generate(OpenExample("Countdown.mfb"));
+        Assert.Contains("n = 3", code);
+        Assert.Contains("_flow_step = 3 if (n > 0) else 4", code);
+        Assert.Contains("print(n)", code);
+        Assert.Contains("n -= 1" + Environment.NewLine + "            _flow_step = 2", code);
+    }
+
+    [Fact]
+    public void ExportRejectsAmbiguousDecisions()
+    {
+        var doc = OpenExample("Countdown.mfb");
+        doc.DocumentSheet.Glyphs.OfType<ConnectorGlyph>().Single(e => e.Caption == "false").Caption = "true";
+        Assert.Throws<InvalidDataException>(() => Tools.PythonExport.PythonGenerator.Generate(doc));
     }
 
     [Fact]

@@ -9,6 +9,8 @@
     <Project Path="Makarov.Framework.Serialization/Makarov.Framework.Serialization.csproj" />
   </Folder>
   <Folder Name="/Plugins/">
+    <Project Path="Makarov.FlowchartBuilder.Tools.PythonExport/Makarov.FlowchartBuilder.Tools.PythonExport.csproj" />
+    <Project Path="Makarov.FlowchartBuilder.Tools.CircuitSimulation/Makarov.FlowchartBuilder.Tools.CircuitSimulation.csproj" />
     <Project Path="Makarov.FlowchartBuilder.Glyphs.Containers/Makarov.FlowchartBuilder.Glyphs.Containers.csproj" />
     <Project Path="Makarov.FlowchartBuilder.Glyphs.Electrical/Makarov.FlowchartBuilder.Glyphs.Electrical.csproj" />
     <Project Path="Makarov.FlowchartBuilder.Glyphs.Flowchart/Makarov.FlowchartBuilder.Glyphs.Flowchart.csproj" />

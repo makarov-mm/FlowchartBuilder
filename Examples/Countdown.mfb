@@ -1,0 +1,88 @@
+<fb:FlowchartBuilderDocument Version="2.0.0.0" xmlns:fb="http://flowchartbuilder.blogspot.com">
+  <fb:Sheet fb:ClassName="Makarov.FlowchartBuilder.Sheets.InfiniteSheet">
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Flowchart.BeginGlyph" id="start">
+      <fb:Property fb:Value="Caption">Begin</fb:Property>
+      <fb:Property fb:Value="XInMM">60</fb:Property>
+      <fb:Property fb:Value="YInMM">18</fb:Property>
+      <fb:Property fb:Value="WidthInMM">38</fb:Property>
+      <fb:Property fb:Value="HeightInMM">18</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Flowchart.OperationGlyph" id="init">
+      <fb:Property fb:Value="Caption">n = 3</fb:Property>
+      <fb:Property fb:Value="XInMM">60</fb:Property>
+      <fb:Property fb:Value="YInMM">49</fb:Property>
+      <fb:Property fb:Value="WidthInMM">38</fb:Property>
+      <fb:Property fb:Value="HeightInMM">18</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Flowchart.IfGlyph" id="loop">
+      <fb:Property fb:Value="Caption">n &gt; 0</fb:Property>
+      <fb:Property fb:Value="XInMM">60</fb:Property>
+      <fb:Property fb:Value="YInMM">83</fb:Property>
+      <fb:Property fb:Value="WidthInMM">38</fb:Property>
+      <fb:Property fb:Value="HeightInMM">18</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Flowchart.InOutGlyph" id="print">
+      <fb:Property fb:Value="Caption">output n</fb:Property>
+      <fb:Property fb:Value="XInMM">126</fb:Property>
+      <fb:Property fb:Value="YInMM">83</fb:Property>
+      <fb:Property fb:Value="WidthInMM">38</fb:Property>
+      <fb:Property fb:Value="HeightInMM">18</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Flowchart.OperationGlyph" id="dec">
+      <fb:Property fb:Value="Caption">n -= 1</fb:Property>
+      <fb:Property fb:Value="XInMM">126</fb:Property>
+      <fb:Property fb:Value="YInMM">123</fb:Property>
+      <fb:Property fb:Value="WidthInMM">38</fb:Property>
+      <fb:Property fb:Value="HeightInMM">18</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Flowchart.EndGlyph" id="stop">
+      <fb:Property fb:Value="Caption">End</fb:Property>
+      <fb:Property fb:Value="XInMM">60</fb:Property>
+      <fb:Property fb:Value="YInMM">145</fb:Property>
+      <fb:Property fb:Value="WidthInMM">38</fb:Property>
+      <fb:Property fb:Value="HeightInMM">18</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Simple.ArrowGlyph" id="a1">
+      <fb:Property fb:Value="SourceGlyphId">start</fb:Property>
+      <fb:Property fb:Value="SourcePort">2</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">init</fb:Property>
+      <fb:Property fb:Value="TargetPort">0</fb:Property>
+      <fb:Property fb:Value="Caption"></fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Simple.ArrowGlyph" id="a2">
+      <fb:Property fb:Value="SourceGlyphId">init</fb:Property>
+      <fb:Property fb:Value="SourcePort">2</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">loop</fb:Property>
+      <fb:Property fb:Value="TargetPort">0</fb:Property>
+      <fb:Property fb:Value="Caption"></fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Simple.ArrowGlyph" id="a3">
+      <fb:Property fb:Value="SourceGlyphId">loop</fb:Property>
+      <fb:Property fb:Value="SourcePort">1</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">print</fb:Property>
+      <fb:Property fb:Value="TargetPort">3</fb:Property>
+      <fb:Property fb:Value="Caption">true</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Simple.ArrowGlyph" id="a4">
+      <fb:Property fb:Value="SourceGlyphId">print</fb:Property>
+      <fb:Property fb:Value="SourcePort">2</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">dec</fb:Property>
+      <fb:Property fb:Value="TargetPort">0</fb:Property>
+      <fb:Property fb:Value="Caption"></fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Simple.ArrowGlyph" id="a5">
+      <fb:Property fb:Value="SourceGlyphId">dec</fb:Property>
+      <fb:Property fb:Value="SourcePort">3</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">loop</fb:Property>
+      <fb:Property fb:Value="TargetPort">3</fb:Property>
+      <fb:Property fb:Value="Caption"></fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Simple.ArrowGlyph" id="a6">
+      <fb:Property fb:Value="SourceGlyphId">loop</fb:Property>
+      <fb:Property fb:Value="SourcePort">2</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">stop</fb:Property>
+      <fb:Property fb:Value="TargetPort">0</fb:Property>
+      <fb:Property fb:Value="Caption">false</fb:Property>
+    </fb:Glyph>
+  </fb:Sheet>
+</fb:FlowchartBuilderDocument>

@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="../Examples/*.mfb" Link="Examples/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../LICENSE" Link="License.txt" CopyToOutputDirectory="PreserveNewest" />
     <InternalsVisibleTo Include="FlowchartBuilder.Tests" />
     <EmbeddedResource Include="../LICENSE" LogicalName="FlowchartBuilder.License" />
@@ -24,22 +25,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <BundledGlyphProject Include="../Makarov.FlowchartBuilder.Glyphs.*/*.csproj" />
-    <BundledGlyphSource Include="../Makarov.FlowchartBuilder.Glyphs.*/**/*.cs"
-                        Exclude="../Makarov.FlowchartBuilder.Glyphs.*/obj/**;../Makarov.FlowchartBuilder.Glyphs.*/bin/**" />
-    <UpToDateCheckInput Include="@(BundledGlyphProject);@(BundledGlyphSource)" />
-    <UpToDateCheckOutput Include="@(BundledGlyphProject->'$(OutputPath)Plugins/%(Filename).dll')" />
+    <BundledPluginProject Include="../Makarov.FlowchartBuilder.Glyphs.*/*.csproj;../Makarov.FlowchartBuilder.Tools.*/*.csproj" />
+    <BundledPluginSource Include="../Makarov.FlowchartBuilder.Glyphs.*/**/*.cs;../Makarov.FlowchartBuilder.Tools.*/**/*.cs"
+                        Exclude="../Makarov.FlowchartBuilder.Glyphs.*/obj/**;../Makarov.FlowchartBuilder.Glyphs.*/bin/**;../Makarov.FlowchartBuilder.Tools.*/obj/**;../Makarov.FlowchartBuilder.Tools.*/bin/**" />
+    <UpToDateCheckInput Include="@(BundledPluginProject);@(BundledPluginSource)" />
+    <UpToDateCheckOutput Include="@(BundledPluginProject->'$(OutputPath)Plugins/%(Filename).dll')" />
   </ItemGroup>
 
   <!-- F5 and dotnet run can build only the startup project. Plugins reference the editor,
        so build them after its assembly exists, without recursively building their references. -->
-  <Target Name="BuildBundledGlyphs" AfterTargets="Build"
+  <Target Name="BuildBundledPlugins" AfterTargets="Build"
           Condition="'$(DesignTimeBuild)' != 'true' and ('$(BuildingSolutionFile)' != 'true' or '$(BuildingInsideVisualStudio)' == 'true')"
-          Inputs="$(TargetPath);@(BundledGlyphProject);@(BundledGlyphSource);$(MSBuildThisFileDirectory)../Directory.Build.props"
-          Outputs="@(BundledGlyphProject->'$(TargetDir)Plugins/%(Filename).dll')">
-    <MSBuild Projects="@(BundledGlyphProject)" Targets="Restore"
+          Inputs="$(TargetPath);@(BundledPluginProject);@(BundledPluginSource);$(MSBuildThisFileDirectory)../Directory.Build.props"
+          Outputs="@(BundledPluginProject->'$(TargetDir)Plugins/%(Filename).dll')">
+    <MSBuild Projects="@(BundledPluginProject)" Targets="Restore"
              Properties="Configuration=$(Configuration);RestoreRecursive=false;BuildingInsideVisualStudio=false" />
-    <MSBuild Projects="@(BundledGlyphProject)" Targets="Build"
+    <MSBuild Projects="@(BundledPluginProject)" Targets="Build"
              Properties="Configuration=$(Configuration);BuildProjectReferences=false;BuildingInsideVisualStudio=false" />
   </Target>
 

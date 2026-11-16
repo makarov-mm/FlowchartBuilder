@@ -20,6 +20,41 @@ public static class MenuLoader
 
         foreach (XmlElement node in root.ChildNodes.OfType<XmlElement>())
             window.MainMenu.Items.Add(CreateMenuItem(node));
+
+        AddDocumentTools(window);
+    }
+
+    private static void AddDocumentTools(MainForm window)
+    {
+        var core = Core.Instance;
+        string language = core.CurrentTranslator.Language;
+        var menu = new ToolStripMenuItem(core.CurrentTranslator["Menu_Plugins"]);
+        var examples = new ToolStripMenuItem(core.CurrentTranslator["Menu_Examples"]);
+        foreach (var type in core.Plugins.Types.Where(t => t.IsClass && !t.IsAbstract && typeof(IDocumentTool).IsAssignableFrom(t))
+                     .OrderBy(t => t.FullName, StringComparer.Ordinal))
+        {
+            var tool = (IDocumentTool)Activator.CreateInstance(type)!;
+            var item = new ToolStripMenuItem(tool.Title(language));
+            item.Click += (_, _) =>
+            {
+                if (!core.HasDocuments) return;
+                try { tool.Run(core.CurrentDocument, window, language); }
+                catch (Exception ex) { core.ShowError(ex.Message); }
+            };
+            menu.DropDownItems.Add(item);
+            if (tool.ExampleFileName is { } name)
+            {
+                var file = Path.Combine(AppContext.BaseDirectory, "Examples", Path.GetFileName(name));
+                if (File.Exists(file)) examples.DropDownItems.Add(Path.GetFileNameWithoutExtension(file), null, (_, _) => core.TryOpenDocument(file));
+            }
+        }
+        if (examples.DropDownItems.Count > 0) menu.DropDownItems.Add(examples); else examples.Dispose();
+        if (menu.DropDownItems.Count == 0) { menu.Dispose(); return; }
+        menu.DropDownOpening += (_, _) =>
+        {
+            foreach (ToolStripItem item in menu.DropDownItems) item.Enabled = item == examples || core.HasDocuments;
+        };
+        window.MainMenu.Items.Add(menu);
     }
 
     public static void LoadSecondaryMenu(MainForm window)

@@ -96,6 +96,14 @@ language is used after a restart.
 **Single instance.** Starting the application again (for example by opening a document from
 Explorer) passes the file names to the running copy and brings it to the front.
 
+## Simulation and code export
+
+The **Plugins** menu lists commands from optional `IDocumentTool` assemblies in the executable's `Plugins` directory. Each DLL can be distributed or removed separately. Restart the editor after changing the contents of this directory. **Plugins → Examples** opens editable diagrams from the adjacent `Examples` directory.
+
+- **Circuit simulation.** Open **RC-low-pass**, then **Plugins → Circuit simulation**. Select the voltage at C1 or a component current and press **Run**. The oscilloscope shows time in seconds and the selected quantity in volts or amperes. Change the integration step in microseconds, pause, or reset to zero initial energy. **DC operating point** starts at DC equilibrium. **AC sweep** plots the selected node's voltage magnitude from 1 Hz to 100 kHz for a circuit with an AC source. With 1 kΩ and 1 µF the example's cutoff is about 159 Hz.
+- The simulator joins explicit wire endpoints and junctions. Connect both terminals of each component and provide ground and a source. Set **Component value** to e.g. `1k`, `100nF`, `10mH`, `9V`, `5V 50Hz`, `12V 5W` or `2A`. The AC amplitude is peak voltage. The model supports R, L, C, batteries, DC/AC sources, piecewise-linear diodes, resistive lamps, switches and fuses. Switch controls change the simulation session. Reset clears a blown fuse. NPN simulation is unsupported and produces a diagnostic. The adapted MNA solver and SI units parser are from Schematic Editor; its MIT notice ships with the plugin.
+- **Flowchart → Python.** Open **Countdown**, choose the export command and save the preview as `countdown.py`. Running `python countdown.py` prints 3, 2 and 1. A diagram starts at one Begin and reaches its blocks through directed connectors. Operation takes a single Python statement, Subroutine a call, If a Python expression, and In/Out takes `input name` (a string) or `output expression`. Label the two outgoing If connections `true` and `false` (also yes/no, да/нет or так/ні). Straight-line diagrams generate sequential statements; branching and looping diagrams use a dispatch loop. Python snippets in captions are copied into the exported source. The editor previews and saves the code without executing it.
+
 ## Building
 
 You need Windows and Visual Studio 2026 or the .NET 11 SDK.
