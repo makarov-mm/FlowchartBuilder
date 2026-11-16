@@ -1,24 +1,20 @@
-namespace Makarov.FlowchartBuilder.Commands
+using Makarov.FlowchartBuilder.Glyphs;
+
+namespace Makarov.FlowchartBuilder.Commands;
+
+/// <summary>Unlocks all glyphs.</summary>
+public sealed class UnfixAllCommand : Command
 {
-
-    public sealed class UnfixAllCommand : Command
+    public override void Run()
     {
+        if (Core.Instance.ActiveSheet is not { } sheet)
+            return;
 
-        public override void Run()
-        {
+        foreach (AbstractGlyph glyph in sheet.FixedGlyphs.ToList())
+            glyph.Fixed = false;
 
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            if (!Core.Instance.CurrentDocument.DocumentSheet.FixedGlyphsExists)
-                throw new InvalidContextException();
-
-            foreach (var glyph in Core.Instance.CurrentDocument.DocumentSheet.FixedGlyphs)
-                glyph.Fixed = false;
-
-            Core.Instance.CurrentDocument.DocumentSheet.UpdateGlyphsCommands();
-
-            Core.Instance.Redraw();
-        }
+        sheet.UpdateGlyphsCommands();
+        sheet.ShowProperties();
+        Core.Instance.Redraw();
     }
 }

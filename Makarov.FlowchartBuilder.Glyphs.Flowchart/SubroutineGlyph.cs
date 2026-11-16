@@ -1,79 +1,36 @@
-using System.Drawing;
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
+using Makarov.Framework.Graphics.Primitives;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Flowchart
+namespace Makarov.FlowchartBuilder.Glyphs.Flowchart;
+
+/// <summary>Predefined process: a rectangle with double vertical sides.</summary>
+[GlyphName("Subroutine")]
+[GlyphDefaultWidth(30)]
+[GlyphDefaultHeight(20)]
+public sealed class SubroutineGlyph : AbstractFlowchartGlyph
 {
+    protected override Primitive CreatePrimitive(int x, int y, int width, int height) =>
+        new Framework.Graphics.Primitives.Rectangle(x, y, width, height);
 
-    [GlyphName("Subroutine")]
-    [GlyphDefaultWidth(30)]
-    [GlyphDefaultHeight(20)]
-    public class SubroutineGlyph : AbstractFlowchartGlyph
+    protected override void DrawDetails(Canvas canvas, Stroke stroke)
     {
+        int width = ScaledWidth;
+        int top = ScaledY - ScaledHeight / 2;
+        int bottom = ScaledY + ScaledHeight / 2;
+        int left = ScaledX - width / 2 + width / 8;
+        int right = ScaledX + width / 2 - width / 8;
 
-        protected override GraphicsPath CenteredPath
-        {
-            get
-            {
-                return new Framework.Graphics.Primitives.Rectangle(
-                    ScaledX, ScaledY,
-                    ScaledWidth, ScaledHeight).CreateCentered();
-            }
-        }
+        canvas.DrawLine(new PointF(left, top), new PointF(left, bottom), stroke);
+        canvas.DrawLine(new PointF(right, top), new PointF(right, bottom), stroke);
+    }
 
-        protected override GraphicsPath Path
-        {
-            get
-            {
-                int offsetX = ThumbnailWidth >> 3;
-                int offsetY = ThumbnailHeight >> 2;
+    protected override void DrawThumbnailDetails(Canvas canvas, RectangleF bounds)
+    {
+        float left = bounds.Left + bounds.Width / 8f;
+        float right = bounds.Left + bounds.Width * 7f / 8f;
 
-                return new Framework.Graphics.Primitives.Rectangle(
-                    offsetX, offsetY,
-                    ThumbnailWidth - (offsetX << 1), ThumbnailHeight - (offsetY << 1)).Create();
-            }
-        }
-
-        protected override void DrawGlyph(Graphics gfx)
-        {
-            base.DrawGlyph(gfx);
-
-            using (var pen = new Pen(BorderColor, ScaledBorderWidth))
-            {
-                gfx.DrawLine(
-                    pen,
-                    ScaledX - ScaledWidth / 2 + ScaledWidth / 8, ScaledY - ScaledHeight / 2,
-                    ScaledX - ScaledWidth / 2 + ScaledWidth / 8, ScaledY + ScaledHeight / 2);
-
-                gfx.DrawLine(
-                    pen,
-                    ScaledX + ScaledWidth / 2 - ScaledWidth / 8, ScaledY - ScaledHeight / 2,
-                    ScaledX + ScaledWidth / 2 - ScaledWidth / 8, ScaledY + ScaledHeight / 2);
-            }
-        }
-
-        public override Bitmap Thumbnail
-        {
-            get
-            {
-                Bitmap bmp = base.Thumbnail;
-
-                using (GraphicsPath path = Path)
-                using (Graphics gfx = Graphics.FromImage(bmp))
-                {
-                    gfx.DrawLine(
-                        Settings.Pens.ThumbnailBorder,
-                        path.GetBounds().Left + path.GetBounds().Width / 8f, path.GetBounds().Top,
-                        path.GetBounds().Left + path.GetBounds().Width / 8f, path.GetBounds().Top + path.GetBounds().Height);
-
-                    gfx.DrawLine(
-                        Settings.Pens.ThumbnailBorder,
-                        path.GetBounds().Left + path.GetBounds().Width * 7f / 8f, path.GetBounds().Top,
-                        path.GetBounds().Left + path.GetBounds().Width * 7f / 8f, path.GetBounds().Top + path.GetBounds().Height);
-                }
-
-                return bmp;
-            }
-        }
+        canvas.DrawLine(new PointF(left, bounds.Top), new PointF(left, bounds.Bottom), Settings.Strokes.ThumbnailBorder);
+        canvas.DrawLine(new PointF(right, bounds.Top), new PointF(right, bounds.Bottom), Settings.Strokes.ThumbnailBorder);
     }
 }

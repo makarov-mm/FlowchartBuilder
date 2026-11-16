@@ -1,36 +1,14 @@
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics.Primitives;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Flowchart
+namespace Makarov.FlowchartBuilder.Glyphs.Flowchart;
+
+/// <summary>Processing step.</summary>
+[GlyphName("Operation")]
+[GlyphDefaultWidth(30)]
+[GlyphDefaultHeight(20)]
+public sealed class OperationGlyph : AbstractFlowchartGlyph
 {
-
-    [GlyphName("Operation")]
-    [GlyphDefaultWidth(30)]
-    [GlyphDefaultHeight(20)]
-    public class OperationGlyph : AbstractFlowchartGlyph
-    {
-
-        protected override GraphicsPath CenteredPath
-        {
-            get
-            {
-                return new Framework.Graphics.Primitives.Rectangle(
-                    ScaledX, ScaledY,
-                    ScaledWidth, ScaledHeight).CreateCentered();
-            }
-        }
-
-        protected override GraphicsPath Path
-        {
-            get
-            {
-                int offsetX = ThumbnailWidth >> 3;
-                int offsetY = ThumbnailHeight >> 2;
-
-                return new Framework.Graphics.Primitives.Rectangle(
-                    offsetX, offsetY,
-                    ThumbnailWidth - (offsetX << 1), ThumbnailHeight - (offsetY << 1)).Create();
-            }
-        }
-    }
+    protected override Primitive CreatePrimitive(int x, int y, int width, int height) =>
+        new Framework.Graphics.Primitives.Rectangle(x, y, width, height);
 }

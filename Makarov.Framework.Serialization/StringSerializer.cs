@@ -1,21 +1,10 @@
-using System;
 using Makarov.Framework.Core;
 
-namespace Makarov.Framework.Serialization
+namespace Makarov.Framework.Serialization;
+
+public sealed class StringSerializer : AbstractSerializer<string>
 {
-    public sealed class StringSerializer : AbstractSerializer
-    {
+    protected override string Format(string value) => value;
 
-        public override Type SerializerType => typeof(string);
-
-        public override string Serialize(object obj)
-        {
-            return (string) obj;
-        }
-
-        public override object Deserialize(string str)
-        {
-            return str;
-        }
-    }
+    protected override string Parse(string text) => text;
 }

@@ -1,16 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <RootNamespace>Makarov.Framework.Graphics</RootNamespace>
-    <AssemblyName>Makarov.Framework.Graphics</AssemblyName>
+    <!-- Direct2D, DirectWrite and WIC are called through COM vtables. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Makarov.Framework.Core\Makarov.Framework.Core.csproj" />
-  </ItemGroup>
 
 </Project>

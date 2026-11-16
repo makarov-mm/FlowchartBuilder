@@ -1,141 +1,184 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
 using Makarov.FlowchartBuilder.Commands;
 using Makarov.FlowchartBuilder.Forms;
 using Makarov.FlowchartBuilder.Glyphs;
 
-namespace Makarov.FlowchartBuilder.Sheets
+namespace Makarov.FlowchartBuilder.Sheets;
+
+/// <summary>
+/// Drawing surface of a document: holds the glyphs (front-most first), their groups and the zoom.
+/// Mouse interaction lives in Sheet_Mouse.cs, painting in Sheet_Rendering.cs.
+/// </summary>
+public abstract partial class Sheet
 {
+    public const float MinScaleFactor = 0.2f;
+    public const float MaxScaleFactor = 2f;
 
-    public abstract partial class Sheet: ICloneable
+    private const float DefaultScaleFactor = 1f;
+
+    private readonly List<AbstractGlyph> _glyphs = [];
+    private float _scaleFactor = DefaultScaleFactor;
+
+    /// <summary>Zoom; changing it updates the enabled state of the zoom commands.</summary>
+    public float ScaleFactor
     {
-        #region Constructors
-
-        protected Sheet()
+        get => _scaleFactor;
+        set
         {
-
-            Groups = new List<List<BlockGlyph>>();
-
-            Command.GetInstance("ExportImageCommand").Enabled = true;
+            _scaleFactor = Math.Clamp(value, MinScaleFactor, MaxScaleFactor);
+            UpdateZoomCommands();
         }
-        #endregion
-
-        #region Private members
-
-        private float _scaleFactor = 1f;
-
-        private readonly List<AbstractGlyph> _glyphs = new List<AbstractGlyph>();
-
-        protected Point _oldPt;
-
-        protected Point? _selectionStart;
-
-        protected Point _selectionEnd;
-
-        protected BlockGlyph _connectorSource;
-
-        protected int _connectorSourcePort;
-
-        protected Point? _connectorCurrent;
-        #endregion
-
-        #region Protected methods
-
-        public void UpdateGlyphsCommands()
-        {
-
-            bool groupsFinded = false;
-            foreach (var glyph in SelectedGlyphs)
-                if (glyph is BlockGlyph)
-                    if (((BlockGlyph) glyph).InGroup)
-                    {
-                        Command.GetInstance("UngroupCommand").Enabled = true;
-                        groupsFinded = true;
-                        break;
-                    }
-
-            if (!groupsFinded)
-                Command.GetInstance("UngroupCommand").Enabled = false;
-
-            if (SelectedGlyphsExists)
-            {
-
-                List<BlockGlyph> currGroup = null;
-
-                bool freeGlyphFounded = false;
-
-                foreach (var glyph in SelectedGlyphs)
-                    if (glyph is BlockGlyph)
-                    {
-                        var bg = (BlockGlyph) glyph;
-
-                        if (freeGlyphFounded)
-                        {
-                            Command.GetInstance("GroupCommand").Enabled = true;
-                            break;
-                        }
-
-                        if (bg.InGroup)
-                        {
-                            if (currGroup == null)
-                            {
-                                currGroup = bg.Group;
-                            }
-                            else if (currGroup != bg.Group)
-                            {
-                                Command.GetInstance("GroupCommand").Enabled = true;
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            freeGlyphFounded = true;
-
-                            if (currGroup != null)
-                            {
-                                Command.GetInstance("GroupCommand").Enabled = true;
-                                break;
-                            }
-                        }
-                    }
-            }
-            else
-                Command.GetInstance("GroupCommand").Enabled = false;
-
-            if (SelectedGlyphsExists)
-            {
-
-                Command.GetInstance("DeleteCommand").Enabled = true;
-
-                Command.GetInstance("CutCommand").Enabled = true;
-
-                Command.GetInstance("CopyCommand").Enabled = true;
-
-                Command.GetInstance("FixSelectedCommand").Enabled = true;
-
-                Command.GetInstance("DeselectCommand").Enabled = true;
-            }
-            else
-            {
-
-                Command.GetInstance("DeleteCommand").Enabled = false;
-
-                Command.GetInstance("CutCommand").Enabled = false;
-
-                Command.GetInstance("CopyCommand").Enabled = false;
-
-                Command.GetInstance("FixSelectedCommand").Enabled = false;
-
-                Command.GetInstance("DeselectCommand").Enabled = false;
-            }
-
-            Command.GetInstance("FixAllCommand").Enabled = GlyphsExists;
-
-            Command.GetInstance("UnfixAllCommand").Enabled = FixedGlyphsExists;
-        }
-        #endregion
     }
+
+    /// <summary>Top-left of the viewport in document pixels at 100% zoom.</summary>
+    public PointF ViewOrigin { get; set; }
+
+    public Point ScaledViewOrigin => Point.Round(new PointF(ViewOrigin.X * ScaleFactor, ViewOrigin.Y * ScaleFactor));
+
+    public Rectangle GetContentBounds()
+    {
+        RectangleF bounds = RectangleF.Empty;
+        foreach (BlockGlyph block in Glyphs.OfType<BlockGlyph>())
+        {
+            float angle = block.Angle * MathF.PI / 180f;
+            float cos = MathF.Abs(MathF.Cos(angle));
+            float sin = MathF.Abs(MathF.Sin(angle));
+            float width = cos * block.Width + sin * block.Height;
+            float height = sin * block.Width + cos * block.Height;
+            var box = new RectangleF(block.X - width / 2, block.Y - height / 2, width, height);
+            bounds = bounds.IsEmpty ? box : RectangleF.Union(bounds, box);
+        }
+        if (bounds.IsEmpty)
+            return Rectangle.Empty;
+
+        bounds.Inflate(16f, 16f);
+        return Rectangle.FromLTRB((int)MathF.Floor(bounds.Left), (int)MathF.Floor(bounds.Top),
+                                  (int)MathF.Ceiling(bounds.Right), (int)MathF.Ceiling(bounds.Bottom));
+    }
+
+    /// <summary>All glyphs, front-most first.</summary>
+    public IReadOnlyList<AbstractGlyph> Glyphs => _glyphs;
+
+    public IEnumerable<AbstractGlyph> SelectedGlyphs => _glyphs.Where(glyph => glyph.Selected);
+
+    public IEnumerable<BlockGlyph> SelectedBlockGlyphs => SelectedGlyphs.OfType<BlockGlyph>();
+
+    public IEnumerable<AbstractGlyph> FixedGlyphs => _glyphs.Where(glyph => glyph.Fixed);
+
+    public IEnumerable<AbstractGlyph> NonFixedGlyphs => _glyphs.Where(glyph => !glyph.Fixed);
+
+    public bool HasGlyphs => _glyphs.Count > 0;
+
+    public bool HasSelection => _glyphs.Any(glyph => glyph.Selected);
+
+    public bool HasFixedGlyphs => _glyphs.Any(glyph => glyph.Fixed);
+
+    public bool HasNonFixedGlyphs => _glyphs.Any(glyph => !glyph.Fixed);
+
+    /// <summary>Groups of block glyphs that are selected and moved together.</summary>
+    public List<List<BlockGlyph>> Groups { get; } = [];
+
+    /// <summary>Adds the glyph in front of all others.</summary>
+    public void Add(AbstractGlyph glyph) => _glyphs.Insert(0, glyph);
+
+    /// <summary>Adds glyphs behind all others, keeping their order (front-most first), as they are stored in a file.</summary>
+    public void AddToBack(IEnumerable<AbstractGlyph> glyphs) => _glyphs.AddRange(glyphs);
+
+    public void DeselectAllGlyphs()
+    {
+        foreach (AbstractGlyph glyph in _glyphs)
+            glyph.Selected = false;
+    }
+
+    public void DeselectAllGlyphs(IEnumerable<AbstractGlyph> except)
+    {
+        var keep = except.ToHashSet();
+        foreach (AbstractGlyph glyph in _glyphs)
+        {
+            if (!keep.Contains(glyph))
+                glyph.Selected = false;
+        }
+    }
+
+    public void SelectAllGlyphs()
+    {
+        foreach (AbstractGlyph glyph in NonFixedGlyphs)
+            glyph.Selected = true;
+    }
+
+    /// <summary>Deletes the selected glyphs together with the connectors and group memberships that pointed to them.</summary>
+    public void DeleteSelectedGlyphs()
+    {
+        var deleted = SelectedGlyphs.ToHashSet();
+        _glyphs.RemoveAll(deleted.Contains);
+
+        foreach (List<BlockGlyph> group in Groups)
+            group.RemoveAll(deleted.Contains);
+
+        Groups.RemoveAll(group => group.Count < 2);
+        RemoveOrphanConnectors();
+    }
+
+    public void RemoveOrphanConnectors() =>
+        _glyphs.RemoveAll(glyph => glyph is ConnectorGlyph connector &&
+            (connector.Source is null || connector.Target is null ||
+             !_glyphs.Contains(connector.Source) || !_glyphs.Contains(connector.Target)));
+
+    /// <summary>Ends any drag in progress on the glyphs.</summary>
+    public void UnlockGlyphs()
+    {
+        foreach (BlockGlyph glyph in _glyphs.OfType<BlockGlyph>())
+            glyph.Direction = MoveDirection.None;
+    }
+
+    /// <summary>Shows the selected block glyphs in the properties window.</summary>
+    public void ShowProperties() =>
+        Core.Instance.Windows.GetWindow<PropertiesForm>().Grid.SelectedObjects = [.. SelectedGlyphs];
+
+    /// <summary>Enables the commands that make sense for the current selection.</summary>
+    public void UpdateGlyphsCommands()
+    {
+        var selectedBlocks = SelectedBlockGlyphs.ToList();
+        var selectedGroups = selectedBlocks.Select(glyph => glyph.Group).OfType<List<BlockGlyph>>().Distinct().ToList();
+        int freeBlocks = selectedBlocks.Count(glyph => !glyph.InGroup);
+        bool hasSelection = HasSelection;
+
+        // Grouping changes something only when at least two groups or free glyphs are selected.
+        SetEnabled<GroupCommand>(selectedGroups.Count + freeBlocks >= 2);
+        SetEnabled<UngroupCommand>(selectedGroups.Count > 0);
+        SetEnabled<DeleteCommand>(hasSelection);
+        SetEnabled<CutCommand>(hasSelection);
+        SetEnabled<CopyCommand>(hasSelection);
+        SetEnabled<FixSelectedCommand>(hasSelection);
+        SetEnabled<DeselectCommand>(hasSelection);
+        SetEnabled<FixAllCommand>(HasGlyphs);
+        SetEnabled<UnfixAllCommand>(HasFixedGlyphs);
+        SetEnabled<PasteCommand>(Core.Instance.Buffer.Count > 0);
+    }
+
+    public void UpdateZoomCommands()
+    {
+        SetEnabled<ZoomOutCommand>(_scaleFactor > MinScaleFactor);
+        SetEnabled<ZoomInCommand>(_scaleFactor < MaxScaleFactor);
+    }
+
+    /// <summary>Disables the commands that need a sheet, for when no document is open.</summary>
+    public static void DisableGlyphsCommands()
+    {
+        SetEnabled<GroupCommand>(false);
+        SetEnabled<UngroupCommand>(false);
+        SetEnabled<DeleteCommand>(false);
+        SetEnabled<CutCommand>(false);
+        SetEnabled<CopyCommand>(false);
+        SetEnabled<PasteCommand>(false);
+        SetEnabled<FixSelectedCommand>(false);
+        SetEnabled<DeselectCommand>(false);
+        SetEnabled<FixAllCommand>(false);
+        SetEnabled<UnfixAllCommand>(false);
+        SetEnabled<ZoomInCommand>(false);
+        SetEnabled<ZoomOutCommand>(false);
+    }
+
+    private static void SetEnabled<TCommand>(bool enabled)
+        where TCommand : Command =>
+        Command.GetInstance<TCommand>().Enabled = enabled;
 }

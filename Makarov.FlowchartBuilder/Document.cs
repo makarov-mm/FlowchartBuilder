@@ -1,110 +1,65 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Makarov.FlowchartBuilder.Glyphs;
 using Makarov.FlowchartBuilder.Sheets;
 
-namespace Makarov.FlowchartBuilder
+namespace Makarov.FlowchartBuilder;
+
+/// <summary>An open document: a sheet with its glyphs, the file it came from and its undo history.</summary>
+public sealed partial class Document
 {
+    private const string UntitledName = "Document";
 
-    public sealed partial class Document
+    private static int _lastId;
+
+    private string _savedSnapshot;
+
+    public Document() : this(new InfiniteSheet()) { }
+
+    private Document(Sheet sheet)
     {
-        #region Constructors
+        DocumentSheet = sheet;
+        Id = Interlocked.Increment(ref _lastId);
+        History = new DocumentHistory(CreateSnapshot());
+        _savedSnapshot = History.Current;
+    }
 
-        public Document()
-        {
-            DocumentSheet = new InfiniteSheet();
-            DocumentHistory = new History(Array.Empty<HistoryEvent>());
-        }
+    /// <summary>Identifies the document (and its tab) for the session.</summary>
+    public int Id { get; }
 
-        public Document(string fileName)
-        {
-            using (new DonNotRedraw())
-                Load(fileName);
-        }
-        #endregion
+    public Sheet DocumentSheet { get; private set; }
 
-        #region Private members
+    public string? Name { get; set; }
 
-        private readonly List<GlyphSnapshot> _snapshots = new List<GlyphSnapshot>();
-        #endregion
+    public string? FileName { get; private set; }
 
-        #region Properties
+    public bool HasSkippedProperties { get; private set; }
 
-        public bool Saved
-        {
-            get { return CompareSnapshots(GetSnapshotsFromSheet()); }
-        }
+    public DocumentHistory History { get; }
 
-        public Sheet DocumentSheet { get; private set; }
+    /// <summary>Whether the document changed since it was created, opened or saved.</summary>
+    public bool IsModified => History.Current != _savedSnapshot;
 
-        public History DocumentHistory { get; private set; }
+    /// <summary>The file name without extension, or a placeholder for a document that was never saved.</summary>
+    public string DisplayName => Name ?? UntitledName;
 
-        public string Name { get; set; }
-        #endregion
+    /// <summary>Name for tabs and the window title, with an asterisk when there are unsaved changes.</summary>
+    public string Caption => DisplayName + (IsModified ? " *" : string.Empty);
 
-        #region Private methods
+    /// <summary>Records the current state as an undo step if it changed since the last one.</summary>
+    public bool CommitChange() => History.Commit(CreateSnapshot());
 
-        private IEnumerable<GlyphSnapshot> GetSnapshotsFromSheet()
-        {
-            return DocumentSheet.Glyphs.Select(glyph => new GlyphSnapshot(glyph));
-        }
+    public bool Undo() => Restore(History.Undo());
 
-        private void SaveSnapshots(IEnumerable<GlyphSnapshot> snapshots)
-        {
-            _snapshots.Clear();
+    public bool Redo() => Restore(History.Redo());
 
-            foreach (GlyphSnapshot snapshot in snapshots)
-                _snapshots.Add(snapshot);
-        }
+    private bool Restore(string? snapshot)
+    {
+        if (snapshot is null)
+            return false;
 
-        private bool CompareSnapshots(IEnumerable<GlyphSnapshot> snapshots)
-        {
-
-            var sshots = new List<GlyphSnapshot>(snapshots);
-
-            if (sshots.Count != _snapshots.Count)
-                return false;
-
-            foreach (GlyphSnapshot currSshot in _snapshots)
-            {
-                GlyphSnapshotsDiff diff = null;
-
-                foreach (GlyphSnapshot sshot in sshots)
-                    if (sshot.GlyphId == currSshot.GlyphId &&
-                        sshot.GlyphType == currSshot.GlyphType)
-                    {
-
-                        diff = new GlyphSnapshotsDiff(currSshot, sshot);
-                    }
-
-                if (diff == null)
-                    return false;
-
-                if (diff.Count > 0)
-                    return false;
-            }
-
-            return true;
-        }
-        #endregion
-
-        #region Public methods
-
-        public void UpdateHistory()
-        {
-
-        }
-
-        public void HistoryBack()
-        {
-
-        }
-
-        public void HistoryForward()
-        {
-
-        }
-        #endregion
+        // Undo edits the diagram while keeping the current view.
+        Sheet sheet = ReadSheet(ParseXml(snapshot), DisplayName, out _);
+        sheet.ViewOrigin = DocumentSheet.ViewOrigin;
+        sheet.ScaleFactor = DocumentSheet.ScaleFactor;
+        DocumentSheet = sheet;
+        return true;
     }
 }

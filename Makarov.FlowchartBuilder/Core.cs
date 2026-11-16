@@ -1,231 +1,198 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Windows.Forms;
+using System.Globalization;
+using System.Security;
+using System.Xml;
 using Makarov.FlowchartBuilder.Forms;
+using Makarov.FlowchartBuilder.Glyphs;
+using Makarov.FlowchartBuilder.Sheets;
 using Makarov.Framework.Core;
-using Makarov.Framework.Graphics;
-using BaseSettings = Makarov.Framework.Core.Settings;
+using Makarov.Framework.Core.Managers;
+using Makarov.Framework.Core.SettingStorages;
+using Makarov.Framework.Serialization;
 
-namespace Makarov.FlowchartBuilder
+namespace Makarov.FlowchartBuilder;
+
+/// <summary>
+/// Application root: owns the open documents and the shared services (translations, units, images, plugins,
+/// settings) and drives redrawing of the main window. Rendering lives in Core_Rendering.cs.
+/// </summary>
+public sealed partial class Core : IDisposable
 {
+    private static Core? _instance;
 
-    public sealed partial class Core : Singleton<Core>, IDisposable
+    private readonly List<Document> _documents = [];
+    private readonly WindowsManager _windows = new();
+    private int _currentDocumentIndex = -1;
+    private int _redrawSuspensions;
+    private bool _disposed;
+    private Type? _currentGlyphType;
+
+    private MainForm? _mainWindow;
+    private RegistryStorage? _registryStorage;
+    private ISettingsStorage? _settingsStorage;
+    private TranslatorsManager? _translators;
+    private UnitsManager? _units;
+    private SerializerManager? _serializers;
+    private PluginLoader? _plugins;
+    private GraphicsManager? _icons;
+    private IReadOnlyList<Type>? _glyphTypes;
+
+    private Core()
     {
-        #region Constructors
-        private Core()
+        IsFirstRun = !SettingsStorage.Contains(Settings.Keys.FirstStart);
+
+        string now = DateTime.Now.ToString(CultureInfo.InvariantCulture);
+        if (IsFirstRun)
+            SettingsStorage[Settings.Keys.FirstStart] = now;
+
+        SettingsStorage[Settings.Keys.LastStart] = now;
+    }
+
+    public static Core Instance => _instance ??= new Core();
+
+    /// <summary>Raised when the glyph type armed for placement changes, including when it is cleared.</summary>
+    public event EventHandler? CurrentGlyphTypeChanged;
+
+    public bool IsFirstRun { get; }
+
+    public MainForm MainWindow => _mainWindow ??= _windows.GetWindow<MainForm>();
+
+    public WindowsManager Windows => _windows;
+
+    public ISettingsStorage SettingsStorage => _settingsStorage ??= new CachedStorage(CreateSettingsStorage());
+
+    public TranslatorsManager Translators => _translators ??=
+        TranslatorsManager.LoadFromFolder(Settings.Directories.Translations, Settings.Files.TranslationsSchema);
+
+    /// <summary>The translator of the session language, falling back to English if that language is not installed.</summary>
+    public Translator CurrentTranslator
+    {
+        get
         {
-
-            if (CachedSettingsStorage.KeyExists(Settings.RegistryKeys.FirstStart))
-                IsFirstRun = false;
-            else
-            {
-                CachedSettingsStorage[Settings.RegistryKeys.FirstStart] = DateTime.Now.ToString();
-                IsFirstRun = true;
-            }
-
-            CachedSettingsStorage[Settings.RegistryKeys.LastStart] = DateTime.Now.ToString();
-
-            NeedRedraw = true;
+            string language = Settings.Environment.Languages.CurrentLanguage;
+            return Translators.Contains(language)
+                ? Translators[language]
+                : Translators[Settings.Environment.Languages.Default];
         }
-        #endregion
+    }
 
-        #region Public methods
+    public UnitsManager Units => _units ??= new UnitsManager(Settings.Files.UnitsDefinition, Settings.Files.UnitsSchema);
 
-        public void Run(IEnumerable<string> args)
+    public SerializerManager Serializers => _serializers ??= new SerializerManager(typeof(BoolSerializer).Assembly);
+
+    public PluginLoader Plugins => _plugins ??= new PluginLoader(Settings.Directories.Plugins);
+
+    public GraphicsManager Icons => _icons ??= new GraphicsManager(Settings.Directories.Icons);
+
+    /// <summary>Concrete glyph types found in the plugin assemblies.</summary>
+    public IReadOnlyList<Type> GlyphTypes => _glyphTypes ??=
+    [
+        .. Plugins.Types.Where(type => type is { IsClass: true, IsAbstract: false } && type.IsSubclassOf(typeof(AbstractGlyph))),
+    ];
+
+    /// <summary>Glyphs put aside by Copy or Cut, ready to be pasted.</summary>
+    public List<AbstractGlyph> Buffer { get; } = [];
+
+    /// <summary>Glyph type chosen in the palette and waiting to be placed with a click on the sheet.</summary>
+    public Type? CurrentGlyphType
+    {
+        get => _currentGlyphType;
+        set
         {
-
-            foreach (string arg in args)
-            {
-                if (!string.IsNullOrEmpty(arg))
-                {
-                    AddDocument(new Document(arg));
-                }
-            }
-
-            Application.Run(MainWindow);
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-                throw new CoreAlreadyDisposedException();
-
-            if (_windowsManager != null)
-            {
-                _windowsManager.Dispose();
-                _windowsManager = null;
-            }
-
-            if (_graphicsManager != null)
-            {
-                _graphicsManager.Clear();
-                _graphicsManager = null;
-
-            }
-
-            if (_iconsManager != null)
-            {
-                _iconsManager.Clear();
-                _iconsManager = null;
-
-            }
-
-            if (_brushes != null)
-            {
-                _brushes.Dispose();
-                _brushes = null;
-            }
-
-            if (_pens != null)
-            {
-                _pens.Dispose();
-                _pens = null;
-            }
-
-            _disposed = true;
-        }
-
-        public T GetWindowAsChild<T>()
-            where T : Form
-        {
-            if (typeof(T) == typeof(MainForm))
-                throw new CantUseMainWindowAsChildException();
-
-            var window = Windows.GetWindow<T>();
-
-            if (window.Owner != MainWindow) window.Owner = MainWindow;
-
-            return window;
-        }
-
-        public void SetDefaultWindowsPos()
-        {
-
-            using (new DonNotRedraw())
-            {
-
-                MainForm mainWindow = MainWindow;
-
-                var glyphsWindow = GetWindowAsChild<GlyphsForm>();
-                glyphsWindow.Visible = true;
-                glyphsWindow.Left = mainWindow.WorkRectangle.Left;
-                glyphsWindow.Top = mainWindow.WorkRectangle.Top;
-                glyphsWindow.Height = mainWindow.WorkRectangle.Height;
-
-                var propertiesWindow = GetWindowAsChild<PropertiesForm>();
-                propertiesWindow.Visible = true;
-                propertiesWindow.Left = mainWindow.WorkRectangle.Left +
-                                        (mainWindow.WorkRectangle.Width - propertiesWindow.Width);
-                propertiesWindow.Top = mainWindow.WorkRectangle.Top;
-                propertiesWindow.Height = mainWindow.WorkRectangle.Height >> 1;
-            }
-
-            Redraw();
-        }
-
-        public void Redraw()
-        {
-
-            if (!NeedRedraw) return;
-
-            MainForm wndMain = MainWindow;
-
-            if (wndMain.ClientSize.Width <= 0 || wndMain.ClientSize.Height <= 0)
+            if (_currentGlyphType == value)
                 return;
 
-            Rectangle clientRect = wndMain.InnerRectangle;
-            if (clientRect.Width <= 0 || clientRect.Height <= 0) return;
-
-            using (var tmp = new Bitmap(wndMain.ClientSize.Width, wndMain.ClientSize.Height))
-            {
-                using (Graphics gtmp = Graphics.FromImage(tmp))
-                {
-
-                    if (BeginRedraw != null)
-                        BeginRedraw(gtmp, tmp.Width, tmp.Height);
-
-                    gtmp.Clear(Settings.Colors.WorkArea);
-
-                    Point origin = Point.Empty;
-                    if (IsDocumentsExists)
-                    {
-                        var canvas = CurrentDocument.DocumentSheet;
-                        using (Bitmap frame = canvas.Draw())
-                            gtmp.DrawImageUnscaled(frame, clientRect.Location);
-                        origin = canvas.ScaledViewOrigin;
-                    }
-
-                    DrawRulers(gtmp, clientRect, origin);
-
-                    if (EndRedraw != null)
-                        EndRedraw(gtmp, tmp.Width, tmp.Height);
-
-                    gtmp.Flush();
-
-                    using (Graphics gfx = wndMain.CreateGraphics())
-                        if (Settings.Environment.CanUseNative)
-                        {
-                            Gdi.BitBlt(tmp, gtmp, 0, 0, gfx, 0, 0, tmp.Width, tmp.Height);
-                        }
-                        else
-                        {
-                            gfx.DrawImageUnscaled(tmp, 0, 0);
-                        }
-                }
-            }
+            _currentGlyphType = value;
+            CurrentGlyphTypeChanged?.Invoke(this, EventArgs.Empty);
         }
+    }
 
-        public void AddDocument(Document doc)
+    public bool HasDocuments => _documents.Count > 0;
+
+    public Document CurrentDocument =>
+        HasDocuments ? _documents[_currentDocumentIndex] : throw new InvalidOperationException("No document is open.");
+
+    /// <summary>Sheet of the current document, or <see langword="null"/> when no document is open.</summary>
+    public Sheet? ActiveSheet => HasDocuments ? CurrentDocument.DocumentSheet : null;
+
+    public void Run(IEnumerable<string> fileNames)
+    {
+        foreach (string fileName in fileNames.Where(name => !string.IsNullOrWhiteSpace(name)))
+            TryOpenDocument(fileName);
+
+        Application.Run(MainWindow);
+    }
+
+    public T GetWindowAsChild<T>()
+        where T : Form, new()
+    {
+        if (typeof(T) == typeof(MainForm))
+            throw new InvalidOperationException("The main window cannot be owned by itself.");
+
+        T window = _windows.GetWindow<T>();
+        if (window.Owner != MainWindow)
+            window.Owner = MainWindow;
+
+        return window;
+    }
+
+    /// <summary>Docks the palette to the left and the properties window to the right of the work area.</summary>
+    public void SetDefaultWindowsPos()
+    {
+        using (SuspendRedraw())
         {
+            Rectangle work = MainWindow.WorkRectangle;
 
-            _documents.Add(doc);
+            var glyphsWindow = GetWindowAsChild<GlyphsForm>();
+            glyphsWindow.Visible = true;
+            glyphsWindow.SetBounds(work.Left, work.Top, glyphsWindow.Width, work.Height);
 
-            if (DocumentAdded != null)
-                DocumentAdded(doc);
-
-            MainWindow.DocumentsTabs.AddTab(doc.Name ?? "Document", _documents.Count - 1);
-            _currDocIndex = MainWindow.DocumentsTabs.SelectedTab.Id;
+            var propertiesWindow = GetWindowAsChild<PropertiesForm>();
+            propertiesWindow.Visible = true;
+            propertiesWindow.SetBounds(work.Right - propertiesWindow.Width, work.Top, propertiesWindow.Width, work.Height / 2);
         }
 
-        public void SelectDocument(int idx)
+        Redraw();
+    }
+
+    public void ShowError(string message) =>
+        MessageBox.Show(
+            _mainWindow is { IsHandleCreated: true } ? _mainWindow : null,
+            message,
+            CurrentTranslator["Msg_Error"],
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Error);
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _windows.Dispose();
+        _icons?.Dispose();
+        _registryStorage?.Dispose();
+        _instance = null;
+    }
+
+    /// <summary>Settings go to the registry; if it is not writable, to an XML file; failing that, to memory.</summary>
+    private ISettingsStorage CreateSettingsStorage()
+    {
+        try
         {
-            bool idxChanged = false;
-
-            if (!IsDocumentsExists)
-                throw new CurrentDocumentNotExistsException();
-
-            if (idx < 0 || idx >= _documents.Count)
-                throw new CurrentDocumentNotExistsException();
-
-            if (_currDocIndex != idx)
-                idxChanged = true;
-
-            _currDocIndex = idx;
-
-            if (idxChanged)
-                Redraw();
+            return _registryStorage = new RegistryStorage(Settings.Keys.RegistryPath);
         }
-
-        public void ClearBuffer()
+        catch (Exception e) when (e is UnauthorizedAccessException or SecurityException or IOException)
         {
-            _buffer.Clear();
         }
-        #endregion
 
-        #region Events
+        try
+        {
+            return new XmlStorage(Settings.Files.XmlSettingsFile);
+        }
+        catch (Exception e) when (e is UnauthorizedAccessException or SecurityException or IOException or XmlException)
+        {
+        }
 
-        public delegate void BeginRedrawDelegate(Graphics gfx, int width, int height);
-
-        public event BeginRedrawDelegate BeginRedraw;
-
-        public delegate void EndRedrawDelegate(Graphics gfx, int width, int height);
-
-        public event EndRedrawDelegate EndRedraw;
-
-        public delegate void DocumentAddedDelegate(Document doc);
-
-        public event DocumentAddedDelegate DocumentAdded;
-        #endregion
+        return new MemoryStorage();
     }
 }

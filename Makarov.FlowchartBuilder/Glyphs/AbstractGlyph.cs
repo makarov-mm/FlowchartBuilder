@@ -1,105 +1,94 @@
-using System;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Linq;
-using System.Reflection;
+using System.ComponentModel;
 using Makarov.FlowchartBuilder.API.Attributes;
-using Makarov.Framework.Core.Managers;
+using Makarov.Framework.Graphics;
 
-namespace Makarov.FlowchartBuilder.Glyphs
+namespace Makarov.FlowchartBuilder.Glyphs;
+
+/// <summary>
+/// Base of everything placed on a sheet. Properties marked with <see cref="ActivePropertyAttribute"/>
+/// make up the document content; drawing lives in AbstractGlyph_Draw.cs and persistence in AbstractGlyph_Serialization.cs.
+/// </summary>
+[TypeDescriptionProvider(typeof(GlyphTypeDescriptionProvider))]
+public abstract partial class AbstractGlyph
 {
+    private bool _selected;
+    private bool _fixed;
 
-    public abstract partial class AbstractGlyph : ICloneable
+    protected AbstractGlyph()
     {
-        #region Private members
-
-        private bool _selected;
-
-        private bool _fixed;
-        #endregion
-
-        #region Constructors
-        protected AbstractGlyph()
-        {
-            Id = Guid.NewGuid().ToString();
-        }
-        #endregion
-
-        #region Thumbnails
-
-        protected void DrawThumbnailBorder(Graphics gfx)
-        {
-            gfx.DrawRectangle(Settings.Pens.ThumbnailBorder, 0, 0, ThumbnailWidth - 1, ThumbnailHeight - 1);
-        }
-
-        public virtual int ThumbnailWidth
-        {
-            get { return 48; }
-        }
-
-        public virtual int ThumbnailHeight
-        {
-            get { return 48; }
-        }
-
-        public virtual Bitmap Thumbnail
-        {
-            get
-            {
-                var bmp = new Bitmap(ThumbnailWidth, ThumbnailHeight);
-
-                using (Graphics gfx = Graphics.FromImage(bmp))
-                {
-                    gfx.Clear(Color.White);
-
-                    using (Brush brush = new LinearGradientBrush(
-                        new Point(ThumbnailWidth >> 1, 0),
-                        new Point(ThumbnailWidth >> 1, ThumbnailHeight),
-                        Settings.Colors.ThumbnailGradientStart,
-                        Settings.Colors.ThumbnailGradientEnd))
-                    {
-                        gfx.FillRectangle(brush, 0, 0, ThumbnailWidth, ThumbnailHeight);
-                    }
-                }
-
-                return bmp;
-            }
-        }
-
-        public string Id { get; private set; }
-        #endregion
-
-        #region Delegates and events
-        public delegate void GlyphDelegate(AbstractGlyph glyph, Graphics gfx);
-
-        public event GlyphDelegate BeginRedraw;
-
-        public event GlyphDelegate EndRedraw;
-        #endregion
-
-        #region Public members
-
-        public object Clone()
-        {
-
-            Type t = GetType();
-
-            var tmp = Activator.CreateInstance(t);
-
-            foreach (var prop in t.GetProperties(BindingFlags.Public))
-            {
-
-                if (prop.GetCustomAttributes(true).OfType<ActivePropertyAttribute>().Any())
-                    prop.SetValue(tmp, prop.GetValue(this, null), null);
-            }
-
-            return tmp;
-        }
-
-        public object GetProxy()
-        {
-            return ProxyManager.CreateProxy<ActivePropertyAttribute>(this);
-        }
-        #endregion
+        Id = Guid.NewGuid().ToString();
     }
+
+    public string Id { get; private set; }
+
+    public GlyphMetadata Metadata => GlyphMetadata.Of(GetType());
+
+    public string Name => Metadata.Name ?? Core.Instance.CurrentTranslator["UndefinedGlyphName"];
+
+    public string Family => Metadata.Family ?? Core.Instance.CurrentTranslator["UndefinedGlyphFamily"];
+
+    [Description("Caption.")]
+    [Category("Layout")]
+    [DisplayName("Caption")]
+    [ActiveProperty]
+    public string Caption { get; set; } = string.Empty;
+
+    /// <exception cref="InvalidOperationException">Selecting a fixed (locked) glyph.</exception>
+    public bool Selected
+    {
+        get => _selected;
+        set
+        {
+            if (value && _fixed)
+                throw new InvalidOperationException("A fixed glyph cannot be selected.");
+
+            _selected = value;
+        }
+    }
+
+    /// <summary>A fixed (locked) glyph ignores the mouse and cannot be selected.</summary>
+    public bool Fixed
+    {
+        get => _fixed;
+        set
+        {
+            _fixed = value;
+            if (value)
+                _selected = false;
+        }
+    }
+
+    public virtual int ThumbnailWidth => 48;
+
+    public virtual int ThumbnailHeight => 48;
+
+    /// <summary>Renders the palette image; the caller owns the bitmap.</summary>
+    public Bitmap CreateThumbnail() => OffscreenRenderer.Render(ThumbnailWidth, ThumbnailHeight, DrawThumbnail);
+
+    /// <summary>Creates a glyph of the same type with a new id and a copy of all document properties.</summary>
+    public AbstractGlyph Clone()
+    {
+        var clone = (AbstractGlyph)Activator.CreateInstance(GetType())!;
+
+        foreach (var property in Metadata.ActiveProperties)
+            property.SetValue(clone, property.GetValue(this));
+
+        return clone;
+    }
+
+    /// <summary>Whether the Properties window lists the property; glyphs hide properties that do not apply to them.</summary>
+    protected internal virtual bool IsPropertyVisible(string propertyName) => true;
+
+    /// <summary>Palette image background; glyphs draw their picture over it.</summary>
+    protected virtual void DrawThumbnail(Canvas canvas) =>
+        canvas.FillRectangle(
+            new RectangleF(0, 0, ThumbnailWidth, ThumbnailHeight),
+            new LinearGradient(
+                new PointF(ThumbnailWidth / 2f, 0),
+                new PointF(ThumbnailWidth / 2f, ThumbnailHeight),
+                Settings.Colors.ThumbnailGradientStart,
+                Settings.Colors.ThumbnailGradientEnd));
+
+    protected void DrawThumbnailBorder(Canvas canvas) =>
+        canvas.DrawRectangle(new RectangleF(0, 0, ThumbnailWidth - 1, ThumbnailHeight - 1), Settings.Strokes.ThumbnailBorder);
 }

@@ -1,14 +1,11 @@
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+/// <summary>Opens an empty infinite canvas.</summary>
+public sealed class NewCommand : Command
 {
-
-    public sealed class NewCommand : Command
+    public override void Run()
     {
-
-        public override void Run()
-        {
-
-            Core.Instance.AddDocument(new Document());
-            Core.Instance.Redraw();
-        }
+        var core = Core.Instance;
+        core.AddDocument(new Document { Name = core.CreateUntitledName() });
     }
 }

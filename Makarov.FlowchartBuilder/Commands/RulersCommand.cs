@@ -1,26 +1,19 @@
 using Makarov.FlowchartBuilder.Forms;
 
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+public sealed class RulersCommand : ToggleCommand
 {
-
-    public sealed class RulersCommand : Command
+    public override bool IsOn
     {
+        get => Settings.Environment.Rulers;
+        set => Settings.Environment.Rulers = value;
+    }
 
-        public override void Run()
-        {
-            using (new DonNotRedraw())
-            {
-
-                Settings.Environment.Rulers = !Settings.Environment.Rulers;
-
-                foreach (var wnd in Core.Instance.Windows.Windows)
-                    if (wnd is DockingForm)
-                        ((DockingForm) wnd).UpdateDockedWindowPosition();
-            }
-
-            Checked = Settings.Environment.Rulers;
-
-            Core.Instance.Redraw();
-        }
+    /// <summary>The rulers change the work area, so docked tool windows follow its new edges.</summary>
+    protected override void OnToggled()
+    {
+        foreach (DockingForm window in Core.Instance.Windows.Windows.OfType<DockingForm>())
+            window.UpdateDockedWindowPosition();
     }
 }

@@ -1,68 +1,39 @@
-using System.Drawing;
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Containers
+namespace Makarov.FlowchartBuilder.Glyphs.Containers;
+
+[GlyphName("Table")]
+public sealed class TableGlyph : AbstractContainerGlyph
 {
+    /// <summary>The palette image shows a 3x3 table with the last two cells still empty.</summary>
+    private const int Columns = 3;
+    private const int Rows = 3;
+    private const int FilledCells = 7;
+    private const int Spacing = 2;
 
-    [GlyphName("Table")]
-    public sealed class TableGlyph : AbstractContainerGlyph
+    protected override void DrawThumbnail(Canvas canvas)
     {
-        public override Bitmap Thumbnail
+        DrawThumbnailFrame(canvas);
+
+        Rectangle frame = ThumbnailFrame;
+        canvas.DrawRectangle(frame, Settings.Strokes.ThumbnailBorder);
+
+        int cellWidth = (frame.Width - (Columns + 1) * Spacing) / Columns;
+        int cellHeight = (frame.Height - (Rows + 1) * Spacing) / Rows;
+
+        for (int index = 0; index < FilledCells; index++)
         {
-            get
-            {
-                Bitmap bmp = base.Thumbnail;
+            int column = index % Columns;
+            int row = index / Columns;
 
-                const int offset = 5;
-
-                using (Graphics gfx = Graphics.FromImage(bmp))
-                {
-                    int outerWidth = ThumbnailWidth - (offset << 1);
-                    int outerHeight = ThumbnailHeight - (offset << 1);
-
-                    using (Brush brush = new SolidBrush(Color.FromArgb(128, Color.LightGray)))
-                        gfx.FillRectangle(
-                            brush,
-                            offset, offset,
-                            outerWidth, outerHeight);
-
-                    gfx.DrawRectangle(
-                        Settings.Pens.ThumbnailBorder,
-                        offset, offset,
-                        outerWidth, outerHeight);
-
-                    const int horizontalCount = 3;
-                    const int verticalCount = 3;
-                    const int maxCount = 7;
-                    const int innerOffset = 2;
-
-                    int innerWidth = (outerWidth - (horizontalCount + 1)*innerOffset)/horizontalCount;
-                    int innerHeight = (outerHeight - (verticalCount + 1)*innerOffset)/verticalCount;
-
-                    for (int j = 0; j < verticalCount; j++)
-                        for (int i = 0; i < horizontalCount; i++)
-                            if (j * horizontalCount + i < maxCount)
-                            {
-                                var rect = new Rectangle(
-                                    offset + (i + 1)*innerOffset + i*innerWidth,
-                                    offset + (j + 1)*innerOffset + j*innerHeight,
-                                    innerWidth, innerHeight);
-
-                                using (Brush gradientBrush = new LinearGradientBrush(
-                                    rect,
-                                    Settings.Colors.ThumbnailGradientStart,
-                                    Settings.Colors.ThumbnailObjectGradientEnd, 90f))
-                                {
-                                    gfx.FillRectangle(gradientBrush, rect);
-                                }
-
-                                gfx.DrawRectangle(Settings.Pens.ThumbnailBorder, rect);
-                            }
-                }
-
-                return bmp;
-            }
+            DrawThumbnailCell(
+                canvas,
+                new Rectangle(
+                    frame.Left + (column + 1) * Spacing + column * cellWidth,
+                    frame.Top + (row + 1) * Spacing + row * cellHeight,
+                    cellWidth,
+                    cellHeight));
         }
     }
 }

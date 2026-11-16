@@ -1,4 +1,5 @@
-using System.Drawing;
+using Makarov.Framework.Graphics;
+using Makarov.FlowchartBuilder.Extensions;
 
 namespace Makarov.FlowchartBuilder.Glyphs
 {
@@ -20,14 +21,12 @@ namespace Makarov.FlowchartBuilder.Glyphs
 
         #region Draw methods
 
-        protected override void DrawGlyph(Graphics gfx)
+        protected override void DrawGlyph(Canvas canvas)
         {
-            gfx.DrawLine(
-                Pens.Black,
-                UnitsConverter.MMToPx(FirstPoint.XInMM),
-                UnitsConverter.MMToPx(FirstPoint.YInMM),
-                UnitsConverter.MMToPx(SecondPoint.XInMM),
-                UnitsConverter.MMToPx(SecondPoint.YInMM));
+            canvas.DrawLine(
+                new PointF(FirstPoint.XInMM.MMToPx().Scale(), FirstPoint.YInMM.MMToPx().Scale()),
+                new PointF(SecondPoint.XInMM.MMToPx().Scale(), SecondPoint.YInMM.MMToPx().Scale()),
+                new Stroke(Color.Black, 1f));
         }
         #endregion
     }

@@ -1,221 +1,125 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Windows.Forms;
-using System.Linq;
-using Makarov.FlowchartBuilder.API.Attributes;
 using Makarov.FlowchartBuilder.Commands;
 using Makarov.FlowchartBuilder.Glyphs;
 
-namespace Makarov.FlowchartBuilder.Forms
+namespace Makarov.FlowchartBuilder.Forms;
+
+/// <summary>
+/// Palette of the glyph types found in the plugins, grouped by family. Picking an entry arms the glyph
+/// for placement with a click on the sheet; a double click adds it right away.
+/// </summary>
+public partial class GlyphsForm : DockingForm
 {
-    public partial class GlyphsForm : DockingForm
+    public GlyphsForm()
     {
-        public GlyphsForm()
+        InitializeComponent();
+        Core.Instance.CurrentGlyphTypeChanged += OnCurrentGlyphTypeChanged;
+    }
+
+    public void ClearGlyphsSelection() => lstView.SelectedIndices.Clear();
+
+    protected override void OnFormClosed(FormClosedEventArgs e)
+    {
+        Core.Instance.CurrentGlyphTypeChanged -= OnCurrentGlyphTypeChanged;
+        base.OnFormClosed(e);
+    }
+
+    /// <summary>Once the armed glyph is placed, the palette selection is cleared so the same entry can be picked again.</summary>
+    private void OnCurrentGlyphTypeChanged(object? sender, EventArgs e)
+    {
+        if (Core.Instance.CurrentGlyphType is null)
+            ClearGlyphsSelection();
+    }
+
+    private void GlyphsForm_Load(object? sender, EventArgs e) =>
+        Text = Core.Instance.CurrentTranslator["Wnd_Palette_Title"];
+
+    private void GlyphsForm_Shown(object? sender, EventArgs e)
+    {
+        var glyphs = Core.Instance.GlyphTypes
+            .Where(type => GlyphMetadata.Of(type).IsVisible)
+            .Select(type => (AbstractGlyph)Activator.CreateInstance(type)!)
+            .ToList();
+
+        var images = new ImageList { ColorDepth = ColorDepth.Depth32Bit };
+        if (glyphs.Count > 0)
+            images.ImageSize = new Size(glyphs.Max(glyph => glyph.ThumbnailWidth), glyphs.Max(glyph => glyph.ThumbnailHeight));
+
+        lstView.LargeImageList = images;
+        lstView.ForeColor = Settings.Colors.ThumbnailText;
+
+        foreach (IGrouping<string, AbstractGlyph> family in glyphs.GroupBy(glyph => glyph.Family).OrderBy(family => family.Key))
         {
-            InitializeComponent();
-        }
+            ListViewGroup group = lstView.Groups.Add(family.Key, family.Key);
 
-        protected override string RegistrySettingsName
-        {
-            get { return "GlyphsForm"; }
-        }
-
-        private void FBGlyphs_Resize(object sender, EventArgs e)
-        {
-            lstView.Left = ClientRectangle.Left;
-            lstView.Top = ClientRectangle.Top;
-            lstView.Width = ClientRectangle.Width;
-            lstView.Height = ClientRectangle.Height;
-        }
-
-        private void FBGlyphs_Shown(object sender, EventArgs e)
-        {
-            FBGlyphs_Resize(sender, new EventArgs());
-
-            lstView.LargeImageList = new ImageList { ColorDepth = ColorDepth.Depth32Bit };
-
-            lstView.ForeColor = Settings.Colors.ThumbnailText;
-
-            var groups = new List<KeyValuePair<string, KeyValuePair<List<Type>, List<Type>>>>();
-
-            foreach (var glyphType in PluginsManager.Instance.VisibleGlyphs)
+            foreach (AbstractGlyph glyph in family.OrderBy(glyph => glyph.Metadata.Order ?? int.MaxValue))
             {
-
-                var glyph = (AbstractGlyph)Activator.CreateInstance(glyphType);
-
-                if (!groups.Any(x => x.Key == glyph.Family))
-                {
-                    groups.Add(new KeyValuePair<string, KeyValuePair<List<Type>, List<Type>>>(
-                        glyph.Family,
-                        new KeyValuePair<List<Type>, List<Type>>(new List<Type>(), new List<Type>())));
-                }
-
-                if (glyph.OrderExists)
-                {
-                    bool added = false;
-
-                    for (int i = 0; i < groups.First(x => x.Key == glyph.Family).Value.Value.Count; i++)
-                    {
-
-                        var tg = (AbstractGlyph)Activator.CreateInstance(groups.First(x => x.Key == glyph.Family).Value.Value[i]);
-
-                        if (glyph.Order <= tg.Order)
-                        {
-                            groups.First(x => x.Key == glyph.Family).Value.Value.Insert(i, glyphType);
-                            added = true;
-                            break;
-                        }
-                    }
-
-                    if (!added)
-                        groups.First(x => x.Key == glyph.Family).Value.Value.Add(glyphType);
-                }
-                else
-                {
-                    groups.First(x => x.Key == glyph.Family).Value.Value.Add(glyphType);
-                }
-            }
-
-            foreach (var group in groups.OrderBy(x => x.Key))
-            {
-                lstView.Groups.Add(group.Key, group.Key);
-
-                foreach (var glyphType in group.Value.Key)
-                {
-                    var glyph = (AbstractGlyph)Activator.CreateInstance(glyphType);
-
-                    if (glyph.ThumbnailWidth > lstView.LargeImageList.ImageSize.Width)
-                        lstView.LargeImageList.ImageSize = new Size(
-                            glyph.ThumbnailWidth,
-                            lstView.LargeImageList.ImageSize.Height);
-
-                    if (glyph.ThumbnailHeight > lstView.LargeImageList.ImageSize.Height)
-                        lstView.LargeImageList.ImageSize = new Size(
-                            lstView.LargeImageList.ImageSize.Width,
-                            glyph.ThumbnailHeight);
-
-                    lstView.LargeImageList.Images.Add(glyph.Name, glyph.Thumbnail);
-                    var item = new ListViewItem(glyph.Name, glyph.Name)
-                    {
-                        Tag = glyphType,
-                        Group = lstView.Groups[glyph.Family]
-                    };
-                    lstView.Items.Add(item);
-                }
-
-                foreach (var glyphType in group.Value.Value)
-                {
-                    var glyph = (AbstractGlyph) Activator.CreateInstance(glyphType);
-
-                    if (glyph.ThumbnailWidth > lstView.LargeImageList.ImageSize.Width)
-                        lstView.LargeImageList.ImageSize = new Size(
-                            glyph.ThumbnailWidth,
-                            lstView.LargeImageList.ImageSize.Height);
-
-                    if (glyph.ThumbnailHeight > lstView.LargeImageList.ImageSize.Height)
-                        lstView.LargeImageList.ImageSize = new Size(
-                            lstView.LargeImageList.ImageSize.Width,
-                            glyph.ThumbnailHeight);
-
-                    string imageKey = glyph.Family + "::" + glyph.Name;
-                    lstView.LargeImageList.Images.Add(imageKey, glyph.Thumbnail);
-                    var item = new ListViewItem(glyph.Name, imageKey)
-                                   {
-                                       Tag = glyphType,
-                                       Group = lstView.Groups[glyph.Family]
-                                   };
-                    lstView.Items.Add(item);
-                }
+                string imageKey = $"{glyph.Family}::{glyph.Name}";
+                images.Images.Add(imageKey, glyph.CreateThumbnail());
+                lstView.Items.Add(new ListViewItem(glyph.Name, imageKey) { Tag = glyph.GetType(), Group = group });
             }
         }
+    }
 
-        private void FBGlyphs_Load(object sender, EventArgs e)
+    private void lstView_ItemSelectionChanged(object? sender, ListViewItemSelectionChangedEventArgs e)
+    {
+        if (!e.IsSelected || e.Item?.Tag is not Type glyphType)
+            return;
+
+        if (GlyphMetadata.Of(glyphType).CommandName is { } commandName)
         {
-
-            Text = Core.Instance.CurrentTranslator["Wnd_Palette_Title"];
-        }
-
-        private void lstView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
-        {
-
-            if (!e.IsSelected)
-                return;
-
-            var glyphType = (Type)e.Item.Tag;
-
-            var cmdAttrs = glyphType.GetCustomAttributes(typeof (CommandGlyphAttribute), true);
-            bool isCmdGlyph = cmdAttrs.Length > 0;
-
-            if (isCmdGlyph)
+            switch (Command.GetInstance(commandName))
             {
-                foreach (var cmdAttr in cmdAttrs)
-                {
+                case NoneCommand:
+                    ClearGlyphsSelection();
+                    break;
 
-                    string cmd = ((CommandGlyphAttribute)cmdAttr).CommandName;
-
-                    var command = Command.GetInstance(cmd);
-
-                    if (command is NoneCommand)
-                    {
-                        ClearGlyphsSelection();
-                        break;
-                    }
-
-                    var glyphCommand = (CommandedGlyphCommand)Command.GetInstance(cmd);
-
+                case CommandedGlyphCommand glyphCommand:
                     glyphCommand.GlyphType = glyphType;
-
-                    glyphCommand.Run();
-                }
-
-                Core.Instance.CurrentGlyphType = null;
-            }
-            else
-            {
-                Core.Instance.CurrentGlyphType = glyphType;
+                    glyphCommand.Execute();
+                    break;
             }
 
-            Core.Instance.Redraw();
-        }
-
-        private void lstView_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-
-            if (!Core.Instance.CurrGlyphTypeSelected)
-                return;
-
-            Core.Instance.CurrentDocument.DocumentSheet.DeselectAllGlyphs();
-            var glyph = (AbstractGlyph) Activator.CreateInstance(Core.Instance.CurrentGlyphType);
-            if (glyph is BlockGlyph block)
-            {
-                var sheet = Core.Instance.CurrentDocument.DocumentSheet;
-                Size size = Core.Instance.MainWindow.InnerRectangle.Size;
-                block.ScaledX = sheet.ScaledViewOrigin.X + size.Width / 2;
-                block.ScaledY = sheet.ScaledViewOrigin.Y + size.Height / 2;
-            }
-            glyph.Selected = true;
-            Core.Instance.CurrentDocument.DocumentSheet.Add(glyph);
             Core.Instance.CurrentGlyphType = null;
-
-            Core.Instance.Redraw();
         }
-
-        private void FBGlyphs_FormClosing(object sender, FormClosingEventArgs e)
+        else
         {
-            if (Core.Instance.MainWindow.IsClosing)
-                return;
-
-            e.Cancel = true;
-            Hide();
-
-            Command.GetInstance("PaletteWindowCommand").Enabled = true;
+            Core.Instance.CurrentGlyphType = glyphType;
         }
 
-        public void ClearGlyphsSelection()
+        Core.Instance.Redraw();
+    }
+
+    private void lstView_MouseDoubleClick(object? sender, MouseEventArgs e)
+    {
+        // Only blocks can be placed without a position; links need two blocks to connect.
+        if (Core.Instance.CurrentGlyphType is not { } glyphType || !glyphType.IsAssignableTo(typeof(BlockGlyph)) ||
+            Core.Instance.ActiveSheet is not { } sheet)
         {
-
-            lstView.SelectedIndices.Clear();
+            return;
         }
+
+        var glyph = (BlockGlyph)Activator.CreateInstance(glyphType)!;
+        Size viewport = Core.Instance.MainWindow.InnerRectangle.Size;
+        glyph.ScaledX = sheet.ScaledViewOrigin.X + viewport.Width / 2;
+        glyph.ScaledY = sheet.ScaledViewOrigin.Y + viewport.Height / 2;
+        sheet.DeselectAllGlyphs();
+        glyph.Selected = true;
+        sheet.Add(glyph);
+        Core.Instance.CurrentGlyphType = null;
+
+        sheet.ShowProperties();
+        Core.Instance.CommitChange();
+        Core.Instance.UpdateCommands();
+        Core.Instance.Redraw();
+    }
+
+    private void GlyphsForm_FormClosing(object? sender, FormClosingEventArgs e)
+    {
+        if (Core.Instance.MainWindow.IsClosing)
+            return;
+
+        e.Cancel = true;
+        Hide();
+        Command.GetInstance<PaletteWindowCommand>().Enabled = true;
     }
 }

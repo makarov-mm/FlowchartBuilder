@@ -1,98 +1,58 @@
-using System.Drawing;
-using System.Drawing.Text;
 using Makarov.Framework.Graphics;
 
-namespace Makarov.FlowchartBuilder.Glyphs
+namespace Makarov.FlowchartBuilder.Glyphs;
+
+public abstract partial class AbstractGlyph
 {
-
-    public abstract partial class AbstractGlyph
+    /// <summary>
+    /// Draws the glyph in sheet pixel coordinates; the canvas transform is left as it was found. Without
+    /// <paramref name="adornments"/> the editing marks (handles, link points, lock markers) are left out.
+    /// </summary>
+    public void Draw(Canvas canvas, bool adornments = true)
     {
-
-        public void Draw(Graphics gfx)
+        using (ApplyRotation(canvas))
         {
-
-            if (BeginRedraw != null)
-                BeginRedraw(this, gfx);
-
-            using (new TempSmoothingMode(gfx, SmoothMode))
-            {
-                System.Drawing.Drawing2D.GraphicsState beforeRotation = null;
-
-                if (this is BlockGlyph)
-                {
-                    var blockGlyph = (BlockGlyph)this;
-
-                    if (blockGlyph.CanRotate && blockGlyph.Angle != 0)
-                    {
-                        beforeRotation = gfx.Save();
-                        gfx.TranslateTransform(blockGlyph.ScaledX, blockGlyph.ScaledY);
-                        gfx.RotateTransform(blockGlyph.Angle);
-                        gfx.TranslateTransform(-blockGlyph.ScaledX, -blockGlyph.ScaledY);
-                    }
-                }
-
-                if (Selected)
-                    DrawSelectedGlyph(gfx);
-                else
-                    DrawGlyph(gfx);
-
-                if (beforeRotation != null)
-                    gfx.Restore(beforeRotation);
-            }
-
-            using (new TempTextRenderingHint(gfx, Settings.Environment.Antialiasing
-                                                      ? TextRenderingHint.ClearTypeGridFit
-                                                      : TextRenderingHint.SystemDefault))
-            {
-
-                DrawText(gfx);
-            }
-
             if (Selected)
-            {
-                using (new TempSmoothingMode(gfx, SmoothMode))
-                {
-
-                    DrawDots(gfx);
-                }
-
-                DrawHelpers(gfx);
-            }
+                DrawSelectedGlyph(canvas);
             else
-            {
-
-                DrawLinkPoints(gfx);
-            }
-
-            if (Fixed && this is BlockGlyph)
-            {
-                Bitmap lockImg = Core.Instance.Images["Lock"];
-                const int offset = 2;
-
-                var blockGlyph = (BlockGlyph) this;
-                gfx.DrawImageUnscaled(
-                    lockImg,
-                    blockGlyph.ScaledX + (blockGlyph.ScaledWidth >> 1) - lockImg.Width - offset,
-                    blockGlyph.ScaledY - (blockGlyph.ScaledWidth >> 1) + offset);
-            }
-
-            if (EndRedraw != null)
-                EndRedraw(this, gfx);
+                DrawGlyph(canvas);
         }
 
-        protected virtual void DrawGlyph(Graphics gfx) { }
+        DrawText(canvas);
 
-        protected virtual void DrawSelectedGlyph(Graphics gfx)
+        if (!adornments)
+            return;
+
+        if (Selected)
         {
-            DrawGlyph(gfx);
+            DrawDots(canvas);
+            DrawHelpers(canvas);
+        }
+        else
+        {
+            DrawLinkPoints(canvas);
         }
 
-        protected virtual void DrawText(Graphics gfx) { }
-
-        protected virtual void DrawDots(Graphics gfx) { }
-
-        protected virtual void DrawLinkPoints(Graphics gfx) { }
-
-        protected virtual void DrawHelpers(Graphics gfx) { }
+        if (Fixed)
+            DrawLockMarker(canvas);
     }
+
+    /// <summary>Rotates the outline (not the text or the handles) of glyphs that support rotation.</summary>
+    protected virtual CanvasScope ApplyRotation(Canvas canvas) => default;
+
+    protected virtual void DrawGlyph(Canvas canvas) { }
+
+    protected virtual void DrawSelectedGlyph(Canvas canvas) => DrawGlyph(canvas);
+
+    protected virtual void DrawText(Canvas canvas) { }
+
+    /// <summary>Selection handles.</summary>
+    protected virtual void DrawDots(Canvas canvas) { }
+
+    protected virtual void DrawLinkPoints(Canvas canvas) { }
+
+    /// <summary>Size and position hints shown while the glyph is dragged.</summary>
+    protected virtual void DrawHelpers(Canvas canvas) { }
+
+    protected virtual void DrawLockMarker(Canvas canvas) { }
 }

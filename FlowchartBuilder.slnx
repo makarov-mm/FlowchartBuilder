@@ -1,0 +1,24 @@
+<Solution>
+  <Project Path="Makarov.FlowchartBuilder/Makarov.FlowchartBuilder.csproj" />
+  <Project Path="Makarov.FlowchartBuilder.API/Makarov.FlowchartBuilder.API.csproj" />
+  <Folder Name="/Framework/">
+    <Project Path="Makarov.Framework.Components/Makarov.Framework.Components.csproj" />
+    <Project Path="Makarov.Framework.Core/Makarov.Framework.Core.csproj" />
+    <Project Path="Makarov.Framework.Graphics/Makarov.Framework.Graphics.csproj" />
+    <Project Path="Makarov.Framework.Instance/Makarov.Framework.Instance.csproj" />
+    <Project Path="Makarov.Framework.Serialization/Makarov.Framework.Serialization.csproj" />
+  </Folder>
+  <Folder Name="/Plugins/">
+    <Project Path="Makarov.FlowchartBuilder.Glyphs.Containers/Makarov.FlowchartBuilder.Glyphs.Containers.csproj" />
+    <Project Path="Makarov.FlowchartBuilder.Glyphs.Flowchart/Makarov.FlowchartBuilder.Glyphs.Flowchart.csproj" />
+    <Project Path="Makarov.FlowchartBuilder.Glyphs.Shapes/Makarov.FlowchartBuilder.Glyphs.Shapes.csproj" />
+    <Project Path="Makarov.FlowchartBuilder.Glyphs.Simple/Makarov.FlowchartBuilder.Glyphs.Simple.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path=".editorconfig" />
+    <File Path="README.md" />
+    <File Path="MIGRATION.md" />
+    <File Path="todo.txt" />
+  </Folder>
+</Solution>

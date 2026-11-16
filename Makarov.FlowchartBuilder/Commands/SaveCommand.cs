@@ -1,22 +1,11 @@
-using System.Windows.Forms;
+namespace Makarov.FlowchartBuilder.Commands;
 
-namespace Makarov.FlowchartBuilder.Commands
+/// <summary>Saves the current document; a document that was never saved asks for a file name.</summary>
+public sealed class SaveCommand : Command
 {
-
-    public sealed class SaveCommand : Command
+    public override void Run()
     {
-
-        public override void Run()
-        {
-            using (var dialog = new SaveFileDialog())
-            {
-                dialog.Filter = "FlowchartBuilder Documents|*.mfb";
-
-                if (dialog.ShowDialog(Core.Instance.MainWindow) == DialogResult.OK)
-                {
-                    Core.Instance.CurrentDocument.Save(dialog.FileName);
-                }
-            }
-        }
+        if (Core.Instance.HasDocuments)
+            Core.Instance.SaveDocument(Core.Instance.CurrentDocument);
     }
 }

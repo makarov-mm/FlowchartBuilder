@@ -1,62 +1,16 @@
-using System.Drawing;
-using System.Drawing.Drawing2D;
+namespace Makarov.Framework.Graphics.Primitives;
 
-namespace Makarov.Framework.Graphics.Primitives
+/// <summary>Sector of the inscribed ellipse; angles are in degrees, clockwise from the X axis.</summary>
+public sealed class Pie(int x, int y, int width, int height, int startAngle, int sweepAngle) : Primitive(x, y, width, height)
 {
+    public int StartAngle { get; } = startAngle;
 
-    public class Pie : Primitive
-    {
-        #region Constructors
+    public int SweepAngle { get; } = sweepAngle;
 
-        public Pie(int x, int y, int width, int height, int startAngle, int angle)
-            : base(x, y, width, height)
-        {
-            StartAngle = startAngle;
-            Angle = angle;
-        }
-
-        public Pie(Point coords, Size size, int startAngle, int angle)
-            : base(coords.X, coords.Y, size.Width, size.Height)
-        {
-            StartAngle = startAngle;
-            Angle = angle;
-        }
-
-        public Pie(System.Drawing.Rectangle rect, int startAngle, int angle)
-            : base(rect.X, rect.Y, rect.Width, rect.Height)
-        {
-            StartAngle = startAngle;
-            Angle = angle;
-        }
-        #endregion
-
-        #region Protected methods
-
-        protected override GraphicsPath CreatePath(int x, int y, int width, int height)
-        {
-            var path = new GraphicsPath();
-
-            path.StartFigure();
-            path.AddPie(x, y, width, height, StartAngle, Angle);
-            path.CloseFigure();
-
-            return path;
-        }
-        #endregion
-
-        #region Properties
-
-        public int StartAngle
-        {
-            get;
-            set;
-        }
-
-        public int Angle
-        {
-            get;
-            set;
-        }
-        #endregion
-    }
+    protected override Geometry CreateGeometry(int left, int top, int width, int height) =>
+        new GeometryBuilder()
+            .BeginFigure(new PointF(left + width / 2f, top + height / 2f))
+            .Arc(new RectangleF(left, top, width, height), StartAngle, SweepAngle)
+            .EndFigure(closed: true)
+            .ToGeometry();
 }

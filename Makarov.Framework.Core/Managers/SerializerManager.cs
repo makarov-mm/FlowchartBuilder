@@ -1,152 +1,52 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
-namespace Makarov.Framework.Core.Managers
+namespace Makarov.Framework.Core.Managers;
+
+/// <summary>
+/// Registry of <see cref="AbstractSerializer"/> implementations keyed by the type they handle.
+/// </summary>
+public sealed class SerializerManager
 {
+    private readonly Dictionary<Type, AbstractSerializer> _serializers = [];
 
-    public sealed class SerializerManager
+    public SerializerManager(params ReadOnlySpan<Assembly> assemblies)
     {
-        #region Exceptions
-
-        public abstract class SerializerManagerException : MakarovFrameworkException
-        {
-
-            protected SerializerManagerException(string message)
-                : base(message)
-            { }
-        }
-
-        public sealed class SerializerAlreadyExistsException : SerializerManagerException
-        {
-
-            public SerializerAlreadyExistsException(string type)
-                : base($@"Serializer for type '{type ?? string.Empty}' already exists.")
-            { }
-
-            public SerializerAlreadyExistsException(Type type)
-                : this(type.Name)
-            { }
-        }
-
-        public sealed class SerializerNotExistsException : SerializerManagerException
-        {
-
-            public SerializerNotExistsException(string type)
-                : base($@"Serializer for type '{type ?? string.Empty}' not exists.")
-            { }
-
-            public SerializerNotExistsException(Type type)
-                : this(type.Name)
-            { }
-        }
-        #endregion
-
-        #region Private members
-
-        private readonly List<AbstractSerializer> _serializers = new List<AbstractSerializer>();
-        #endregion
-
-        #region Constructors
-
-        public SerializerManager(IEnumerable<Assembly> assemblies)
-        {
-            AddFromAssemblies(assemblies);
-        }
-
-        public SerializerManager(Assembly assembly)
-        {
+        foreach (Assembly assembly in assemblies)
             AddFromAssembly(assembly);
-        }
-        #endregion
+    }
 
-        #region Public methods
+    public bool CanSerialize(Type type) => type.IsEnum || _serializers.ContainsKey(type);
 
-        public string Serialize(object value)
+    public string Serialize(Type type, object? value) => Get(type).Serialize(value);
+
+    public object Deserialize(Type type, string text) => Get(type).Deserialize(text);
+
+    public void Add(AbstractSerializer serializer)
+    {
+        if (!_serializers.TryAdd(serializer.SerializerType, serializer))
+            throw new InvalidOperationException($"A serializer for '{serializer.SerializerType}' is already registered.");
+    }
+
+    /// <summary>Registers every concrete <see cref="AbstractSerializer"/> declared in <paramref name="assembly"/>.</summary>
+    public void AddFromAssembly(Assembly assembly)
+    {
+        foreach (Type type in assembly.GetTypes())
         {
-            return Serialize(value.GetType(), value);
+            if (type is { IsAbstract: false, ContainsGenericParameters: false } && type.IsSubclassOf(typeof(AbstractSerializer)))
+                Add((AbstractSerializer)Activator.CreateInstance(type)!);
         }
+    }
 
-        public string Serialize(Type type, object value)
-        {
-            foreach (AbstractSerializer serializer in _serializers)
-                if (serializer.SerializerType == type)
-                    return serializer.Serialize(value);
+    private AbstractSerializer Get(Type type)
+    {
+        if (_serializers.TryGetValue(type, out AbstractSerializer? serializer))
+            return serializer;
 
-            throw new SerializerNotExistsException(type);
-        }
+        if (!type.IsEnum)
+            throw new KeyNotFoundException($"No serializer is registered for '{type}'.");
 
-        public string Serialize<T>(T value)
-        {
-            Type targetType = typeof(T);
-
-            foreach (AbstractSerializer serializer in _serializers)
-                if (serializer.SerializerType == targetType)
-                    return serializer.Serialize(value);
-
-            throw new SerializerNotExistsException(targetType);
-        }
-
-        public T Deserialize<T>(string str)
-        {
-            Type targetType = typeof(T);
-
-            foreach (AbstractSerializer serializer in _serializers)
-                if (serializer.SerializerType == targetType)
-                    return (T)serializer.Deserialize(str);
-
-            throw new SerializerNotExistsException(targetType);
-        }
-
-        public object Deserialize(Type type, string str)
-        {
-            foreach (AbstractSerializer serializer in _serializers)
-                if (serializer.SerializerType == type)
-                    return serializer.Deserialize(str);
-
-            throw new SerializerNotExistsException(type);
-        }
-
-        public void AddSerializer(AbstractSerializer serializer, bool throwOnExists = true)
-        {
-            if (!IsExists(serializer.SerializerType) || !throwOnExists)
-                _serializers.Add(serializer);
-            else
-                throw new SerializerAlreadyExistsException(serializer.SerializerType);
-        }
-
-        public void AddFromAssembly(Assembly assembly)
-        {
-            AddFromAssemblies(new[] { assembly });
-        }
-
-        public void AddFromAssemblies(IEnumerable<Assembly> assemblies)
-        {
-            foreach (Assembly assembly in assemblies)
-            {
-                Type[] types = assembly.GetTypes();
-
-                foreach (Type type in types)
-                    if (type.IsClass && type.IsSubclassOf(typeof (AbstractSerializer)))
-                        AddSerializer((AbstractSerializer) Activator.CreateInstance(type));
-            }
-        }
-
-        public bool IsExists<T>()
-        {
-            return IsExists(typeof (T));
-        }
-
-        public bool IsExists(Type type)
-        {
-            return _serializers.Any(serializer => serializer.SerializerType == type);
-        }
-
-        public void Clear()
-        {
-            _serializers.Clear();
-        }
-        #endregion
+        serializer = new EnumSerializer(type);
+        _serializers.Add(type, serializer);
+        return serializer;
     }
 }

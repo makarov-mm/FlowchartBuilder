@@ -1,104 +1,64 @@
-using System;
-using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace Makarov.Framework.Components
+namespace Makarov.Framework.Components;
+
+/// <summary>A tab of a <see cref="TabsPanel"/>: an id chosen by the owner, a caption and a close button.</summary>
+public sealed class Tab(int id, string caption)
 {
+    private const int CornerSize = 5;
+    private const int CloseButtonSize = 8;
+    private const int CloseButtonMargin = 6;
 
-    public sealed class Tab
+    public int Id { get; } = id;
+
+    public string Caption { get; set; } = caption;
+
+    /// <summary>Width needed for the caption and the close button.</summary>
+    public int MeasureWidth(Font font) => TextRenderer.MeasureText(Caption, font).Width + CloseButtonSize + CloseButtonMargin;
+
+    public static Rectangle GetCloseButton(Rectangle bounds) =>
+        new(bounds.Right - CloseButtonMargin - CloseButtonSize, bounds.Top + (bounds.Height - CloseButtonSize) / 2, CloseButtonSize, CloseButtonSize);
+
+    public void Draw(Graphics graphics, Rectangle bounds, Font font, bool isActive)
     {
+        using GraphicsPath path = CreateOutline(bounds);
+        using var background = new LinearGradientBrush(
+            new Point(bounds.Left, bounds.Top),
+            new Point(bounds.Left, bounds.Bottom + 1),
+            SystemColors.Control,
+            isActive ? SystemColors.ControlDark : SystemColors.ControlLight);
+        using var border = new Pen(SystemColors.ActiveBorder);
 
-        public Tab(int id, string caption)
-        {
-            Id = id;
-            Caption = caption ?? string.Empty;
-        }
+        graphics.FillPath(background, path);
+        graphics.DrawPath(border, path);
 
-        public int Id { get; private set; }
+        Rectangle close = GetCloseButton(bounds);
+        var text = Rectangle.FromLTRB(bounds.Left + CornerSize, bounds.Top, close.Left - 2, bounds.Bottom);
+        TextRenderer.DrawText(
+            graphics, Caption, font, text, SystemColors.ControlText,
+            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
-        public string Caption { get; private set; }
+        using var cross = new Pen(SystemColors.ControlDarkDark, 1.5f);
+        SmoothingMode smoothing = graphics.SmoothingMode;
+        graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        graphics.DrawLine(cross, close.Left, close.Top, close.Right, close.Bottom);
+        graphics.DrawLine(cross, close.Left, close.Bottom, close.Right, close.Top);
+        graphics.SmoothingMode = smoothing;
+    }
 
-        public int RequiredWidth(Graphics gfx, Font font)
-        {
-            return (int)Math.Ceiling(gfx.MeasureString(Caption, font).Width);
-        }
-
-        public int RequiredHeight(Graphics gfx, Font font)
-        {
-            return (int) Math.Ceiling(gfx.MeasureString(Caption, font).Height);
-        }
-
-        public Size RequiredSize(Graphics gfx, Font font)
-        {
-            return new Size(
-                RequiredWidth(gfx, font),
-                RequiredHeight(gfx, font));
-        }
-
-        public GraphicsPath CreatePath(Graphics gfx, Font font,
-            int? minWidth, int? maxWidth, int? minHeight, int? maxHeight)
-        {
-            int width = RequiredWidth(gfx, font);
-
-            if (minWidth.HasValue && minWidth.Value > width)
-                width = minWidth.Value;
-
-            if (maxWidth.HasValue && maxWidth.Value < width)
-                width = maxWidth.Value;
-
-            int height = RequiredWidth(gfx, font);
-
-            if (minHeight.HasValue && minHeight.Value > height)
-                height = minHeight.Value;
-
-            if (maxHeight.HasValue && maxHeight.Value < height)
-                height = maxHeight.Value;
-
-            const int offset = 2;
-            const int cornerSize = 5;
-
-            var pts = new[]
-            {
-                new Point(0, height + offset),
-                new Point(width, height + offset),
-                new Point(width, 0),
-                new Point(cornerSize, 0),
-                new Point(0, cornerSize),
-                new Point(0, height + offset)
-            };
-
-            var path = new GraphicsPath();
-            path.StartFigure();
-            path.AddLines(pts);
-            path.CloseFigure();
-
-            return path;
-        }
-
-        public void Draw(Graphics gfx, int offsetX, int offsetY, Font font,
-            int? minWidth, int? maxWidth, int? minHeight, int? maxHeight, bool isActive)
-        {
-            gfx.TranslateTransform(offsetX, offsetY);
-
-            using (GraphicsPath path = CreatePath(gfx, font, minWidth, maxWidth, minHeight, maxHeight))
-            using (var gradientBrush = new LinearGradientBrush(
-                    new Point(0, 2),
-                    new Point(0, (int)path.GetBounds().Height),
-                    SystemColors.Control,
-                    isActive ? SystemColors.ControlDark : SystemColors.ControlLight))
-            using (var borderPen = new Pen(SystemColors.ActiveBorder, 1f))
-            {
-                gfx.FillPath(gradientBrush, path);
-                gfx.DrawPath(borderPen, path);
-
-                SizeF textSize = gfx.MeasureString(Caption, font);
-                int textOffsetX = (int)(path.GetBounds().Width - textSize.Width) >> 1;
-                int textOffsetY = (int)(path.GetBounds().Height - textSize.Height) >> 1;
-
-                gfx.DrawString(Caption, font, Brushes.Black, textOffsetX, textOffsetY);
-            }
-
-            gfx.TranslateTransform(-offsetX, -offsetY);
-        }
+    private static GraphicsPath CreateOutline(Rectangle bounds)
+    {
+        var path = new GraphicsPath();
+        path.StartFigure();
+        path.AddLines(
+        [
+            new Point(bounds.Left, bounds.Bottom),
+            new Point(bounds.Right, bounds.Bottom),
+            new Point(bounds.Right, bounds.Top),
+            new Point(bounds.Left + CornerSize, bounds.Top),
+            new Point(bounds.Left, bounds.Top + CornerSize),
+        ]);
+        path.CloseFigure();
+        return path;
     }
 }

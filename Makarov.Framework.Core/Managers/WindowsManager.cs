@@ -1,146 +1,44 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Windows.Forms;
+namespace Makarov.Framework.Core.Managers;
 
-namespace Makarov.Framework.Core.Managers
+/// <summary>
+/// Keeps one live instance per form type and recreates it after it has been disposed.
+/// </summary>
+public sealed class WindowsManager : IDisposable
 {
+    private readonly Dictionary<Type, Form> _windows = [];
+    private bool _disposed;
 
-    public sealed class WindowsManager : IDisposable
+    public IEnumerable<Form> Windows
     {
-        #region Exceptions
-
-        public abstract class WindowsManagerException : MakarovFrameworkException
+        get
         {
-            protected WindowsManagerException(string message)
-                : base(message ?? string.Empty)
-            { }
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _windows.Values.Where(window => !window.IsDisposed).ToList();
         }
+    }
 
-        public sealed class WindowsManagerAlreadyDisposedException : WindowsManagerException
-        {
-            public WindowsManagerAlreadyDisposedException()
-                : base(@"Windows manager already disposed exception.")
-            { }
-        }
+    public T GetWindow<T>()
+        where T : Form, new()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
 
-        public sealed class WindowTypeNotFoundException : WindowsManagerException
-        {
+        if (_windows.TryGetValue(typeof(T), out Form? window) && !window.IsDisposed)
+            return (T)window;
 
-            public WindowTypeNotFoundException(Type type)
-                : base($@"Window type '{type.Name}' not found.")
-            { }
+        var newWindow = new T();
+        _windows[typeof(T)] = newWindow;
+        return newWindow;
+    }
 
-            public WindowTypeNotFoundException(Type type, string details)
-                : base($@"Window type '{type.Name}' not found. {details}")
-            { }
-        }
-        #endregion
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
 
-        #region Private members
+        foreach (Form window in _windows.Values)
+            window.Dispose();
 
-        private bool _disposed;
-
-        private List<Type> _formTypes;
-
-        private List<Form> _windows;
-
-        private string _scannedAssembly;
-        #endregion
-
-        #region Constructors
-
-        public WindowsManager(Assembly assembly)
-        {
-            _formTypes = new List<Type>();
-            _windows = new List<Form>();
-            _scannedAssembly = assembly.GetName().Name;
-
-            Type[] types;
-            try
-            {
-                types = assembly.GetTypes();
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                types = Array.FindAll(ex.Types, t => t != null);
-            }
-
-            foreach (Type type in types)
-                if (type.IsClass && type.IsSubclassOf(typeof(Form)))
-                    _formTypes.Add(type);
-        }
-        #endregion
-
-        #region Properties
-
-        public IEnumerable<Type> Forms
-        {
-            get
-            {
-                if (_disposed)
-                    throw new WindowsManagerAlreadyDisposedException();
-
-                return _formTypes;
-            }
-        }
-
-        public IEnumerable<Form> Windows
-        {
-            get
-            {
-                if (_disposed)
-                    throw new WindowsManagerAlreadyDisposedException();
-
-                return _windows;
-            }
-        }
-        #endregion
-
-        #region Public methods
-
-        public T GetWindow<T>() where T: Form
-        {
-            if (_disposed)
-                throw new WindowsManagerAlreadyDisposedException();
-
-            foreach (Form form in _windows)
-                if (form is T)
-                    return (T) form;
-
-            foreach (Type type in _formTypes)
-                if (type == typeof(T))
-                {
-                    _formTypes.Remove(type);
-                    var frm = (T) Activator.CreateInstance(type);
-                    _windows.Add(frm);
-                    return frm;
-                }
-
-            var known = _formTypes.Count == 0
-                ? "(none)"
-                : string.Join(", ", _formTypes.ConvertAll(t => t.Name));
-            throw new WindowTypeNotFoundException(
-                typeof(T),
-                $"Scanned assembly: '{_scannedAssembly}'. Registered form types: {known}.");
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-                throw new WindowsManagerAlreadyDisposedException();
-
-            foreach (Form wnd in _windows)
-                wnd.Dispose();
-
-            _windows.Clear();
-            _windows = null;
-
-            _formTypes.Clear();
-            _formTypes = null;
-
-            _disposed = true;
-        }
-        #endregion
+        _windows.Clear();
+        _disposed = true;
     }
 }

@@ -1,36 +1,28 @@
-using System;
-using System.Drawing;
+namespace Makarov.FlowchartBuilder.Commands;
 
-namespace Makarov.FlowchartBuilder.Commands
+/// <summary>Zooms so that the diagram fits the work area.</summary>
+public sealed class ZoomToWindowCommand : Command
 {
-
-    public sealed class ZoomToWindowCommand : Command
+    public override void Run()
     {
+        if (Core.Instance.ActiveSheet is not { } sheet)
+            return;
 
-        public override void Run()
+        Size viewport = Core.Instance.MainWindow.InnerRectangle.Size;
+        Rectangle bounds = sheet.GetContentBounds();
+        if (bounds.IsEmpty)
         {
-
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            var sheet = Core.Instance.CurrentDocument.DocumentSheet;
-            var bounds = sheet.GetContentBounds();
-            if (bounds.IsEmpty)
-            {
-                sheet.ScaleFactor = 1f;
-                sheet.ViewOrigin = PointF.Empty;
-            }
-            else
-            {
-                var size = Core.Instance.MainWindow.InnerRectangle.Size;
-                bounds.Inflate(16, 16);
-                sheet.ScaleFactor = Math.Min(size.Width / bounds.Width, size.Height / bounds.Height);
-                sheet.ViewOrigin = new PointF(
-                    bounds.Left + (bounds.Width - size.Width / sheet.ScaleFactor) / 2,
-                    bounds.Top + (bounds.Height - size.Height / sheet.ScaleFactor) / 2);
-            }
-
-            Core.Instance.Redraw();
+            sheet.ScaleFactor = 1f;
+            sheet.ViewOrigin = PointF.Empty;
         }
+        else
+        {
+            sheet.ScaleFactor = Math.Min((float)viewport.Width / bounds.Width, (float)viewport.Height / bounds.Height);
+            sheet.ViewOrigin = new PointF(
+                bounds.Left + (bounds.Width - viewport.Width / sheet.ScaleFactor) / 2,
+                bounds.Top + (bounds.Height - viewport.Height / sheet.ScaleFactor) / 2);
+        }
+
+        Core.Instance.Redraw();
     }
 }

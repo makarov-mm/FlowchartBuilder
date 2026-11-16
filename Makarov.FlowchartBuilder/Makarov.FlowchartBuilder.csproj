@@ -2,17 +2,11 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <RootNamespace>Makarov.FlowchartBuilder</RootNamespace>
-    <AssemblyName>Makarov.FlowchartBuilder</AssemblyName>
     <ApplicationIcon>FlowchartBuilder.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Makarov.FlowchartBuilder.API\Makarov.FlowchartBuilder.API.csproj" />
-    <ProjectReference Include="..\Makarov.FlowchartBuilder.Box\Makarov.FlowchartBuilder.Box.csproj" />
-    <ProjectReference Include="..\Makarov.Framework.Collections\Makarov.Framework.Collections.csproj" />
     <ProjectReference Include="..\Makarov.Framework.Components\Makarov.Framework.Components.csproj" />
     <ProjectReference Include="..\Makarov.Framework.Core\Makarov.Framework.Core.csproj" />
     <ProjectReference Include="..\Makarov.Framework.Graphics\Makarov.Framework.Graphics.csproj" />
@@ -21,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Data\**;Icons\**;Graphics\**;Translations\**;*.ico">
+    <None Update="Data\**;Icons\**;Translations\**;*.ico;License.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -1,126 +1,38 @@
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Xml;
-using System.Xml.Schema;
+using Makarov.Framework.Core.Xml;
 
-namespace Makarov.FlowchartBuilder
+namespace Makarov.FlowchartBuilder;
+
+public sealed class UnitsManager
 {
+    private readonly Dictionary<string, Units> _units = new(StringComparer.Ordinal);
 
-    public sealed class UnitsManager
+    public UnitsManager(string definitionFile, string schemaFile)
     {
-        #region Exceptions
+        XmlElement root = ValidatedXml.Load(definitionFile, Settings.Xml.Namespace, schemaFile);
 
-        public class UnitsManagerException : FlowchartBuilderException
+        foreach (XmlElement node in root.ChildNodes.OfType<XmlElement>())
         {
-
-            public UnitsManagerException(string message)
-                : base(message)
-            { }
+            Add(new Units(
+                node.GetAttribute(Settings.Xml.Attributes.Name),
+                node.GetAttribute(Settings.Xml.Attributes.ShortName),
+                float.Parse(node.GetAttribute(Settings.Xml.Attributes.InMM), NumberStyles.Float, CultureInfo.InvariantCulture),
+                int.Parse(node.GetAttribute(Settings.Xml.Attributes.BigStep), CultureInfo.InvariantCulture),
+                int.Parse(node.GetAttribute(Settings.Xml.Attributes.SmallStep), CultureInfo.InvariantCulture)));
         }
+    }
 
-        public sealed class UnitManagerAlreadyExistsException : SingletonObjectAlreadyExistsException
-        {
+    public Units this[string name] =>
+        _units.TryGetValue(name, out Units? units) ? units : throw new KeyNotFoundException($"Units '{name}' not found.");
 
-            public UnitManagerAlreadyExistsException()
-                : base("UnitsManagerException")
-            { }
-        }
+    public IEnumerable<string> LoadedUnits => _units.Keys;
 
-        public sealed class UnitsNotFoundException : UnitsManagerException
-        {
+    public bool Contains(string name) => _units.ContainsKey(name);
 
-            public UnitsNotFoundException(string name)
-                : base(string.Format("Units '{0}' not found.", name))
-            { }
-        }
-
-        public sealed class UnitsAlreadyExistsException : UnitsManagerException
-        {
-
-            public UnitsAlreadyExistsException(string name)
-                : base(string.Format("Units '{0}' already exists.", name))
-            { }
-        }
-        #endregion
-
-        #region Constructors
-
-        public UnitsManager()
-        {
-            var doc = new XmlDocument();
-            doc.Load(Settings.Files.UnitsDefinition);
-            doc.Schemas.Add(Settings.Xml.Namespaces.Base, Settings.Files.UnitsSchema);
-            doc.Validate(delegate(object sender, ValidationEventArgs args) { throw args.Exception; });
-            var mainNode = doc.GetElementsByTagName(Settings.Xml.Tags.UnitsTypes)[0];
-
-            var nfi = new NumberFormatInfo { NumberDecimalSeparator = "." };
-            const NumberStyles nstyle = NumberStyles.Float;
-
-            foreach (XmlNode node in mainNode)
-            {
-                string name = node.Attributes[Settings.Xml.Attributes.Name].Value;
-                string shortName = node.Attributes[Settings.Xml.Attributes.ShortName].Value;
-                float InMM = float.Parse(node.Attributes[Settings.Xml.Attributes.InMM].Value, nstyle, nfi);
-                int BigStep = int.Parse(node.Attributes[Settings.Xml.Attributes.BigStep].Value, nstyle, nfi);
-                int SmallStep = int.Parse(node.Attributes[Settings.Xml.Attributes.SmallStep].Value, nstyle, nfi);
-
-                AddUnits(new Units(
-                    name,
-                    shortName,
-                    InMM,
-                    BigStep,
-                    SmallStep));
-            }
-        }
-        #endregion
-
-        #region Private members
-
-        private readonly Dictionary<string, Units> _units =
-            new Dictionary<string, Units>();
-        #endregion
-
-        #region Properties
-
-        public Units this[string name]
-        {
-            get { return GetUnits(name); }
-        }
-
-        public int Count
-        {
-            get { return _units.Count; }
-        }
-
-        public IEnumerable<string> LoadedUnits
-        {
-            get { return _units.Select(kvp => kvp.Key); }
-        }
-        #endregion
-
-        #region Public methods
-
-        public Units GetUnits(string name)
-        {
-            if (!_units.TryGetValue(name, out var units))
-                throw new UnitsNotFoundException(name);
-
-            return units;
-        }
-
-        public void AddUnits(Units units)
-        {
-            if (_units.ContainsKey(units.Name))
-                throw new UnitsAlreadyExistsException(units.Name);
-
-            _units.Add(units.Name, units);
-        }
-
-        public void Clear()
-        {
-            _units.Clear();
-        }
-        #endregion
+    private void Add(Units units)
+    {
+        if (!_units.TryAdd(units.Name, units))
+            throw new InvalidDataException($"Units '{units.Name}' are defined twice.");
     }
 }

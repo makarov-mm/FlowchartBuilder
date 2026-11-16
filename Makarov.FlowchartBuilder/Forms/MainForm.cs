@@ -1,218 +1,211 @@
-using System.ComponentModel;
-using System;
-using System.Drawing;
-using System.Windows.Forms;
+using Makarov.FlowchartBuilder.Commands;
 using Makarov.Framework.Components;
 
-namespace Makarov.FlowchartBuilder.Forms
+namespace Makarov.FlowchartBuilder.Forms;
+
+/// <summary>
+/// Main window: menus, document tabs and the work area painted by <see cref="Core.Paint"/>.
+/// </summary>
+public partial class MainForm : BasicForm
 {
-    public partial class MainForm : BasicForm
+    private Point? _panStart;
+
+    public MainForm()
     {
-        public MainForm()
+        InitializeComponent();
+
+        BackColor = Settings.Colors.WorkArea;
+        sheetView.SendToBack();
+        sheetView.MouseCaptureChanged += (_, _) => { if (!sheetView.Capture) EndPan(); };
+        documentsTabsBar.TabCloseRequested += (_, e) =>
         {
-            InitializeComponent();
+            if (Core.Instance.Documents.FirstOrDefault(document => document.Id == e.Tab.Id) is { } document)
+                Core.Instance.CloseDocument(document);
+        };
+    }
+
+    /// <summary>Set once the main window starts closing, so that tool windows close instead of hiding.</summary>
+    public bool IsClosing { get; private set; }
+
+    /// <summary>State to restore when the window is brought back from the taskbar.</summary>
+    public FormWindowState WindowStateBeforeMinimize { get; private set; } = FormWindowState.Normal;
+
+    public TabsPanel DocumentsTabs => documentsTabsBar;
+
+    public SheetView SheetView => sheetView;
+
+    /// <summary>Work area: the part of the sheet view not covered by the rulers, in client coordinates.</summary>
+    public override Rectangle InnerRectangle
+    {
+        get
+        {
+            int rulersSize = Settings.Environment.Rulers ? Settings.Environment.RulersSize : 0;
+            Rectangle view = ViewBounds;
+
+            return new Rectangle(view.Left + rulersSize, view.Top + rulersSize, view.Width - rulersSize, view.Height - rulersSize);
+        }
+    }
+
+    /// <summary>The client area below the document tabs, between the toolbar and the status bar.</summary>
+    private Rectangle ViewBounds
+    {
+        get
+        {
+            Rectangle rect = base.InnerRectangle;
+            int tabsHeight = documentsTabsBar.Height;
+            return new Rectangle(rect.Left, rect.Top + tabsHeight, rect.Width, Math.Max(0, rect.Height - tabsHeight));
+        }
+    }
+
+    protected override void OnLayout(LayoutEventArgs levent)
+    {
+        base.OnLayout(levent);
+
+        if (sheetView is not null)
+            sheetView.Bounds = ViewBounds;
+    }
+
+    private void MainForm_Load(object? sender, EventArgs e)
+    {
+        Text = Core.Instance.CurrentTranslator["FlowchartBuilder_Caption"];
+
+        if (Core.Instance.IsFirstRun)
+        {
+            SetBounds(50, 50, 800, 600);
+            WindowState = FormWindowState.Maximized;
         }
 
-        private void FBMainWindow_Load(object sender, EventArgs e)
+        LoadWindowParamsFromRegistry();
+
+        MenuLoader.LoadMainMenu(this);
+        MenuLoader.LoadSecondaryMenu(this);
+
+        // Documents passed on the command line were opened before the window and its menus were ready.
+        Core.Instance.RefreshDocumentState();
+
+        Core.Instance.GetWindowAsChild<GlyphsForm>().Show();
+        Core.Instance.GetWindowAsChild<PropertiesForm>().Show();
+
+        DocumentsTabs.SelectedTabChanged += (_, _) =>
         {
+            if (DocumentsTabs.SelectedTab is { } tab)
+                Core.Instance.SelectDocument(tab.Id);
+        };
+    }
 
-            Text = Core.Instance.CurrentTranslator["FlowchartBuilder_Caption"];
+    private void MainForm_Shown(object? sender, EventArgs e)
+    {
+        if (!Core.Instance.HasDocuments)
+            Command.GetInstance<NewCommand>().Run();
 
-            if (Core.Instance.IsFirstRun)
-            {
-                Left = 50;
-                Top = 50;
-                Width = 800;
-                Height = 600;
-                WindowState = FormWindowState.Maximized;
-            }
+        if (Core.Instance.IsFirstRun)
+            Core.Instance.SetDefaultWindowsPos();
 
-            LoadWindowParamsFromRegistry();
+        Core.Instance.Redraw();
+    }
 
-            MenuLoader.LoadMainMenu(this);
+    private void MainForm_FormClosing(object? sender, FormClosingEventArgs e)
+    {
+        if (IsClosing)
+            return;
 
-            MenuLoader.LoadSecondaryMenu(this);
-
-            Core.Instance.GetWindowAsChild<GlyphsForm>().Show();
-
-            Core.Instance.GetWindowAsChild<PropertiesForm>().Show();
-
-            DocumentsTabs.SelectedTabChanged += (s, args) =>
-                                                    {
-                                                        var tab = DocumentsTabs.SelectedTab;
-
-                                                        Core.Instance.SelectDocument(tab.Id);
-                                                    };
+        if (!Core.Instance.ConfirmCloseAll())
+        {
+            e.Cancel = true;
+            return;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool IsClosing
-        {
-            get; set;
-        }
+        SaveWindowParamsToRegistry();
+        IsClosing = true;
 
-        private void FBMainWindow_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (IsClosing)
-                return;
+        foreach (Form window in Core.Instance.Windows.Windows.Where(window => window != this))
+            window.Close();
+    }
 
-            SaveWindowParamsToRegistry();
-            IsClosing = true;
+    private void MainForm_Resize(object? sender, EventArgs e)
+    {
+        if (WindowState != FormWindowState.Minimized)
+            WindowStateBeforeMinimize = WindowState;
 
-            foreach (var wnd in Core.Instance.Windows.Windows)
-                if (wnd != this)
-                    wnd.Close();
+        UpdateDockedWindows();
 
-            Close();
-        }
-
-        private void FBMainWindow_Paint(object sender, PaintEventArgs e)
-        {
+        if (Visible)
             Core.Instance.Redraw();
-        }
+    }
 
-        private void FBMainWindow_Resize(object sender, EventArgs e)
+    private void MainForm_Move(object? sender, EventArgs e) => UpdateDockedWindows();
+
+    private void sheetView_MouseDown(object? sender, MouseEventArgs e)
+    {
+        sheetView.Focus();
+
+        if (e.Button == MouseButtons.Middle && Core.Instance.ActiveSheet is not null)
         {
-
-            foreach (var wnd in Core.Instance.Windows.Windows)
-                if (wnd is DockingForm)
-                {
-                    var dockingWnd = (DockingForm)wnd;
-
-                    dockingWnd.UpdateDockedWindowPosition();
-                }
-
-            if (Visible)
-                Core.Instance.Redraw();
+            _panStart = e.Location;
+            sheetView.Capture = true;
+            sheetView.Cursor = Cursors.Hand;
         }
+        else if (e.Button == MouseButtons.Left && _panStart is null)
+            Core.Instance.ActiveSheet?.MouseDown(Core.Instance.ClientToSheet(e.Location));
+    }
 
-        public override Rectangle InnerRectangle
+    private void sheetView_MouseMove(object? sender, MouseEventArgs e)
+    {
+        if (_panStart is Point start)
         {
-            get
-            {
-                int rulersSize = Settings.Environment.Rulers ? Settings.Environment.RulersSize : 0;
-                int docsBarHeight = documentsTabsBar.Height;
-                Rectangle rect = base.InnerRectangle;
-                return new Rectangle(
-                    rect.Left + rulersSize,
-                    rect.Top + rulersSize + docsBarHeight,
-                    rect.Width - rulersSize,
-                    rect.Height - rulersSize - docsBarHeight);
-            }
+            Pan(start.X - e.X, start.Y - e.Y);
+            _panStart = e.Location;
         }
+        else
+            Core.Instance.ActiveSheet?.MouseMove(Core.Instance.ClientToSheet(e.Location));
+    }
 
-        private void FBMainWindow_Shown(object sender, EventArgs e)
+    private void sheetView_MouseUp(object? sender, MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Middle)
         {
-            if (!Core.Instance.IsDocumentsExists)
-                Core.Instance.AddDocument(new Document());
-
-            if (Core.Instance.IsFirstRun)
-                Core.Instance.SetDefaultWindowsPos();
-
-            Core.Instance.Redraw();
+            EndPan();
+            sheetView.Capture = false;
         }
+        else if (e.Button == MouseButtons.Left)
+            Core.Instance.ActiveSheet?.MouseUp();
+    }
 
-        private void FBMainWindow_Enter(object sender, EventArgs e)
+    private void EndPan()
+    {
+        if (_panStart is null) return;
+        _panStart = null;
+        sheetView.Cursor = Cursors.Default;
+    }
+
+    private static void Pan(int dx, int dy)
+    {
+        if (Core.Instance.ActiveSheet is not { } sheet) return;
+        sheet.ViewOrigin = new PointF(sheet.ViewOrigin.X + dx / sheet.ScaleFactor, sheet.ViewOrigin.Y + dy / sheet.ScaleFactor);
+        Core.Instance.Redraw();
+    }
+
+    /// <summary>The wheel scrolls the sheet (with Shift horizontally); with Ctrl it zooms.</summary>
+    private void sheetView_MouseWheel(object? sender, MouseEventArgs e)
+    {
+        if (!Core.Instance.HasDocuments || e.Delta == 0)
+            return;
+
+        if ((ModifierKeys & Keys.Control) != 0)
         {
-
-            Core.Instance.Redraw();
+            Command command = e.Delta > 0 ? Command.GetInstance<ZoomInCommand>() : Command.GetInstance<ZoomOutCommand>();
+            command.Execute();
+            return;
         }
 
-        private Point? _panStart;
+        int distance = -e.Delta / 3;
+        if ((ModifierKeys & Keys.Shift) != 0) Pan(distance, 0);
+        else Pan(0, distance);
+    }
 
-        private Point CoordinatesInSheet(Point client)
-        {
-            Point origin = Core.Instance.CurrentDocument.DocumentSheet.ScaledViewOrigin;
-            return new Point(client.X - InnerRectangle.Left + origin.X,
-                             client.Y - InnerRectangle.Top + origin.Y);
-        }
-
-        private void FBMainWindow_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (!Core.Instance.IsDocumentsExists || !InnerRectangle.Contains(e.Location))
-                return;
-
-            if (e.Button == MouseButtons.Middle)
-            {
-                _panStart = e.Location;
-                Capture = true;
-                Cursor = Cursors.Hand;
-            }
-            else if (e.Button == MouseButtons.Left && !_panStart.HasValue)
-                Core.Instance.CurrentDocument.DocumentSheet.MouseDown(CoordinatesInSheet(e.Location));
-        }
-
-        private void FBMainWindow_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Middle && _panStart.HasValue)
-            {
-                _panStart = null;
-                Capture = false;
-                Cursor = Cursors.Default;
-            }
-            else if (e.Button == MouseButtons.Left && Core.Instance.IsDocumentsExists)
-                Core.Instance.CurrentDocument.DocumentSheet.MouseUp();
-        }
-
-        protected override void OnMouseCaptureChanged(EventArgs e)
-        {
-            base.OnMouseCaptureChanged(e);
-            if (!Capture && _panStart.HasValue)
-            {
-                _panStart = null;
-                Cursor = Cursors.Default;
-            }
-        }
-
-        private void FBMainWindow_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (!Core.Instance.IsDocumentsExists) return;
-            var sheet = Core.Instance.CurrentDocument.DocumentSheet;
-            if (_panStart is Point start)
-            {
-                sheet.ViewOrigin = new PointF(
-                    sheet.ViewOrigin.X + (start.X - e.X) / sheet.ScaleFactor,
-                    sheet.ViewOrigin.Y + (start.Y - e.Y) / sheet.ScaleFactor);
-                _panStart = e.Location;
-                Core.Instance.Redraw();
-            }
-            else
-                sheet.MouseMove(CoordinatesInSheet(e.Location));
-        }
-
-        private void FBMainWindow_Move(object sender, EventArgs e)
-        {
-
-            foreach (var wnd in Core.Instance.Windows.Windows)
-                if (wnd is DockingForm)
-                {
-                    var dockingWnd = (DockingForm)wnd;
-
-                    dockingWnd.UpdateDockedWindowPosition();
-                }
-        }
-
-        public FormWindowState OldWindowState
-        {
-            get; private set;
-        }
-
-        public TabsPanel DocumentsTabs
-        {
-            get { return documentsTabsBar; }
-        }
-
-        protected override void DefWndProc(ref Message m)
-        {
-            const int WM_SYSCOMMAND = 0x0112;
-            const int SC_MINIMIZE = 0xF020;
-
-            if (m.Msg == WM_SYSCOMMAND && m.WParam == (IntPtr)SC_MINIMIZE)
-            {
-                OldWindowState = WindowState;
-            }
-
-            base.DefWndProc(ref m);
-        }
+    private static void UpdateDockedWindows()
+    {
+        foreach (DockingForm window in Core.Instance.Windows.Windows.OfType<DockingForm>())
+            window.UpdateDockedWindowPosition();
     }
 }

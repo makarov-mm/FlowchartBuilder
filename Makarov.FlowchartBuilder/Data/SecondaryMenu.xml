@@ -2,7 +2,7 @@
 <fb:SecondaryMenu xmlns:fb="http://flowchartbuilder.blogspot.com"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://flowchartbuilder.blogspot.com SecondaryMenu.xsd">
-  <fb:Command Class="OpenCommand" ToolTip="Command_Open" Icon="Open" Enabled="false" />
+  <fb:Command Class="OpenCommand" ToolTip="Command_Open" Icon="Open" />
   <fb:Command Class="SaveCommand" ToolTip="Command_Save" Icon="Save" Enabled="false" />
   <fb:Command Class="SaveAllCommand" ToolTip="Command_SaveAll" Icon="SaveAll" Enabled="false" />
   <fb:Separator/>

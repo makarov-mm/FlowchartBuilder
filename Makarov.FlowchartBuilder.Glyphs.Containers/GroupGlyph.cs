@@ -1,44 +1,16 @@
-using System.Drawing;
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Containers
+namespace Makarov.FlowchartBuilder.Glyphs.Containers;
+
+[GlyphName("Group")]
+public sealed class GroupGlyph : AbstractContainerGlyph
 {
+    private static readonly Stroke ThumbnailFrameStroke = new(Settings.Colors.ThumbnailBorder) { Dash = new DashPattern(3f, 1f) };
 
-    [GlyphName("Group")]
-    public sealed class GroupGlyph : AbstractContainerGlyph
+    protected override void DrawThumbnail(Canvas canvas)
     {
-        public override Bitmap Thumbnail
-        {
-            get
-            {
-                Bitmap bmp = base.Thumbnail;
-
-                const int offset = 5;
-
-                using (Graphics gfx = Graphics.FromImage(bmp))
-                {
-                    using (Brush brush = new SolidBrush(Color.FromArgb(128, Color.LightGray)))
-                        gfx.FillRectangle(
-                            brush,
-                            offset, offset,
-                            ThumbnailWidth - (offset << 1),
-                            ThumbnailHeight - (offset << 1));
-
-                    using (var borderPen = new Pen(Settings.Colors.ThumbnailBorder))
-                    {
-                        borderPen.DashStyle = DashStyle.Dash;
-
-                        gfx.DrawRectangle(
-                            borderPen,
-                            offset, offset,
-                            ThumbnailWidth - (offset << 1),
-                            ThumbnailHeight - (offset << 1));
-                    }
-                }
-
-                return bmp;
-            }
-        }
+        DrawThumbnailFrame(canvas);
+        canvas.DrawRectangle(ThumbnailFrame, ThumbnailFrameStroke);
     }
 }

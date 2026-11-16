@@ -1,34 +1,10 @@
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics.Primitives;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Shapes
+namespace Makarov.FlowchartBuilder.Glyphs.Shapes;
+
+[GlyphName("Direct Triangle")]
+public sealed class DirectTriangleGlyph : AbstractShapeGlyph
 {
-
-    [GlyphName("Direct Triangle")]
-    public sealed class DirectTriangleGlyph : AbstractShapeGlyph
-    {
-
-        protected override GraphicsPath CenteredPath
-        {
-            get
-            {
-                return new Framework.Graphics.Primitives.DirectTriangle(
-                    ScaledX, ScaledY,
-                    ScaledWidth, ScaledHeight).CreateCentered();
-            }
-        }
-
-        protected override GraphicsPath Path
-        {
-            get
-            {
-                int offsetX = ThumbnailWidth >> 3;
-                int offsetY = ThumbnailHeight >> 3;
-
-                return new Framework.Graphics.Primitives.DirectTriangle(
-                    offsetX, offsetY,
-                    ThumbnailWidth - (offsetX << 1), ThumbnailHeight - (offsetY << 1)).Create();
-            }
-        }
-    }
+    protected override Primitive CreatePrimitive(int x, int y, int width, int height) => new DirectTriangle(x, y, width, height);
 }

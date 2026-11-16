@@ -1,13 +1,15 @@
 using Makarov.FlowchartBuilder.API.Attributes;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Simple
+namespace Makarov.FlowchartBuilder.Glyphs.Simple;
+
+/// <summary>Smooth curved arrow.</summary>
+[GlyphName("Arrow")]
+[GlyphOrder(1)]
+public sealed class ArrowGlyph : AbstractLinkGlyph
 {
-
-    [GlyphName("Arrow")]
-    [GlyphDefaultWidth(30)]
-    [GlyphDefaultHeight(30)]
-    public sealed class BrokenArrowGlyph : AbstractLinkGlyph
+    public ArrowGlyph()
     {
-
+        Routing = ConnectorRouting.Curved;
+        ArrowHead = true;
     }
 }

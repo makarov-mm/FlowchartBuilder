@@ -1,13 +1,15 @@
 using Makarov.FlowchartBuilder.API.Attributes;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Simple
+namespace Makarov.FlowchartBuilder.Glyphs.Simple;
+
+/// <summary>Arrow made of horizontal and vertical segments.</summary>
+[GlyphName("Broken Arrow")]
+[GlyphOrder(2)]
+public sealed class BrokenArrowGlyph : AbstractLinkGlyph
 {
-
-    [GlyphName("Arrow")]
-    [GlyphDefaultWidth(30)]
-    [GlyphDefaultHeight(30)]
-    public sealed class ArrowGlyph : AbstractLinkGlyph
+    public BrokenArrowGlyph()
     {
-
+        Routing = ConnectorRouting.Orthogonal;
+        ArrowHead = true;
     }
 }

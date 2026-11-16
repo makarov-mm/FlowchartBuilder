@@ -1,12 +1,6 @@
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+public sealed class SaveSettingsCommand : Command
 {
-
-    public sealed class SaveSettingsCommand : Command
-    {
-
-        public override void Run()
-        {
-            SettingsExport.ShowSaveDialog();
-        }
-    }
+    public override void Run() => SettingsExport.ShowSaveDialog();
 }

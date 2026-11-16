@@ -1,224 +1,156 @@
 using System.ComponentModel;
-using System;
-using System.Windows.Forms;
-using BaseSettings = Makarov.Framework.Core.Settings;
+using System.Globalization;
 
-namespace Makarov.FlowchartBuilder.Forms
+namespace Makarov.FlowchartBuilder.Forms;
+
+/// <summary>
+/// Tool window that snaps to the edges of the main window work area and keeps its position and docking
+/// in the settings under "SecWndParams.&lt;RegistrySettingsName&gt;.*".
+/// </summary>
+public partial class DockingForm : Form
 {
-    public partial class DockingForm : Form
+    private const int MinimumWindowSize = 100;
+
+    public DockingForm()
     {
-        public DockingForm()
-        {
-            InitializeComponent();
-        }
-
-        public string ClassName
-        {
-            get
-            {
-                string[] clsType = GetType().Name.Split('.');
-                return clsType[clsType.Length - 1];
-            }
-        }
-
-        protected string RegistrySettingsKey
-        {
-            get
-            {
-                return Settings.RegistryKeys.SecondaryWindowParams + "." + RegistrySettingsName;
-            }
-        }
-
-        protected virtual string RegistrySettingsName
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        private void DockingForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (Settings.Environment.InDesignTime) return;
-
-            if (!(Visible || Enabled))
-                return;
-
-            Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Left"] = Left.ToString();
-            Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Top"] = Top.ToString();
-            Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Width"] = Width.ToString();
-            Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Height"] = Height.ToString();
-
-            Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockLeft"] = DockLeft.ToString();
-            Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockRight"] = DockRight.ToString();
-            Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockTop"] = DockTop.ToString();
-            Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockBottom"] = DockBottom.ToString();
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool DockLeft
-        {
-            get;
-            set;
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool DockRight
-        {
-            get;
-            set;
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool DockTop
-        {
-            get;
-            set;
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool DockBottom
-        {
-            get;
-            set;
-        }
-
-        private void DockingForm_Load(object sender, EventArgs e)
-        {
-            if (Settings.Environment.InDesignTime) return;
-
-            string x = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Left"];
-            string y = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Top"];
-            string width = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Width"];
-            string height = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Height"];
-
-            if (!string.IsNullOrEmpty(x))
-            {
-                int ix = int.Parse(x);
-                if (ix < 0)
-                {
-                    ix = 0;
-                    Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Left"] = ix.ToString();
-                }
-                Left = ix;
-            }
-
-            if (!string.IsNullOrEmpty(y))
-            {
-                int iy = int.Parse(y);
-                if (iy < 0)
-                {
-                    iy = 0;
-                    Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Top"] = iy.ToString();
-                }
-                Top = iy;
-            }
-
-            if (!string.IsNullOrEmpty(width))
-            {
-                int iwidth = int.Parse(width);
-                if (iwidth < 100)
-                {
-                    iwidth = 100;
-                    Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Width"] = iwidth.ToString();
-                }
-                Width = iwidth;
-            }
-
-            if (!string.IsNullOrEmpty(height))
-            {
-                int iheight = int.Parse(height);
-                if (iheight < 100)
-                {
-                    iheight = 100;
-                    Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".Height"] = iheight.ToString();
-                }
-                Height = iheight;
-            }
-
-            string dockLeft = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockLeft"];
-            string dockRight = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockRight"];
-            string dockTop = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockTop"];
-            string dockBottom = Core.Instance.CachedSettingsStorage[RegistrySettingsKey + ".DockBottom"];
-
-            if (!string.IsNullOrEmpty(dockLeft))
-                DockLeft = bool.Parse(dockLeft);
-
-            if (!string.IsNullOrEmpty(dockRight))
-                DockRight = bool.Parse(dockRight);
-
-            if (!string.IsNullOrEmpty(dockTop))
-                DockTop = bool.Parse(dockTop);
-
-            if (!string.IsNullOrEmpty(dockBottom))
-                DockBottom = bool.Parse(dockBottom);
-        }
-
-        public void UpdateDockingWindowOnMove()
-        {
-
-            if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Left - Left) <= Settings.Environment.Docking.DockDistance)
-            {
-                Left = Core.Instance.MainWindow.WorkRectangle.Left;
-                DockLeft = true;
-            }
-            else if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Left - Left) >= Settings.Environment.Docking.UndockDistance)
-                DockLeft = false;
-
-            if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Top - Top) <= Settings.Environment.Docking.DockDistance)
-            {
-                Top = Core.Instance.MainWindow.WorkRectangle.Top;
-                DockTop = true;
-            }
-            else if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Top - Top) >= Settings.Environment.Docking.UndockDistance)
-                DockTop = false;
-        }
-
-        public void UpdateDockingWindowOnResize()
-        {
-
-            if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Right - (Left + Width)) <= Settings.Environment.Docking.DockDistance)
-            {
-                Width += Core.Instance.MainWindow.WorkRectangle.Right - (Left + Width);
-                DockRight = true;
-            }
-            else if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Right - (Left + Width)) >= Settings.Environment.Docking.UndockDistance)
-                DockRight = false;
-
-            if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Bottom - (Top + Height)) <= Settings.Environment.Docking.DockDistance)
-            {
-                Height += Core.Instance.MainWindow.WorkRectangle.Bottom - (Top + Height);
-                DockBottom = true;
-            }
-            else if (Math.Abs(Core.Instance.MainWindow.WorkRectangle.Bottom - (Top + Height)) >= Settings.Environment.Docking.UndockDistance)
-                DockBottom = false;
-        }
-
-        public void UpdateDockedWindowPosition()
-        {
-            if (DockLeft)
-                Left = Core.Instance.MainWindow.WorkRectangle.Left;
-
-            if (DockTop)
-                Top = Core.Instance.MainWindow.WorkRectangle.Top;
-
-            if (DockRight)
-                Left = Core.Instance.MainWindow.WorkRectangle.Right - Width;
-
-            if (DockBottom)
-                Top = Core.Instance.MainWindow.WorkRectangle.Bottom - Height;
-        }
-
-        private void DockingForm_Move(object sender, EventArgs e)
-        {
-            if (Settings.Environment.InDesignTime) return;
-
-            UpdateDockingWindowOnMove();
-            UpdateDockingWindowOnResize();
-        }
-
-        private void DockingForm_Resize(object sender, EventArgs e)
-        {
-            if (Settings.Environment.InDesignTime) return;
-
-            UpdateDockingWindowOnResize();
-        }
+        InitializeComponent();
     }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public bool DockLeft { get; set; }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public bool DockRight { get; set; }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public bool DockTop { get; set; }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public bool DockBottom { get; set; }
+
+    /// <summary>Name of this window in the settings; the class name by default.</summary>
+    protected virtual string RegistrySettingsName => GetType().Name;
+
+    private string SettingsPrefix => $"{Settings.Keys.SecondaryWindowParams}.{RegistrySettingsName}.";
+
+    /// <summary>Snaps the left and top edges to the work area when the window is moved close to them.</summary>
+    public void UpdateDockingWindowOnMove()
+    {
+        Rectangle work = Core.Instance.MainWindow.WorkRectangle;
+
+        DockLeft = UpdateDock(DockLeft, work.Left - Left);
+        if (Math.Abs(work.Left - Left) <= Settings.Environment.Docking.DockDistance)
+            Left = work.Left;
+
+        DockTop = UpdateDock(DockTop, work.Top - Top);
+        if (Math.Abs(work.Top - Top) <= Settings.Environment.Docking.DockDistance)
+            Top = work.Top;
+    }
+
+    /// <summary>Snaps the right and bottom edges to the work area when the window is resized close to them.</summary>
+    public void UpdateDockingWindowOnResize()
+    {
+        Rectangle work = Core.Instance.MainWindow.WorkRectangle;
+
+        DockRight = UpdateDock(DockRight, work.Right - Right);
+        if (Math.Abs(work.Right - Right) <= Settings.Environment.Docking.DockDistance)
+            Width += work.Right - Right;
+
+        DockBottom = UpdateDock(DockBottom, work.Bottom - Bottom);
+        if (Math.Abs(work.Bottom - Bottom) <= Settings.Environment.Docking.DockDistance)
+            Height += work.Bottom - Bottom;
+    }
+
+    /// <summary>Keeps docked edges attached after the main window or its work area changed.</summary>
+    public void UpdateDockedWindowPosition()
+    {
+        Rectangle work = Core.Instance.MainWindow.WorkRectangle;
+
+        if (DockLeft)
+            Left = work.Left;
+
+        if (DockTop)
+            Top = work.Top;
+
+        if (DockRight)
+            Left = work.Right - Width;
+
+        if (DockBottom)
+            Top = work.Bottom - Height;
+    }
+
+    /// <summary>Docks within the dock distance, undocks beyond the undock distance and keeps the state in between.</summary>
+    private static bool UpdateDock(bool docked, int distance) => Math.Abs(distance) switch
+    {
+        <= Settings.Environment.Docking.DockDistance => true,
+        >= Settings.Environment.Docking.UndockDistance => false,
+        _ => docked,
+    };
+
+    private void DockingForm_Load(object? sender, EventArgs e)
+    {
+        if (DesignMode)
+            return;
+
+        if (ReadInt("Left", 0) is { } left)
+            Left = left;
+
+        if (ReadInt("Top", 0) is { } top)
+            Top = top;
+
+        if (ReadInt("Width", MinimumWindowSize) is { } width)
+            Width = width;
+
+        if (ReadInt("Height", MinimumWindowSize) is { } height)
+            Height = height;
+
+        DockLeft = ReadBool("DockLeft") ?? DockLeft;
+        DockRight = ReadBool("DockRight") ?? DockRight;
+        DockTop = ReadBool("DockTop") ?? DockTop;
+        DockBottom = ReadBool("DockBottom") ?? DockBottom;
+    }
+
+    private void DockingForm_FormClosing(object? sender, FormClosingEventArgs e)
+    {
+        if (DesignMode || !(Visible || Enabled))
+            return;
+
+        Write("Left", Left);
+        Write("Top", Top);
+        Write("Width", Width);
+        Write("Height", Height);
+        Write("DockLeft", DockLeft);
+        Write("DockRight", DockRight);
+        Write("DockTop", DockTop);
+        Write("DockBottom", DockBottom);
+    }
+
+    private void DockingForm_Move(object? sender, EventArgs e)
+    {
+        if (DesignMode)
+            return;
+
+        UpdateDockingWindowOnMove();
+        UpdateDockingWindowOnResize();
+    }
+
+    private void DockingForm_Resize(object? sender, EventArgs e)
+    {
+        if (!DesignMode)
+            UpdateDockingWindowOnResize();
+    }
+
+    private int? ReadInt(string name, int minimum) =>
+        int.TryParse(Core.Instance.SettingsStorage[SettingsPrefix + name], NumberStyles.Integer, CultureInfo.InvariantCulture, out int value)
+            ? Math.Max(value, minimum)
+            : null;
+
+    private bool? ReadBool(string name) =>
+        bool.TryParse(Core.Instance.SettingsStorage[SettingsPrefix + name], out bool value) ? value : null;
+
+    private void Write(string name, int value) =>
+        Core.Instance.SettingsStorage[SettingsPrefix + name] = value.ToString(CultureInfo.InvariantCulture);
+
+    private void Write(string name, bool value) =>
+        Core.Instance.SettingsStorage[SettingsPrefix + name] = value.ToString();
 }

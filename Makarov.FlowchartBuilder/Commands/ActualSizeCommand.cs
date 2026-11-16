@@ -1,18 +1,15 @@
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+/// <summary>Restores 100% zoom.</summary>
+public sealed class ActualSizeCommand : Command
 {
-
-    public sealed class ActualSizeCommand : Command
+    public override void Run()
     {
+        if (Core.Instance.ActiveSheet is not { } sheet)
+            return;
 
-        public override void Run()
-        {
+        sheet.ScaleFactor = 1f;
 
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            Core.Instance.CurrentDocument.DocumentSheet.ScaleFactor = 1f;
-
-            Core.Instance.Redraw();
-        }
+        Core.Instance.Redraw();
     }
 }

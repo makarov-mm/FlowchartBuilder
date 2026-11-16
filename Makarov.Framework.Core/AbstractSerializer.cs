@@ -1,15 +1,13 @@
-using System;
+namespace Makarov.Framework.Core;
 
-namespace Makarov.Framework.Core
+/// <summary>
+/// Converts values of <see cref="SerializerType"/> to and from their string representation.
+/// </summary>
+public abstract class AbstractSerializer
 {
+    public abstract Type SerializerType { get; }
 
-    public abstract class AbstractSerializer
-    {
+    public abstract string Serialize(object? value);
 
-        public abstract Type SerializerType { get; }
-
-        public abstract string Serialize(object obj);
-
-        public abstract object Deserialize(string str);
-    }
+    public abstract object Deserialize(string text);
 }

@@ -1,40 +1,25 @@
-using System.Collections.Generic;
-using System.Drawing;
-using System.Windows.Forms;
-using System.Linq;
-using BaseSettings = Makarov.Framework.Core.Settings;
+using Makarov.Framework.Core;
 
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+public sealed class LanguagesCommand : CommandWithSubcommands
 {
+    public override IEnumerable<string> Commands =>
+        Core.Instance.Translators.Languages.OrderBy(language => Core.Instance.CurrentTranslator[language], StringComparer.CurrentCulture);
 
-    public sealed class LanguagesCommand : CommandWithSubcommands
+    /// <summary>The language is applied on the next start, because windows are translated when they are created.</summary>
+    public override void Run(string subcommand)
     {
+        Settings.Environment.Languages.CurrentLanguage = subcommand;
 
-        public override void Run()
-        { }
-
-        public override void Run(string name)
-        {
-            Settings.Environment.Languages.CurrentLanguage = name;
-
-            MessageBox.Show(
-                Core.Instance.CurrentTranslator["Msg_Need_Restart_Application"],
-                Core.Instance.CurrentTranslator["Msg_Info"],
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-        }
-
-        public override IEnumerable<string> Commands
-        {
-            get
-            {
-                return Core.Instance.Translators.Languages.OrderBy(x => Core.Instance.CurrentTranslator[x]);
-            }
-        }
-
-        public override Bitmap Icon(string cmd)
-        {
-            return Core.Instance.Icons[cmd];
-        }
+        Translator translator = Core.Instance.CurrentTranslator;
+        MessageBox.Show(
+            Core.Instance.MainWindow,
+            translator["Msg_Need_Restart_Application"],
+            translator["Msg_Info"],
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information);
     }
+
+    public override Bitmap? GetIcon(string subcommand) => Core.Instance.Icons.TryGetCopy(subcommand);
 }

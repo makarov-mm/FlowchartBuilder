@@ -1,51 +1,16 @@
-using System.Drawing;
-using System.Drawing.Drawing2D;
+namespace Makarov.Framework.Graphics.Primitives;
 
-namespace Makarov.Framework.Graphics.Primitives
+/// <summary>Arrow with a notched tail.</summary>
+public sealed class GearArrow(int x, int y, int width, int height) : Primitive(x, y, width, height)
 {
-
-    public class GearArrow : Primitive
-    {
-        #region Constructors
-
-        public GearArrow(int x, int y, int width, int height)
-            : base(x, y, width, height)
-        { }
-
-        public GearArrow(Point coords, Size size)
-            : base(coords.X, coords.Y, size.Width, size.Height)
-        { }
-
-        public GearArrow(System.Drawing.Rectangle rect)
-            : base(rect.X, rect.Y, rect.Width, rect.Height)
-        { }
-        #endregion
-
-        #region Protected methods
-
-        protected override GraphicsPath CreatePath(int x, int y, int width, int height)
-        {
-            var path = new GraphicsPath();
-
-            path.StartFigure();
-            path.AddLines(
-                new[]
-                    {
-                        new PointF(x + (width >> 1), y),
-                        new PointF(x + width, y + (height >> 1)),
-                        new PointF(x + width / 3 * 2, y + (height >> 1)),
-                        new PointF(x + width / 3 * 2, y + height),
-                        new PointF(x + (width >> 1), y + height - width / 6),
-                        new PointF(x + width  / 3, y + height),
-                        new PointF(x + width  / 3, y + (height >> 1)),
-                        new PointF(x, y + (height >> 1)),
-                        new PointF(x + (width >> 1), y)
-                    }
-                );
-            path.CloseFigure();
-
-            return path;
-        }
-        #endregion
-    }
+    protected override Geometry CreateGeometry(int left, int top, int width, int height) => Polygon(
+        new PointF(left + width / 2, top),
+        new PointF(left + width, top + height / 2),
+        new PointF(left + width / 3 * 2, top + height / 2),
+        new PointF(left + width / 3 * 2, top + height),
+        new PointF(left + width / 2, top + height - width / 6),
+        new PointF(left + width / 3, top + height),
+        new PointF(left + width / 3, top + height / 2),
+        new PointF(left, top + height / 2),
+        new PointF(left + width / 2, top));
 }

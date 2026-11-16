@@ -1,18 +1,7 @@
-using System;
+namespace Makarov.FlowchartBuilder.Commands;
 
-namespace Makarov.FlowchartBuilder.Commands
+/// <summary>Closes all documents, offering to save changes; stops when the user cancels.</summary>
+public sealed class CloseAllCommand : Command
 {
-
-    public sealed class CloseAllCommand : Command
-    {
-
-        public override void Run()
-        {
-
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            throw new NotImplementedException();
-        }
-    }
+    public override void Run() => Core.Instance.CloseAllDocuments();
 }

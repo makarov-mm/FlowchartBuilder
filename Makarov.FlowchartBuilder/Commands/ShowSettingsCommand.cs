@@ -1,14 +1,12 @@
 using Makarov.FlowchartBuilder.Forms;
 
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+public sealed class ShowSettingsCommand : Command
 {
-
-    public sealed class ShowSettingsCommand : Command
+    public override void Run()
     {
-
-        public override void Run()
-        {
-            Core.Instance.Windows.GetWindow<SettingsForm>().ShowDialog(Core.Instance.MainWindow);
-        }
+        using var dialog = new SettingsForm();
+        dialog.ShowDialog(Core.Instance.MainWindow);
     }
 }

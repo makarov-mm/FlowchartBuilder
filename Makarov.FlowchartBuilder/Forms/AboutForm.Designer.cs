@@ -68,9 +68,9 @@ namespace Makarov.FlowchartBuilder.Forms
             this.Name = "AboutForm";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "FBAbout";
+            this.Text = "About";
             this.TopMost = true;
-            this.Load += new System.EventHandler(this.FBAbout_Load);
+            this.Load += new System.EventHandler(this.AboutForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -1,12 +1,6 @@
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+public sealed class LoadSettingsCommand : Command
 {
-
-    public sealed class LoadSettingsCommand : Command
-    {
-
-        public override void Run()
-        {
-            SettingsExport.ShowLoadDialog();
-        }
-    }
+    public override void Run() => SettingsExport.ShowLoadDialog();
 }

@@ -1,17 +1,10 @@
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+public sealed class SizeLocationLabelCommand : ToggleCommand
 {
-
-    public sealed class SizeLocationLabelCommand : Command
+    public override bool IsOn
     {
-
-        public override void Run()
-        {
-
-            Settings.Environment.SizeLocationLabel = !Settings.Environment.SizeLocationLabel;
-
-            Checked = Settings.Environment.SizeLocationLabel;
-
-            Core.Instance.Redraw();
-        }
+        get => Settings.Environment.SizeLocationLabel;
+        set => Settings.Environment.SizeLocationLabel = value;
     }
 }

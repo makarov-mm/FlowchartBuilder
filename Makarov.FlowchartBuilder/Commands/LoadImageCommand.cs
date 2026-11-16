@@ -12,8 +12,8 @@ namespace Makarov.FlowchartBuilder.Commands
         public override void Run()
         {
 
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
+            if (Core.Instance.ActiveSheet is not { } sheet || GlyphType is not { } glyphType)
+                return;
 
             using (var dialog = new OpenFileDialog())
             {
@@ -23,10 +23,10 @@ namespace Makarov.FlowchartBuilder.Commands
                 if (dialog.ShowDialog(Core.Instance.MainWindow) == DialogResult.OK)
                 {
                     var bmp = (Bitmap)Image.FromFile(dialog.FileName);
-                    Core.Instance.CurrentDocument.DocumentSheet.DeselectAllGlyphs();
-                    var glyph = (AbstractGlyph) Activator.CreateInstance(GlyphType, new object[] {bmp});
+                    sheet.DeselectAllGlyphs();
+                    var glyph = (AbstractGlyph) Activator.CreateInstance(glyphType, new object[] {bmp})!;
                     glyph.Selected = true;
-                    Core.Instance.CurrentDocument.DocumentSheet.Add(glyph);
+                    sheet.Add(glyph);
                 }
             }
         }

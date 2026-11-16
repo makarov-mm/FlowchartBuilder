@@ -1,24 +1,20 @@
-namespace Makarov.FlowchartBuilder.Commands
+using Makarov.FlowchartBuilder.Glyphs;
+
+namespace Makarov.FlowchartBuilder.Commands;
+
+/// <summary>Locks the selected glyphs against selection and dragging.</summary>
+public sealed class FixSelectedCommand : Command
 {
-
-    public sealed class FixSelectedCommand : Command
+    public override void Run()
     {
+        if (Core.Instance.ActiveSheet is not { } sheet)
+            return;
 
-        public override void Run()
-        {
+        foreach (AbstractGlyph glyph in sheet.SelectedGlyphs.ToList())
+            glyph.Fixed = true;
 
-            if (!Core.Instance.IsDocumentsExists)
-                throw new InvalidContextException(@"Document not exists.");
-
-            if (!Core.Instance.CurrentDocument.DocumentSheet.SelectedGlyphsExists)
-                throw new InvalidContextException(@"Selected glyphs not exists.");
-
-            foreach (var glyph in Core.Instance.CurrentDocument.DocumentSheet.SelectedGlyphs)
-                glyph.Fixed = true;
-
-            Core.Instance.CurrentDocument.DocumentSheet.UpdateGlyphsCommands();
-
-            Core.Instance.Redraw();
-        }
+        sheet.UpdateGlyphsCommands();
+        sheet.ShowProperties();
+        Core.Instance.Redraw();
     }
 }

@@ -1,78 +1,55 @@
-using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
-using System.Windows.Forms;
-using BaseSettings = Makarov.Framework.Core.Settings;
+using Makarov.Framework.Core;
 
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+/// <summary>Saves the current sheet at 100% zoom as a PNG or BMP image.</summary>
+public sealed class ExportImageCommand : Command
 {
+    private string _lastFileName = "Flowchart.png";
 
-    public sealed class ExportImageCommand : Command
+    public override void Run()
     {
+        if (Core.Instance.ActiveSheet is not { } sheet)
+            return;
 
-        public static string _oldFileName = "Flowchart.png";
-
-        public override void Run()
+        using var dialog = new SaveFileDialog
         {
-            if (Settings.Environment.Registered)
-            {
+            Filter = "PNG|*.png|BMP|*.bmp",
+            FileName = _lastFileName,
+        };
 
-                if (!Core.Instance.IsDocumentsExists)
-                    throw new Core.CurrentDocumentNotExistsException();
+        if (dialog.ShowDialog(Core.Instance.MainWindow) != DialogResult.OK)
+            return;
 
-                using (var dialog = new SaveFileDialog())
-                {
-                    dialog.Filter = @"*.png|*.png|*.bmp|*.bmp";
+        ImageFormat? format = Path.GetExtension(dialog.FileName).ToLowerInvariant() switch
+        {
+            ".png" => ImageFormat.Png,
+            ".bmp" => ImageFormat.Bmp,
+            _ => null,
+        };
 
-                    if (string.IsNullOrEmpty(dialog.FileName))
-                        dialog.FileName = _oldFileName;
+        Translator translator = Core.Instance.CurrentTranslator;
+        if (format is null)
+        {
+            MessageBox.Show(
+                Core.Instance.MainWindow,
+                translator["Msg_InvalidImageExtension"],
+                translator["Msg_Error"],
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+            return;
+        }
 
-                    DialogResult result = dialog.ShowDialog(Core.Instance.MainWindow);
-                    if (result == DialogResult.OK || result == DialogResult.Yes)
-                    {
-                        string fileName = dialog.FileName;
-                        string ext = Path.GetExtension(fileName).ToLower();
-                        ImageFormat format = null;
-
-                        if (!string.IsNullOrEmpty(ext))
-                        {
-                            switch (ext)
-                            {
-                                case ".bmp":
-                                    format = ImageFormat.Bmp;
-                                    break;
-
-                                case ".png":
-                                    format = ImageFormat.Png;
-                                    break;
-                            }
-                        }
-
-                        if (format != null)
-                        {
-                            Core.Instance.CurrentDocument.DocumentSheet.DeselectAllGlyphs();
-                            Core.Instance.Redraw();
-
-                            using (Bitmap bmp = Core.Instance.CurrentDocument.DocumentSheet.DrawUnscaled())
-                                bmp.Save(fileName, format);
-
-                            _oldFileName = dialog.FileName;
-                        }
-                        else
-                            MessageBox.Show(Core.Instance.CurrentTranslator["Msg_InvalidImageExtension"],
-                                            Core.Instance.CurrentTranslator["Msg_Error"],
-                                            MessageBoxButtons.OK,
-                                            MessageBoxIcon.Error);
-                    }
-                }
-            }
-            else
-            {
-                MessageBox.Show(Core.Instance.CurrentTranslator["Msg_FunctionDisabledInNonRegisteredProgram"],
-                                Core.Instance.CurrentTranslator["Msg_Warning"],
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Warning);
-            }
+        try
+        {
+            using Bitmap image = sheet.RenderImage(Core.Instance.MainWindow.InnerRectangle.Size);
+            image.Save(dialog.FileName, format);
+            _lastFileName = dialog.FileName;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Runtime.InteropServices.ExternalException)
+        {
+            Core.Instance.ShowError(e.Message);
         }
     }
 }

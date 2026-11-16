@@ -1,66 +1,9 @@
-using System.Drawing;
+namespace Makarov.FlowchartBuilder;
 
-namespace Makarov.FlowchartBuilder
-{
-
-    public struct ManipPoint
-    {
-        #region Private members
-
-        private PointF _coords;
-
-        private readonly MoveDirection _arrowDirection;
-
-        private readonly MoveDirection _moveDirection;
-        #endregion
-
-        #region Constructors
-
-        public ManipPoint(PointF coords, MoveDirection moveDirection, MoveDirection arrowDirection)
-        {
-            _coords = coords;
-            _moveDirection = moveDirection;
-            _arrowDirection = arrowDirection;
-        }
-        #endregion
-
-        #region Properties
-
-        public PointF Coords
-        {
-            get => _coords;
-            set => _coords = value;
-        }
-
-        public float XInMM
-        {
-            get => Coords.X;
-            set => Coords = new PointF(value, Coords.Y);
-        }
-
-        public float YInMM
-        {
-            get => Coords.Y;
-            set => Coords = new PointF(Coords.X, value);
-        }
-
-        public MoveDirection MoveDirection => _moveDirection;
-
-        public MoveDirection ArrowDirection => _arrowDirection;
-
-        #endregion
-
-        #region Operators
-
-        public static explicit operator PointF(ManipPoint pt)
-        {
-            return pt.Coords;
-        }
-
-        public static explicit operator MoveDirection(ManipPoint pt)
-        {
-            return pt.MoveDirection;
-        }
-        #endregion
-    }
-}
+/// <summary>
+/// Resize handle of a selected block glyph.
+/// </summary>
+/// <param name="Coords">Handle center in sheet pixels, already rotated with the glyph.</param>
+/// <param name="MoveDirection">The side or corner of the glyph the handle belongs to.</param>
+/// <param name="ArrowDirection">The on-screen direction of that side after rotation; picks the mouse cursor.</param>
+public readonly record struct ManipPoint(PointF Coords, MoveDirection MoveDirection, MoveDirection ArrowDirection);

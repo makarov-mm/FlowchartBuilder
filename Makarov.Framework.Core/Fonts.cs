@@ -1,75 +1,37 @@
-using System.Drawing;
+namespace Makarov.Framework.Core;
 
-namespace Makarov.Framework.Core
+public static class Fonts
 {
+    private static readonly FontStyle[] FallbackStyles =
+        [FontStyle.Regular, FontStyle.Italic, FontStyle.Bold, FontStyle.Underline, FontStyle.Strikeout];
 
-    public static class Fonts
+    /// <summary>
+    /// Creates a font in the requested style, or in the first style the family supports
+    /// (some families have no regular face and throw on <see cref="FontStyle.Regular"/>).
+    /// </summary>
+    public static Font Create(string familyName, float emSize, FontStyle style = FontStyle.Regular)
     {
+        if (TryCreate(familyName, emSize, style) is { } font)
+            return font;
 
-        public sealed class CantCreateFontException : MakarovFrameworkException
+        foreach (FontStyle fallback in FallbackStyles)
         {
-
-            public CantCreateFontException(string familyName)
-                : base($"Can't create font '{familyName}'.")
-            { }
+            if (TryCreate(familyName, emSize, fallback) is { } fallbackFont)
+                return fallbackFont;
         }
 
-        public static Font SafeCreateFont(FontFamily familyName, float emSize)
+        return new Font(FontFamily.GenericSansSerif, emSize, style);
+    }
+
+    private static Font? TryCreate(string familyName, float emSize, FontStyle style)
+    {
+        try
         {
-
-            var styles = new[]
-                             {
-                                 FontStyle.Regular,
-                                 FontStyle.Italic,
-                                 FontStyle.Bold,
-                                 FontStyle.Underline,
-                                 FontStyle.Strikeout
-                             };
-
-            for (int i = 0; i < styles.Length; i++)
-                try
-                {
-
-                    return new Font(familyName, emSize, styles[i]);
-                }
-                catch
-                {
-
-                    if (i == styles.Length - 1)
-                        break;
-
-                }
-
-            throw new CantCreateFontException(familyName.Name);
+            return new Font(familyName, emSize, style);
         }
-
-        public static Font SafeCreateFont(string familyName, float emSize)
+        catch (ArgumentException)
         {
-
-            var styles = new[]
-            {
-                FontStyle.Regular,
-                FontStyle.Italic,
-                FontStyle.Bold,
-                FontStyle.Underline,
-                FontStyle.Strikeout
-            };
-
-            for (int i = 0; i < styles.Length; i++)
-                try
-                {
-
-                    return new Font(familyName, emSize, styles[i]);
-                }
-                catch
-                {
-
-                    if (i == styles.Length - 1)
-                        break;
-
-                }
-
-            throw new CantCreateFontException(familyName);
+            return null;
         }
     }
 }

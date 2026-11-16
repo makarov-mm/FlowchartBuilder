@@ -1,20 +1,16 @@
 using Makarov.FlowchartBuilder.Forms;
 
-namespace Makarov.FlowchartBuilder.Commands
+namespace Makarov.FlowchartBuilder.Commands;
+
+public sealed class PropertiesWindowCommand : Command
 {
-
-    public sealed class PropertiesWindowCommand : Command
+    /// <summary>Shows the tool window again after the user closed (hid) it.</summary>
+    public override void Run()
     {
+        Enabled = false;
 
-        public override void Run()
-        {
-
-            Enabled = false;
-
-            var propWindow = Core.Instance.Windows.GetWindow<PropertiesForm>();
-            propWindow.Visible = !propWindow.Visible;
-
-            Core.Instance.Redraw();
-        }
+        var window = Core.Instance.GetWindowAsChild<PropertiesForm>();
+        window.Visible = !window.Visible;
+        Core.Instance.Redraw();
     }
 }

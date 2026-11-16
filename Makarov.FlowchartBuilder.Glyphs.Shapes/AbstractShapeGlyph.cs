@@ -1,81 +1,59 @@
-using System.Drawing;
-using System.Drawing.Drawing2D;
 using Makarov.FlowchartBuilder.API.Attributes;
+using Makarov.Framework.Graphics;
+using Makarov.Framework.Graphics.Primitives;
 
-namespace Makarov.FlowchartBuilder.Glyphs.Shapes
+namespace Makarov.FlowchartBuilder.Glyphs.Shapes;
+
+/// <summary>
+/// A filled geometric shape without a caption; the outline comes from a <see cref="Primitive"/>.
+/// </summary>
+[GlyphFamily("Shapes")]
+[GlyphDefaultWidth(30)]
+[GlyphDefaultHeight(30)]
+public abstract class AbstractShapeGlyph : BlockGlyph
 {
-
-    [GlyphFamily("Shapes")]
-    [GlyphDefaultWidth(30)]
-    [GlyphDefaultHeight(30)]
-    public abstract class AbstractShapeGlyph : BlockGlyph
+    protected AbstractShapeGlyph()
     {
+        BackgroundColor = Color.Yellow;
+    }
 
-        protected AbstractShapeGlyph()
-        {
-            BackgroundColor = Color.Yellow;
-        }
+    /// <summary>Vertical margin of the shape in the palette image; flat shapes use a larger one.</summary>
+    protected virtual int ThumbnailInsetY => ThumbnailHeight >> 3;
 
-        protected override void DrawText(Graphics gfx)
-        {
+    /// <summary>Creates the outline fitted into the given box.</summary>
+    protected abstract Primitive CreatePrimitive(int x, int y, int width, int height);
 
-        }
+    protected override void DrawThumbnail(Canvas canvas)
+    {
+        base.DrawThumbnail(canvas);
 
-        protected abstract GraphicsPath CenteredPath
-        {
-            get;
-        }
+        using Geometry outline = CreateThumbnailPrimitive().Create();
+        canvas.FillGeometry(
+            outline,
+            new LinearGradient(
+                PointF.Empty,
+                new PointF(ThumbnailWidth, ThumbnailHeight),
+                Settings.Colors.ThumbnailObjectGradientStart,
+                Settings.Colors.ThumbnailObjectGradientEnd));
+        canvas.DrawGeometry(outline, Settings.Strokes.ThumbnailBorder);
+        DrawThumbnailBorder(canvas);
+    }
 
-        protected abstract GraphicsPath Path
-        {
-            get;
-        }
+    protected override void DrawGlyph(Canvas canvas)
+    {
+        using Geometry outline = CreatePrimitive(ScaledX, ScaledY, ScaledWidth, ScaledHeight).CreateCentered();
+        canvas.FillGeometry(outline, BackgroundColor);
+        canvas.DrawGeometry(outline, new Stroke(BorderColor, ScaledBorderWidth));
+    }
 
-        protected override void DrawGlyph(Graphics gfx)
-        {
-            using (GraphicsPath path = CenteredPath)
-            {
-                using (Brush brush = new LinearGradientBrush(
-                    new PointF(ScaledX - ScaledWidth / 2, ScaledY - ScaledHeight / 2),
-                    new PointF(ScaledX + ScaledWidth / 2, ScaledY + ScaledHeight / 2),
-                    BackgroundColor, BackgroundColor))
-                {
-                    gfx.FillPath(brush, path);
-                }
+    protected override void DrawText(Canvas canvas)
+    {
+    }
 
-                using (var pen = new Pen(BorderColor, ScaledBorderWidth))
-                {
-                    gfx.DrawPath(pen, path);
-                }
-            }
-        }
-
-        public override Bitmap Thumbnail
-        {
-            get
-            {
-                Bitmap bmp = base.Thumbnail;
-
-                using (Graphics gfx = Graphics.FromImage(bmp))
-                {
-                    using (GraphicsPath path = Path)
-                    {
-                        using (Brush brush = new LinearGradientBrush(
-                            new PointF(0, 0),
-                            new PointF(ThumbnailWidth, ThumbnailHeight),
-                            Settings.Colors.ThumbnailObjectGradientStart,
-                            Settings.Colors.ThumbnailObjectGradientEnd))
-                        {
-                            gfx.FillPath(brush, path);
-                        }
-
-                        gfx.DrawPath(Settings.Pens.ThumbnailBorder, path);
-                        DrawThumbnailBorder(gfx);
-                    }
-                }
-
-                return bmp;
-            }
-        }
+    private Primitive CreateThumbnailPrimitive()
+    {
+        int insetX = ThumbnailWidth >> 3;
+        int insetY = ThumbnailInsetY;
+        return CreatePrimitive(insetX, insetY, ThumbnailWidth - (insetX << 1), ThumbnailHeight - (insetY << 1));
     }
 }
