@@ -13,7 +13,7 @@ public sealed partial class Core
     public IReadOnlyList<Document> Documents => _documents;
 
     /// <summary>Name for a new document: "Document 1", "Document 2" and so on.</summary>
-    public string CreateUntitledName() => $"Document {++_untitledDocuments}";
+    public string CreateUntitledName() => $"{CurrentTranslator["Document"]} {++_untitledDocuments}";
 
     /// <summary>Opens a document file, or switches to it when it is already open; reports failures to the user.</summary>
     public bool TryOpenDocument(string fileName)
@@ -42,7 +42,7 @@ public sealed partial class Core
         {
             MessageBox.Show(
                 MainWindow,
-                "The document was saved by another version of FlowchartBuilder. Properties this version does not support were skipped.",
+                CurrentTranslator["Msg_SkippedProperties"],
                 CurrentTranslator["Msg_Info"],
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
@@ -186,6 +186,7 @@ public sealed partial class Core
         SetEnabled<CloseAllCommand>(hasDocument);
         SetEnabled<ExportImageCommand>(hasDocument);
         SetEnabled<PageSetupCommand>(hasDocument);
+        SetEnabled<PrintPreviewCommand>(hasDocument);
         SetEnabled<PrintCommand>(hasDocument);
         SetEnabled<UndoCommand>(hasDocument && CurrentDocument.History.CanUndo);
         SetEnabled<RedoCommand>(hasDocument && CurrentDocument.History.CanRedo);

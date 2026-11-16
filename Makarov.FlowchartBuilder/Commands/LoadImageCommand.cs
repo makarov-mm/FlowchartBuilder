@@ -17,7 +17,7 @@ namespace Makarov.FlowchartBuilder.Commands
 
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Filter = "All Picture Files|*.bmp;*.png;*.jpg;*.jpeg|Bitmap Files|*bmp|PNG|*.png|JPEG|*.jpg;*.jpeg|All Files|*.*";
+                dialog.Filter = Core.Instance.CurrentTranslator["ImageFiles"] + "|*.bmp;*.png;*.jpg;*.jpeg";
                 dialog.Multiselect = false;
 
                 if (dialog.ShowDialog(Core.Instance.MainWindow) == DialogResult.OK)

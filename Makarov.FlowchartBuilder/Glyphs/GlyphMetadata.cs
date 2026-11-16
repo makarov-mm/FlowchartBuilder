@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Reflection;
 using Makarov.FlowchartBuilder.API.Attributes;
 
@@ -9,11 +8,10 @@ namespace Makarov.FlowchartBuilder.Glyphs;
 /// </summary>
 public sealed class GlyphMetadata
 {
-    private static readonly ConcurrentDictionary<Type, GlyphMetadata> Cache = new();
 
     private readonly Dictionary<string, PropertyInfo> _activePropertiesByName;
 
-    private GlyphMetadata(Type type)
+    internal GlyphMetadata(Type type)
     {
         Name = type.GetCustomAttribute<GlyphNameAttribute>()?.Name;
         Family = type.GetCustomAttribute<GlyphFamilyAttribute>()?.Family;
@@ -56,7 +54,7 @@ public sealed class GlyphMetadata
     /// <summary>Properties marked with <see cref="ActivePropertyAttribute"/>: saved to documents and shown for editing.</summary>
     public IReadOnlyList<PropertyInfo> ActiveProperties { get; }
 
-    public static GlyphMetadata Of(Type glyphType) => Cache.GetOrAdd(glyphType, static type => new GlyphMetadata(type));
+    public static GlyphMetadata Of(Type glyphType) => Core.Instance.MetadataFor(glyphType);
 
     public PropertyInfo? FindActiveProperty(string name) => _activePropertiesByName.GetValueOrDefault(name);
 }

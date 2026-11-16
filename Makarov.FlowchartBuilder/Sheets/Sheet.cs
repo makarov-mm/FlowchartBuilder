@@ -45,11 +45,33 @@ public abstract partial class Sheet
             float width = cos * block.Width + sin * block.Height;
             float height = sin * block.Width + cos * block.Height;
             var box = new RectangleF(block.X - width / 2, block.Y - height / 2, width, height);
+            float edge = Math.Max(1f, UnitsConverter.MMToPxExact(block.BorderWidthInMM)) / 2;
+            box.Inflate(edge, edge);
             bounds = bounds.IsEmpty ? box : RectangleF.Union(bounds, box);
         }
         if (bounds.IsEmpty)
             return Rectangle.Empty;
 
+        foreach (var link in Glyphs.OfType<ConnectorGlyph>())
+        {
+            if (link.Source is not { } source || link.Target is not { } target) continue;
+            RectangleF Box(BlockGlyph block) => new(block.X - block.Width / 2, block.Y - block.Height / 2, block.Width, block.Height);
+            PointF Port(BlockGlyph block, PointF normal) =>
+                new(block.X + normal.X * (block.Width / 2), block.Y + normal.Y * (block.Height / 2));
+            var a = ConnectorGlyph.PortNormal(link.SourcePort);
+            var b = ConnectorGlyph.PortNormal(link.TargetPort);
+            var route = ConnectorRoute.Create(link.Routing, Port(source, a), a, Box(source),
+                Port(target, b), b, Box(target), Math.Max(8f, UnitsConverter.MMToPxExact(6f)));
+            float pad = UnitsConverter.MMToPxExact(link.LineWidthInMM) * 2f;
+            foreach (var point in route.Polyline)
+                bounds = RectangleF.Union(bounds, new RectangleF(point.X-pad, point.Y-pad, pad*2, pad*2));
+            if (!string.IsNullOrWhiteSpace(link.Caption))
+            {
+                var size = Makarov.Framework.Graphics.Canvas.MeasureText(link.Caption, new("Arial", 8f));
+                bounds = RectangleF.Union(bounds, new RectangleF(route.Midpoint.X - size.Width/2,
+                    route.Midpoint.Y - size.Height/2, size.Width, size.Height));
+            }
+        }
         bounds.Inflate(16f, 16f);
         return Rectangle.FromLTRB((int)MathF.Floor(bounds.Left), (int)MathF.Floor(bounds.Top),
                                   (int)MathF.Ceiling(bounds.Right), (int)MathF.Ceiling(bounds.Bottom));
@@ -146,13 +168,13 @@ public abstract partial class Sheet
         SetEnabled<GroupCommand>(selectedGroups.Count + freeBlocks >= 2);
         SetEnabled<UngroupCommand>(selectedGroups.Count > 0);
         SetEnabled<DeleteCommand>(hasSelection);
-        SetEnabled<CutCommand>(hasSelection);
-        SetEnabled<CopyCommand>(hasSelection);
+        SetEnabled<CutCommand>(selectedBlocks.Count > 0);
+        SetEnabled<CopyCommand>(selectedBlocks.Count > 0);
         SetEnabled<FixSelectedCommand>(hasSelection);
         SetEnabled<DeselectCommand>(hasSelection);
         SetEnabled<FixAllCommand>(HasGlyphs);
         SetEnabled<UnfixAllCommand>(HasFixedGlyphs);
-        SetEnabled<PasteCommand>(Core.Instance.Buffer.Count > 0);
+        SetEnabled<PasteCommand>(GlyphClipboard.Available);
     }
 
     public void UpdateZoomCommands()

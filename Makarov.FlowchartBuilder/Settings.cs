@@ -81,7 +81,7 @@ public static class Settings
         public static readonly Color ThumbnailGradientStart = Color.FromArgb(255, 200, 200, 225);
         public static readonly Color ThumbnailGradientEnd = Color.White;
         public static readonly Color ThumbnailObjectGradientStart = Color.FromArgb(255, 228, 228, 240);
-        public static readonly Color ThumbnailObjectGradientEnd = Color.FromArgb(255, 228, 228, 240);
+        public static readonly Color ThumbnailObjectGradientEnd = Color.FromArgb(255, 153, 174, 218);
         public static readonly Color ThumbnailText = ThumbnailBorder;
         public static readonly Color SelectionBorder = Color.FromArgb(128, 0, 0, 255);
         public static readonly Color GroupSelectionBorder = Color.FromArgb(128, 255, 0, 0);
@@ -112,7 +112,7 @@ public static class Settings
     public static class Environment
     {
         public const string ApplicationName = "MakarovFlowchartBuilder";
-        public const string DefaultUnitsName = "Millimeters";
+        public static string DefaultUnitsName => System.Globalization.RegionInfo.CurrentRegion.IsMetric ? "Millimeters" : "Inches";
         public const string DocumentExtension = "mfb";
         public const string SettingsExtension = "fbsettings";
         public const int RulersSize = 20;
@@ -122,10 +122,10 @@ public static class Settings
 
         /// <summary>Product version without the source revision suffix ("2.0.0+abc123" becomes "2.0.0").</summary>
         public static string Version { get; } =
-            Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0]
+            typeof(Settings).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0]
             ?? string.Empty;
 
-        public static string DocumentFilter => $"FlowchartBuilder Documents|*.{DocumentExtension}";
+        public static string DocumentFilter => $"{Core.Instance.CurrentTranslator["DocumentFiles"]}|*.{DocumentExtension}";
 
         public static Units CurrentUnits
         {
@@ -176,15 +176,14 @@ public static class Settings
         private static void SetFlag(string key, bool value) =>
             Core.Instance.SettingsStorage[key] = value.ToString();
 
-        public static class Docking
-        {
-            public const int DockDistance = 10;
-            public const int UndockDistance = 50;
-        }
-
         public static class Languages
         {
-            public const string Default = "English";
+            public static string Default => System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName switch
+            {
+                "ru" => "Russian",
+                "uk" => "Ukrainian",
+                _ => "English",
+            };
 
             private static bool _pendingLanguageApplied;
 

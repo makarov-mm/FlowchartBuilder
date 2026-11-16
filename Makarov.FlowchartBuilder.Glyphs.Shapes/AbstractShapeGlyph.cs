@@ -42,6 +42,7 @@ public abstract class AbstractShapeGlyph : BlockGlyph
     protected override void DrawGlyph(Canvas canvas)
     {
         using Geometry outline = CreatePrimitive(ScaledX, ScaledY, ScaledWidth, ScaledHeight).CreateCentered();
+        DrawShadow(canvas, outline);
         canvas.FillGeometry(outline, BackgroundColor);
         canvas.DrawGeometry(outline, new Stroke(BorderColor, ScaledBorderWidth));
     }

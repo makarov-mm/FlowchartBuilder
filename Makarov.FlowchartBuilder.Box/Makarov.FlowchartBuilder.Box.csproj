@@ -2,8 +2,6 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>Makarov.FlowchartBuilder.Box</RootNamespace>
     <AssemblyName>Makarov.FlowchartBuilder.Box</AssemblyName>
   </PropertyGroup>

@@ -16,7 +16,6 @@ public abstract class AbstractContainerGlyph : ContainerGlyph
     private static readonly Color AreaColor = Color.FromArgb(5, Color.Blue);
     private static readonly Color SelectedAreaColor = Color.FromArgb(15, Color.Blue);
     private static readonly Stroke SelectedFrameStroke = new(Color.Silver) { Dash = new DashPattern(4f, 2f) };
-    private static readonly Color ThumbnailFrameColor = Color.FromArgb(128, Color.LightGray);
 
     public override bool CanRotate => false;
 
@@ -28,8 +27,15 @@ public abstract class AbstractContainerGlyph : ContainerGlyph
             ThumbnailWidth - (ThumbnailFrameInset << 1),
             ThumbnailHeight - (ThumbnailFrameInset << 1));
 
-    protected override void DrawGlyph(Canvas canvas) =>
-        canvas.FillRectangle(ScaledBounds, AreaColor);
+    protected override void DrawGlyph(Canvas canvas)
+    {
+        var bounds = ScaledBounds;
+        float edge = Math.Max(1f, 2f * ScaleFactor);
+        var shade = Color.FromArgb(40, Color.Black);
+        canvas.FillRectangle(new RectangleF(bounds.Right, bounds.Top + edge, edge, bounds.Height), shade);
+        canvas.FillRectangle(new RectangleF(bounds.Left + edge, bounds.Bottom, bounds.Width - edge, edge), shade);
+        canvas.FillRectangle(bounds, AreaColor);
+    }
 
     protected override void DrawSelectedGlyph(Canvas canvas)
     {
@@ -42,7 +48,8 @@ public abstract class AbstractContainerGlyph : ContainerGlyph
     protected void DrawThumbnailFrame(Canvas canvas)
     {
         base.DrawThumbnail(canvas);
-        canvas.FillRectangle(ThumbnailFrame, ThumbnailFrameColor);
+        canvas.FillRectangle(ThumbnailFrame, new LinearGradient(ThumbnailFrame.Location,
+            new PointF(ThumbnailFrame.Right, ThumbnailFrame.Bottom), Settings.Colors.ThumbnailObjectGradientStart, Settings.Colors.ThumbnailObjectGradientEnd));
     }
 
     /// <summary>Draws one slot of a stack or a table in the palette image.</summary>

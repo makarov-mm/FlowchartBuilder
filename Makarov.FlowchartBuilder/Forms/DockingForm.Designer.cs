@@ -26,10 +26,6 @@ namespace Makarov.FlowchartBuilder.Forms
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.Name = "DockingForm";
             this.Text = "DockingForm";
-            this.Load += new System.EventHandler(this.DockingForm_Load);
-            this.Move += new System.EventHandler(this.DockingForm_Move);
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DockingForm_FormClosing);
-            this.Resize += new System.EventHandler(this.DockingForm_Resize);
             this.ResumeLayout(false);
 
         }

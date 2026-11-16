@@ -22,7 +22,7 @@ public abstract partial class Sheet
     /// Renders the sheet at 100% zoom without selection or editing marks, <paramref name="resolution"/> times larger
     /// than on screen. For printing the background is plain white and the grid is left out.
     /// </summary>
-    public Bitmap RenderImage(Size viewport, float resolution = 1f, bool forPrinting = false)
+    public Bitmap RenderImage(Size viewport, float resolution = 1f, bool forPrinting = false, Rectangle? region = null)
     {
         float scaleFactor = _scaleFactor;
         var selected = SelectedGlyphs.ToList();
@@ -33,7 +33,7 @@ public abstract partial class Sheet
             foreach (AbstractGlyph glyph in selected)
                 glyph.Selected = false;
 
-            Rectangle bounds = GetContentBounds();
+            Rectangle bounds = region ?? GetContentBounds();
             if (bounds.IsEmpty)
                 bounds = new Rectangle(Point.Round(ViewOrigin), viewport);
             Size size = bounds.Size;

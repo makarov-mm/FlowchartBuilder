@@ -37,7 +37,6 @@ namespace Makarov.FlowchartBuilder.Forms
             this.ShowInTaskbar = false;
             this.Text = "Properties";
             this.Load += new System.EventHandler(this.PropertiesForm_Load);
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PropertiesForm_FormClosing);
             this.ResumeLayout(false);
 
         }

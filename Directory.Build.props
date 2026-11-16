@@ -11,6 +11,7 @@
 
   <PropertyGroup>
     <Company>Michael Makarov</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Authors>Michael Makarov</Authors>
     <Product>FlowchartBuilder</Product>
     <Copyright>Copyright (c) 2008-2026 Mykhailo Makarov</Copyright>

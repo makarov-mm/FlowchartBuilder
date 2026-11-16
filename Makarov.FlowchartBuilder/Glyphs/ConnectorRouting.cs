@@ -1,6 +1,7 @@
 namespace Makarov.FlowchartBuilder.Glyphs;
 
 /// <summary>How a connector runs between its ports.</summary>
+[System.ComponentModel.TypeConverter(typeof(RoutingConverter))]
 public enum ConnectorRouting
 {
     /// <summary>Smooth curve that leaves and enters the ports at right angles to the block sides.</summary>

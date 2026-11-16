@@ -77,6 +77,40 @@ public sealed class Canvas
 
     public void Clear(Color color) => D2DRenderTarget.Clear(_target, ToColor(color));
 
+    /// <summary>Draws tightly packed premultiplied BGRA pixels using the active Direct2D target.</summary>
+    public unsafe void DrawBitmap(ReadOnlySpan<byte> pixels, int width, int height, RectangleF destination)
+    {
+        if (width <= 0 || height <= 0 || pixels.Length != checked(width * height * 4))
+            throw new ArgumentException("Invalid bitmap dimensions.");
+        var size = new Native.SizeU((uint)width, (uint)height);
+        var props = new BitmapProperties
+        {
+            Format = new Native.PixelFormat { Format = Native.DXGI_FORMAT_B8G8R8A8_UNORM, AlphaMode = Native.D2D1_ALPHA_MODE_PREMULTIPLIED },
+            DpiX = 96, DpiY = 96,
+        };
+        nint bitmap = 0;
+        fixed (byte* data = pixels)
+        {
+            var create = (delegate* unmanaged[Stdcall]<nint, Native.SizeU, byte*, uint, BitmapProperties*, nint*, int>)
+                Com.Method(_target, Slots.ID2D1RenderTarget_CreateBitmap);
+            Com.Check(create(_target, size, data, (uint)width * 4, &props, &bitmap));
+        }
+        try
+        {
+            var rect = ToRect(destination);
+            var draw = (delegate* unmanaged[Stdcall]<nint, nint, Native.RectF*, float, int, Native.RectF*, void>)
+                Com.Method(_target, Slots.ID2D1RenderTarget_DrawBitmap);
+            draw(_target, bitmap, &rect, 1f, 1, null);
+        }
+        finally { Com.Release(ref bitmap); }
+    }
+
+    private struct BitmapProperties
+    {
+        public Native.PixelFormat Format;
+        public float DpiX, DpiY;
+    }
+
     public void FillRectangle(RectangleF rect, Color color)
     {
         if (color.A != 0)

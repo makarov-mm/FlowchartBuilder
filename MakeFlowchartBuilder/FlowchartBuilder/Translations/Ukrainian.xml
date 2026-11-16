@@ -89,7 +89,7 @@
 
   <fb:Word Key="Wnd_About_Title">Про Редактор Діаграм</fb:Word>
   <fb:Word Key="Wnd_About_VersionLabel">Версія:</fb:Word>
-  <fb:Word Key="Wnd_About_CopyrightLabel">(c) 2011 Макаров Михайло.</fb:Word>
+  <fb:Word Key="Wnd_About_CopyrightLabel">Copyright © 2008–2026 Mykhailo Makarov</fb:Word>
 
   <fb:Word Key="Wnd_Palette_Title">Палітра</fb:Word>
   <fb:Word Key="Wnd_Properties_Title">Властивості</fb:Word>
@@ -120,7 +120,7 @@
   <fb:Word Key="OK">Примінити</fb:Word>
   <fb:Word Key="Cancel">Відміна</fb:Word>
   <fb:Word Key="Close">Зачінити</fb:Word>
-  <fb:Word Key="License_Text">Warning: This computer program is protected by copyright law and international treaties. Unauthorized reproduction or distribution of this program, or any portion of it, may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under tha law.</fb:Word>
+  <fb:Word Key="License_Text">MIT License</fb:Word>
 
   <fb:Word Key="Msg_Error">Помилка</fb:Word>
   <fb:Word Key="Msg_Warning">Увага</fb:Word>

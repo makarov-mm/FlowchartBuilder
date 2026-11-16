@@ -32,6 +32,38 @@ public partial class MainForm : BasicForm
 
     public TabsPanel DocumentsTabs => documentsTabsBar;
 
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool AddClipboardFormatListener(IntPtr hwnd);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
+
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        AddClipboardFormatListener(Handle);
+    }
+
+    protected override void OnHandleDestroyed(EventArgs e)
+    {
+        RemoveClipboardFormatListener(Handle);
+        base.OnHandleDestroyed(e);
+    }
+
+    protected override void WndProc(ref Message message)
+    {
+        const int ClipboardUpdate = 0x031D;
+        base.WndProc(ref message);
+        if (message.Msg == ClipboardUpdate)
+            Core.Instance.ActiveSheet?.UpdateGlyphsCommands();
+    }
+
+    protected override void OnActivated(EventArgs e)
+    {
+        base.OnActivated(e);
+        Core.Instance.ActiveSheet?.UpdateGlyphsCommands();
+    }
+
     public SheetView SheetView => sheetView;
 
     /// <summary>Work area: the part of the sheet view not covered by the rulers, in client coordinates.</summary>
@@ -40,9 +72,9 @@ public partial class MainForm : BasicForm
         get
         {
             int rulersSize = Settings.Environment.Rulers ? Settings.Environment.RulersSize : 0;
-            Rectangle view = ViewBounds;
+            Rectangle view = sheetView.Bounds;
 
-            return new Rectangle(view.Left + rulersSize, view.Top + rulersSize, view.Width - rulersSize, view.Height - rulersSize);
+            return new Rectangle(view.Left + rulersSize, view.Top + rulersSize, Math.Max(0, view.Width - rulersSize), Math.Max(0, view.Height - rulersSize));
         }
     }
 
@@ -53,7 +85,7 @@ public partial class MainForm : BasicForm
         {
             Rectangle rect = base.InnerRectangle;
             int tabsHeight = documentsTabsBar.Height;
-            return new Rectangle(rect.Left, rect.Top + tabsHeight, rect.Width, Math.Max(0, rect.Height - tabsHeight));
+            return new Rectangle(rect.Left, rect.Top + tabsHeight, Math.Max(0, rect.Width), Math.Max(0, rect.Height - tabsHeight));
         }
     }
 
@@ -62,7 +94,7 @@ public partial class MainForm : BasicForm
         base.OnLayout(levent);
 
         if (sheetView is not null)
-            sheetView.Bounds = ViewBounds;
+            ArrangeTools();
     }
 
     private void MainForm_Load(object? sender, EventArgs e)
@@ -83,8 +115,7 @@ public partial class MainForm : BasicForm
         // Documents passed on the command line were opened before the window and its menus were ready.
         Core.Instance.RefreshDocumentState();
 
-        Core.Instance.GetWindowAsChild<GlyphsForm>().Show();
-        Core.Instance.GetWindowAsChild<PropertiesForm>().Show();
+        RestoreTools();
 
         DocumentsTabs.SelectedTabChanged += (_, _) =>
         {
@@ -97,9 +128,6 @@ public partial class MainForm : BasicForm
     {
         if (!Core.Instance.HasDocuments)
             Command.GetInstance<NewCommand>().Run();
-
-        if (Core.Instance.IsFirstRun)
-            Core.Instance.SetDefaultWindowsPos();
 
         Core.Instance.Redraw();
     }
@@ -116,6 +144,8 @@ public partial class MainForm : BasicForm
         }
 
         SaveWindowParamsToRegistry();
+        foreach (var tool in _toolWindows)
+            tool.SavePlacement();
         IsClosing = true;
 
         foreach (Form window in Core.Instance.Windows.Windows.Where(window => window != this))
@@ -127,13 +157,9 @@ public partial class MainForm : BasicForm
         if (WindowState != FormWindowState.Minimized)
             WindowStateBeforeMinimize = WindowState;
 
-        UpdateDockedWindows();
-
         if (Visible)
             Core.Instance.Redraw();
     }
-
-    private void MainForm_Move(object? sender, EventArgs e) => UpdateDockedWindows();
 
     private void sheetView_MouseDown(object? sender, MouseEventArgs e)
     {
@@ -203,9 +229,4 @@ public partial class MainForm : BasicForm
         else Pan(0, distance);
     }
 
-    private static void UpdateDockedWindows()
-    {
-        foreach (DockingForm window in Core.Instance.Windows.Windows.OfType<DockingForm>())
-            window.UpdateDockedWindowPosition();
-    }
 }

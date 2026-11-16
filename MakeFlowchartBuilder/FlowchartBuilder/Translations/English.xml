@@ -92,7 +92,7 @@
 
   <fb:Word Key="Wnd_About_Title">About Makarov Flowchart Builder</fb:Word>
   <fb:Word Key="Wnd_About_VersionLabel">FlowchartBuilder v</fb:Word>
-  <fb:Word Key="Wnd_About_CopyrightLabel">Copyright © 2011 Makarov Michael. All Rights Reserved.</fb:Word>
+  <fb:Word Key="Wnd_About_CopyrightLabel">Copyright © 2008–2026 Mykhailo Makarov</fb:Word>
 
   <fb:Word Key="Wnd_Palette_Title">Glyphs</fb:Word>
   <fb:Word Key="Wnd_Properties_Title">Properties</fb:Word>
@@ -120,7 +120,7 @@
   <fb:Word Key="OK">OK</fb:Word>
   <fb:Word Key="Cancel">Cancel</fb:Word>
   <fb:Word Key="Close">Close</fb:Word>
-  <fb:Word Key="License_Text">Warning: This computer program is protected by copyright law and international treaties. Unauthorized reproduction or distribution of this program, or any portion of it, may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under tha law.</fb:Word>
+  <fb:Word Key="License_Text">MIT License</fb:Word>
 
   <fb:Word Key="Msg_Error">Error</fb:Word>
   <fb:Word Key="Msg_Warning">Warning</fb:Word>

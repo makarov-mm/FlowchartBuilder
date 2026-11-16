@@ -15,6 +15,7 @@
     <fb:Command Class="CloseAllCommand" Caption="Command_CloseAll" Enabled="false" />
     <fb:Separator />
     <fb:Command Class="PageSetupCommand" Caption="Command_PageSetup" Icon="PageSetup" Enabled="false" />
+    <fb:Command Class="PrintPreviewCommand" Caption="Command_PrintPreview" Enabled="false" />
     <fb:Command Class="PrintCommand" Caption="Command_Print" Icon="Print" Enabled="false" Shortcut="Ctrl+P" />
     <fb:Separator />
     <fb:Command Class="ExitCommand" Caption="Command_Exit" />

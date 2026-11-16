@@ -40,7 +40,8 @@ public class BlockGlyph : AbstractGlyph
         WidthInMM = Metadata.DefaultWidthInMM;
         HeightInMM = Metadata.DefaultHeightInMM;
 
-        Caption = Name;
+        var translator = Core.Instance.CurrentTranslator;
+        Caption = translator.Contains(Name) ? translator[Name] : Name;
         ForegroundColor = Color.Black;
         BorderColor = Color.Black;
         BorderWidthInMM = 0.5f;
@@ -342,6 +343,14 @@ public class BlockGlyph : AbstractGlyph
 
     protected override CanvasScope ApplyRotation(Canvas canvas) =>
         CanRotate && Angle != 0f ? canvas.Rotate(Angle, new PointF(ScaledX, ScaledY)) : default;
+
+    protected void DrawShadow(Canvas canvas, Geometry outline)
+    {
+        using (canvas.Translate(3f * ScaleFactor, 3f * ScaleFactor))
+            canvas.FillGeometry(outline, Color.FromArgb(54, Color.Black));
+    }
+
+    public virtual bool PreparePlacement(IWin32Window owner) => true;
 
     /// <summary>Placeholder look for block glyphs that do not draw themselves.</summary>
     protected override void DrawGlyph(Canvas canvas)

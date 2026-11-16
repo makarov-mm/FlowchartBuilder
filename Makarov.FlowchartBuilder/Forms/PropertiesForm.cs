@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using Makarov.FlowchartBuilder.API.Attributes;
-using Makarov.FlowchartBuilder.Commands;
 
 namespace Makarov.FlowchartBuilder.Forms;
 
@@ -19,16 +18,6 @@ public partial class PropertiesForm : DockingForm
 
     private void PropertiesForm_Load(object? sender, EventArgs e) =>
         Text = Core.Instance.CurrentTranslator["Wnd_Properties_Title"];
-
-    private void PropertiesForm_FormClosing(object? sender, FormClosingEventArgs e)
-    {
-        if (Core.Instance.MainWindow.IsClosing)
-            return;
-
-        e.Cancel = true;
-        Hide();
-        Command.GetInstance<PropertiesWindowCommand>().Enabled = true;
-    }
 
     private void gridView_PropertyValueChanged(object? sender, PropertyValueChangedEventArgs e)
     {

@@ -43,7 +43,6 @@ namespace Makarov.FlowchartBuilder.Forms
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.Text = "Glyphs";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GlyphsForm_FormClosing);
             this.Load += new System.EventHandler(this.GlyphsForm_Load);
             this.Shown += new System.EventHandler(this.GlyphsForm_Shown);
             this.ResumeLayout(false);

@@ -49,15 +49,21 @@ public partial class GlyphsForm : DockingForm
 
         foreach (IGrouping<string, AbstractGlyph> family in glyphs.GroupBy(glyph => glyph.Family).OrderBy(family => family.Key))
         {
-            ListViewGroup group = lstView.Groups.Add(family.Key, family.Key);
+            ListViewGroup group = lstView.Groups.Add(family.Key, Localize(family.Key));
 
             foreach (AbstractGlyph glyph in family.OrderBy(glyph => glyph.Metadata.Order ?? int.MaxValue))
             {
                 string imageKey = $"{glyph.Family}::{glyph.Name}";
                 images.Images.Add(imageKey, glyph.CreateThumbnail());
-                lstView.Items.Add(new ListViewItem(glyph.Name, imageKey) { Tag = glyph.GetType(), Group = group });
+                lstView.Items.Add(new ListViewItem(Localize(glyph.Name), imageKey) { Tag = glyph.GetType(), Group = group });
             }
         }
+    }
+
+    private static string Localize(string name)
+    {
+        var translator = Core.Instance.CurrentTranslator;
+        return translator.Contains(name) ? translator[name] : name;
     }
 
     private void lstView_ItemSelectionChanged(object? sender, ListViewItemSelectionChangedEventArgs e)
@@ -99,9 +105,26 @@ public partial class GlyphsForm : DockingForm
         }
 
         var glyph = (BlockGlyph)Activator.CreateInstance(glyphType)!;
+        if (!glyph.PreparePlacement(this)) return;
         Size viewport = Core.Instance.MainWindow.InnerRectangle.Size;
         glyph.ScaledX = sheet.ScaledViewOrigin.X + viewport.Width / 2;
         glyph.ScaledY = sheet.ScaledViewOrigin.Y + viewport.Height / 2;
+        // Search outwards from the viewport center so consecutive insertions stay visible.
+        int centerX = glyph.ScaledX, centerY = glyph.ScaledY;
+        int dx = glyph.ScaledWidth + 8, dy = glyph.ScaledHeight + 8;
+        var occupied = sheet.Glyphs.OfType<BlockGlyph>().Select(block => block.ScaledBounds).ToArray();
+        for (int ring = 1; occupied.Any(bounds => bounds.IntersectsWith(glyph.ScaledBounds)); ring++)
+        {
+            bool found = false;
+            for (int y = -ring; y <= ring && !found; y++)
+                for (int x = -ring; x <= ring && !found; x++)
+                {
+                    if (Math.Abs(x) != ring && Math.Abs(y) != ring) continue;
+                    glyph.ScaledX = centerX + x * dx;
+                    glyph.ScaledY = centerY + y * dy;
+                    found = !occupied.Any(bounds => bounds.IntersectsWith(glyph.ScaledBounds));
+                }
+        }
         sheet.DeselectAllGlyphs();
         glyph.Selected = true;
         sheet.Add(glyph);
@@ -111,15 +134,5 @@ public partial class GlyphsForm : DockingForm
         Core.Instance.CommitChange();
         Core.Instance.UpdateCommands();
         Core.Instance.Redraw();
-    }
-
-    private void GlyphsForm_FormClosing(object? sender, FormClosingEventArgs e)
-    {
-        if (Core.Instance.MainWindow.IsClosing)
-            return;
-
-        e.Cancel = true;
-        Hide();
-        Command.GetInstance<PaletteWindowCommand>().Enabled = true;
     }
 }

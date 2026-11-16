@@ -5,10 +5,8 @@ namespace Makarov.FlowchartBuilder;
 /// </summary>
 public static class UnitsConverter
 {
-    private static float? _inchesInMM;
-
     /// <summary>Inches per millimeter, as defined by the "Inches" entry of Data\Units.xml.</summary>
-    private static float InchesInMM => _inchesInMM ??= Core.Instance.Units["Inches"].InMM;
+    private static float InchesInMM => Core.Instance.Units["Inches"].InMM;
 
     private static Units Current => Settings.Environment.CurrentUnits;
 

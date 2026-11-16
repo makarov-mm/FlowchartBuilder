@@ -6,8 +6,6 @@ namespace Makarov.FlowchartBuilder.Commands;
 /// </summary>
 public abstract class Command
 {
-    private static readonly Dictionary<string, Command> Instances = new(StringComparer.Ordinal);
-
     private readonly List<ToolStripItem> _items = [];
 
     /// <summary>Enabled state of the bound menu items and toolbar buttons.</summary>
@@ -33,18 +31,15 @@ public abstract class Command
     }
 
     /// <exception cref="KeyNotFoundException">There is no command class with that name.</exception>
-    public static Command GetInstance(string name)
-    {
-        if (Instances.TryGetValue(name, out Command? command))
-            return command;
+    public static Command GetInstance(string name) => Core.Instance.CommandFor(name);
 
+    internal static Command Create(string name)
+    {
         Type? type = Type.GetType($"{typeof(Command).Namespace}.{name}");
         if (type is null || type.IsAbstract || !type.IsSubclassOf(typeof(Command)))
             throw new KeyNotFoundException($"Command '{name}' does not exist.");
 
-        command = (Command)Activator.CreateInstance(type)!;
-        Instances.Add(name, command);
-        return command;
+        return (Command)Activator.CreateInstance(type)!;
     }
 
     public static TCommand GetInstance<TCommand>()

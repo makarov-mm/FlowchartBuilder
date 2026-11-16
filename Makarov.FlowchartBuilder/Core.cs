@@ -25,6 +25,20 @@ public sealed partial class Core : IDisposable
     private int _redrawSuspensions;
     private bool _disposed;
     private Type? _currentGlyphType;
+    private readonly Dictionary<string, Commands.Command> _commands = new(StringComparer.Ordinal);
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<Type, GlyphMetadata> _glyphMetadata = new();
+
+    internal GlyphMetadata MetadataFor(Type type) => _glyphMetadata.GetOrAdd(type, static key => new GlyphMetadata(key));
+
+    internal Commands.Command CommandFor(string name)
+    {
+        if (!_commands.TryGetValue(name, out var command))
+        {
+            command = Commands.Command.Create(name);
+            _commands.Add(name, command);
+        }
+        return command;
+    }
 
     private MainForm? _mainWindow;
     private RegistryStorage? _registryStorage;
@@ -36,8 +50,9 @@ public sealed partial class Core : IDisposable
     private GraphicsManager? _icons;
     private IReadOnlyList<Type>? _glyphTypes;
 
-    private Core()
+    private Core(ISettingsStorage? storage)
     {
+        _settingsStorage = storage;
         IsFirstRun = !SettingsStorage.Contains(Settings.Keys.FirstStart);
 
         string now = DateTime.Now.ToString(CultureInfo.InvariantCulture);
@@ -47,7 +62,9 @@ public sealed partial class Core : IDisposable
         SettingsStorage[Settings.Keys.LastStart] = now;
     }
 
-    public static Core Instance => _instance ??= new Core();
+    internal static Core Initialize(ISettingsStorage? storage = null) => _instance ??= new Core(storage);
+
+    public static Core Instance => Initialize();
 
     /// <summary>Raised when the glyph type armed for placement changes, including when it is cleared.</summary>
     public event EventHandler? CurrentGlyphTypeChanged;
@@ -71,7 +88,7 @@ public sealed partial class Core : IDisposable
             string language = Settings.Environment.Languages.CurrentLanguage;
             return Translators.Contains(language)
                 ? Translators[language]
-                : Translators[Settings.Environment.Languages.Default];
+                : Translators["English"];
         }
     }
 
@@ -88,9 +105,6 @@ public sealed partial class Core : IDisposable
     [
         .. Plugins.Types.Where(type => type is { IsClass: true, IsAbstract: false } && type.IsSubclassOf(typeof(AbstractGlyph))),
     ];
-
-    /// <summary>Glyphs put aside by Copy or Cut, ready to be pasted.</summary>
-    public List<AbstractGlyph> Buffer { get; } = [];
 
     /// <summary>Glyph type chosen in the palette and waiting to be placed with a click on the sheet.</summary>
     public Type? CurrentGlyphType
@@ -129,30 +143,14 @@ public sealed partial class Core : IDisposable
             throw new InvalidOperationException("The main window cannot be owned by itself.");
 
         T window = _windows.GetWindow<T>();
-        if (window.Owner != MainWindow)
+        if (window.TopLevel && window.Owner != MainWindow)
             window.Owner = MainWindow;
 
         return window;
     }
 
     /// <summary>Docks the palette to the left and the properties window to the right of the work area.</summary>
-    public void SetDefaultWindowsPos()
-    {
-        using (SuspendRedraw())
-        {
-            Rectangle work = MainWindow.WorkRectangle;
-
-            var glyphsWindow = GetWindowAsChild<GlyphsForm>();
-            glyphsWindow.Visible = true;
-            glyphsWindow.SetBounds(work.Left, work.Top, glyphsWindow.Width, work.Height);
-
-            var propertiesWindow = GetWindowAsChild<PropertiesForm>();
-            propertiesWindow.Visible = true;
-            propertiesWindow.SetBounds(work.Right - propertiesWindow.Width, work.Top, propertiesWindow.Width, work.Height / 2);
-        }
-
-        Redraw();
-    }
+    public void SetDefaultWindowsPos() => MainWindow.ResetTools();
 
     public void ShowError(string message) =>
         MessageBox.Show(

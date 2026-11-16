@@ -7,7 +7,6 @@ public sealed class CutCommand : Command
         if (Core.Instance.ActiveSheet is not { HasSelection: true } sheet)
             return;
 
-        GetInstance<CopyCommand>().Run();
-        GetInstance<DeleteCommand>().Run();
+        if (GlyphClipboard.Copy()) GetInstance<DeleteCommand>().Run();
     }
 }

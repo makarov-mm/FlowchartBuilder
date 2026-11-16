@@ -5,10 +5,7 @@ using Makarov.FlowchartBuilder.Sheets;
 
 namespace Makarov.FlowchartBuilder;
 
-/// <summary>
-/// Prints a document on one page. The sheet is rendered with Direct2D at printer resolution (at most 300 DPI) and
-/// centered in the margins: at its real size when it fits, otherwise scaled down to fit.
-/// </summary>
+/// <summary>Prints the diagram at actual size on as many pages as necessary.</summary>
 public static class DocumentPrinter
 {
     private const float MaxDpi = 300f;
@@ -29,12 +26,36 @@ public static class DocumentPrinter
     {
         var printDocument = new PrintDocument
         {
+            OriginAtMargins = true,
             DocumentName = document.DisplayName,
             PrinterSettings = Printer,
             DefaultPageSettings = GetPageSettings(document),
         };
 
-        printDocument.PrintPage += (_, e) => PrintPage(document, e);
+        IEnumerator<Rectangle>? pages = null;
+        Rectangle content = Rectangle.Empty;
+        printDocument.BeginPrint += (_, _) => { pages?.Dispose(); pages = null; };
+        printDocument.EndPrint += (_, _) => { pages?.Dispose(); pages = null; };
+        printDocument.PrintPage += (_, e) =>
+        {
+            RectangleF printable = RectangleF.Intersect(e.MarginBounds, e.PageSettings.PrintableArea);
+            var available = new Size((int)Math.Floor(printable.Width), (int)Math.Floor(printable.Height));
+            if (pages is null)
+            {
+                content = document.DocumentSheet.GetContentBounds();
+                if (content.IsEmpty) return;
+                pages = Tiles(content, available).GetEnumerator();
+                if (!pages.MoveNext()) return;
+            }
+            var origin = new PointF(printable.Left - e.MarginBounds.Left, printable.Top - e.MarginBounds.Top);
+            if (pages.Current == content)
+            {
+                origin.X += (printable.Width - content.Width * 100f / ScreenDpi) / 2f;
+                origin.Y += (printable.Height - content.Height * 100f / ScreenDpi) / 2f;
+            }
+            PrintPage(document.DocumentSheet, pages.Current, origin, e);
+            e.HasMorePages = pages.MoveNext();
+        };
         return printDocument;
     }
 
@@ -44,38 +65,27 @@ public static class DocumentPrinter
         return new PageSettings(Printer) { Landscape = bounds.Width > bounds.Height };
     }
 
-    private static void PrintPage(Document document, PrintPageEventArgs e)
+    internal static IEnumerable<Rectangle> Tiles(Rectangle content, Size margins)
     {
-        e.HasMorePages = false;
-        if (e.Graphics is not { } graphics)
-            return;
+        int width = (int)Math.Floor(margins.Width * (double)ScreenDpi / 100);
+        int height = (int)Math.Floor(margins.Height * (double)ScreenDpi / 100);
+        if (width <= 0 || height <= 0)
+            throw new InvalidOperationException(Core.Instance.CurrentTranslator["Msg_InvalidMargins"]);
+        for (long y = content.Top; y < (long)content.Top + content.Height; y += height)
+            for (long x = content.Left; x < (long)content.Left + content.Width; x += width)
+                yield return new Rectangle((int)x, (int)y,
+                    (int)Math.Min(width, (long)content.Left + content.Width - x),
+                    (int)Math.Min(height, (long)content.Top + content.Height - y));
+    }
 
-        Sheet sheet = document.DocumentSheet;
-        Size viewport = Core.Instance.MainWindow.InnerRectangle.Size;
-        Size size = sheet.GetContentBounds().Size;
-        if (size.IsEmpty) size = viewport;
-
-        // Page coordinates are hundredths of an inch; the sheet size is in screen pixels.
-        RectangleF margins = e.MarginBounds;
-        float width = size.Width / ScreenDpi * 100f;
-        float height = size.Height / ScreenDpi * 100f;
-        float fit = Math.Min(1f, Math.Min(margins.Width / width, margins.Height / height));
-        var target = new RectangleF(
-            margins.X + (margins.Width - width * fit) / 2f,
-            margins.Y + (margins.Height - height * fit) / 2f,
-            width * fit,
-            height * fit);
-
+    private static void PrintPage(Sheet sheet, Rectangle tile, PointF origin, PrintPageEventArgs e)
+    {
+        if (e.Graphics is not { } graphics) return;
         int printerDpi = e.PageSettings.PrinterResolution.X;
         float dpi = printerDpi > 0 ? Math.Min(MaxDpi, printerDpi) : MaxDpi;
-        float resolution = dpi / ScreenDpi * fit;
-
-        double pixels = (double)size.Width * size.Height * resolution * resolution;
-        if (pixels > MaxPixels)
-            resolution *= (float)Math.Sqrt(MaxPixels / pixels);
-
-        using Bitmap image = sheet.RenderImage(viewport, resolution, forPrinting: true);
+        float resolution = Math.Min(dpi / ScreenDpi, (float)Math.Sqrt(MaxPixels / ((double)tile.Width * tile.Height)));
+        using Bitmap image = sheet.RenderImage(tile.Size, resolution, forPrinting: true, region: tile);
         graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        graphics.DrawImage(image, target);
+        graphics.DrawImage(image, new RectangleF(origin.X, origin.Y, tile.Width * 100f / ScreenDpi, tile.Height * 100f / ScreenDpi));
     }
 }

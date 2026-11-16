@@ -41,7 +41,7 @@ public abstract partial class Sheet
             }
 
             if (glyphType.IsAssignableTo(typeof(BlockGlyph)))
-                PlaceNewGlyph(glyphType, point);
+                if (!PlaceNewGlyph(glyphType, point)) return;
         }
 
         if (TryStartEndDrag(point) || TryStartConnector(point) || TryHitBlock(point) || TrySelectConnector(point))
@@ -109,17 +109,19 @@ public abstract partial class Sheet
         Core.Instance.CommitChange();
     }
 
-    private void PlaceNewGlyph(Type glyphType, Point point)
+    private bool PlaceNewGlyph(Type glyphType, Point point)
     {
         var glyph = (BlockGlyph)Activator.CreateInstance(glyphType)!;
         Core.Instance.CurrentGlyphType = null;
 
+        if (!glyph.PreparePlacement(Core.Instance.MainWindow)) return false;
         glyph.ScaledX = point.X;
         glyph.ScaledY = point.Y;
 
         DeselectAllGlyphs();
         glyph.Selected = true;
         Add(glyph);
+        return true;
     }
 
     /// <summary>Starts a connector when a link port of an unselected block is pressed.</summary>
@@ -186,6 +188,7 @@ public abstract partial class Sheet
             if (end == ConnectorEnd.None || connector.BlockAt(end) is not { Selected: false })
                 continue;
 
+            SnapPointer(ConnectorGlyph.PortLocation(connector.BlockAt(end)!, end == ConnectorEnd.Source ? connector.SourcePort : connector.TargetPort));
             _draggedConnector = connector;
             _draggedEnd = end;
             _hoveredBlock = null;
@@ -244,6 +247,7 @@ public abstract partial class Sheet
             if (!IsNear(point, handle.Coords, half))
                 continue;
 
+            SnapPointer(handle.Coords);
             glyph.DirectionsAngle = handle.ArrowDirection.AngleTo(handle.MoveDirection);
             glyph.Direction = handle.MoveDirection;
             DeselectAllGlyphs([glyph]);
@@ -268,12 +272,23 @@ public abstract partial class Sheet
         if (!glyph.CanRotate || !IsNear(point, glyph.RotationPoints[3], glyph.RotationPointSize / 2f))
             return false;
 
+        SnapPointer(glyph.RotationPoints[3]);
         glyph.Direction = MoveDirection.Rotate;
         DeselectAllGlyphs([glyph]);
 
         Core.Instance.MainWindow.Cursor = Cursors.Hand;
         OnSelectionChanged();
         return true;
+    }
+
+    private void SnapPointer(PointF handle)
+    {
+        _lastMousePosition = Point.Round(handle);
+        var core = Core.Instance;
+        var view = core.MainWindow.SheetView;
+        if (!view.Capture && Control.MouseButtons != MouseButtons.Left) return;
+        var origin = core.ClientToSheet(Point.Empty);
+        Cursor.Position = view.PointToScreen(new Point(_lastMousePosition.X - origin.X, _lastMousePosition.Y - origin.Y));
     }
 
     private void SelectForMove(BlockGlyph glyph)

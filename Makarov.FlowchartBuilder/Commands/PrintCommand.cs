@@ -3,7 +3,7 @@ using System.Drawing.Printing;
 
 namespace Makarov.FlowchartBuilder.Commands;
 
-/// <summary>Prints the current document on one page.</summary>
+/// <summary>Prints the current document at actual size.</summary>
 public sealed class PrintCommand : Command
 {
     public override void Run()
@@ -23,7 +23,7 @@ public sealed class PrintCommand : Command
             if (dialog.ShowDialog(Core.Instance.MainWindow) == DialogResult.OK)
                 printDocument.Print();
         }
-        catch (Exception e) when (e is InvalidPrinterException or Win32Exception)
+        catch (Exception e) when (e is InvalidPrinterException or Win32Exception or InvalidOperationException)
         {
             Core.Instance.ShowError(e.Message);
         }

@@ -10,5 +10,14 @@ internal sealed class GlyphTypeDescriptor(ICustomTypeDescriptor parent, Abstract
     public override PropertyDescriptorCollection GetProperties(Attribute[]? attributes) => Filter(base.GetProperties(attributes));
 
     private PropertyDescriptorCollection Filter(PropertyDescriptorCollection properties) =>
-        new([.. properties.Cast<PropertyDescriptor>().Where(property => glyph.IsPropertyVisible(property.Name))], readOnly: true);
+        new([.. properties.Cast<PropertyDescriptor>().Where(property => glyph.IsPropertyVisible(property.Name)).Select(Localize)], readOnly: true);
+
+    private PropertyDescriptor Localize(PropertyDescriptor property)
+    {
+        var t = Core.Instance.CurrentTranslator;
+        string Translate(string key) => t.Contains(key) ? t[key] : key;
+        return TypeDescriptor.CreateProperty(glyph.GetType(), property,
+            new DisplayNameAttribute(Translate(property.DisplayName)), new DescriptionAttribute(Translate(property.Description)),
+            new CategoryAttribute(Translate(property.Category)));
+    }
 }

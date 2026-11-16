@@ -15,7 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Data\**;Icons\**;Translations\**;*.ico;License.txt">
+    <None Include="../LICENSE" Link="License.txt" CopyToOutputDirectory="PreserveNewest" />
+    <InternalsVisibleTo Include="FlowchartBuilder.Tests" />
+    <EmbeddedResource Include="../LICENSE" LogicalName="FlowchartBuilder.License" />
+    <None Update="Data\**;Icons\**;Translations\**;*.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

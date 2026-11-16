@@ -12,7 +12,7 @@ public static class SettingsExport
     private const string EntryTag = "Key";
     private const string NameAttribute = "name";
 
-    private static string Filter => $"FlowchartBuilder Settings (*.{Settings.Environment.SettingsExtension})|*.{Settings.Environment.SettingsExtension}";
+    private static string Filter => $"{Core.Instance.CurrentTranslator["SettingsFiles"]} (*.{Settings.Environment.SettingsExtension})|*.{Settings.Environment.SettingsExtension}";
 
     public static void ShowSaveDialog()
     {

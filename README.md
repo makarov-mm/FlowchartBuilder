@@ -4,13 +4,17 @@ A modular WinForms diagram editor with an infinite canvas. Start drawing immedia
 
 I wrote it in 2008-2011 to explore plugin architecture and declarative metadata, back when MEF,
 modern DI containers and `System.Text.Json` were not part of .NET yet. In 2026 the code was moved
-to .NET 11, cleaned up and given a Direct2D renderer (see `MIGRATION.md`).
+to .NET 11, cleaned up and given a Direct2D renderer.
 
 ![Screenshot](screenshot.png)
 
+Drag the title of the glyph palette or the Properties window toward any edge of the work area.
+Release over the highlighted area to dock, or away from the edges to float the window.
+Drag the divider to resize a docked panel. Escape cancels a drag. The layout is restored on startup.
+
 ## Solution layout
 
-`FlowchartBuilder.slnx` contains 11 projects.
+`FlowchartBuilder.slnx` contains the editor, its libraries and plugins, and the FlowchartBuilder.Tests project.
 
 ### Framework
 
@@ -31,7 +35,7 @@ to .NET 11, cleaned up and given a Direct2D renderer (see `MIGRATION.md`).
 | `Makarov.FlowchartBuilder.Glyphs.Flowchart` | Begin, End, If, In/Out, Operation, Subroutine |
 | `Makarov.FlowchartBuilder.Glyphs.Shapes` | 14 geometric shapes |
 | `Makarov.FlowchartBuilder.Glyphs.Containers` | Group, Panel, Stack, Table |
-| `Makarov.FlowchartBuilder.Glyphs.Simple` | Link tools: Arrow (curved), Broken Arrow (horizontal and vertical segments) and Link (straight, no arrowhead); Image and Text (hidden, not implemented) |
+| `Makarov.FlowchartBuilder.Glyphs.Simple` | Link tools: Arrow (curved), Broken Arrow (horizontal and vertical segments) and Link (straight, no arrowhead); embedded images and editable text |
 
 Glyph libraries are plugins. On startup the application loads every assembly from the `Plugins`
 folder next to the executable and puts every non-abstract glyph type into the palette, so a new DLL
@@ -109,17 +113,28 @@ To move to a newer .NET, change `TargetFramework` in `Directory.Build.props`.
 
 ## Status
 
-Working: documents (new, open, save, save as, save all, close with a prompt for unsaved changes,
-export to an image, page setup and printing), undo and redo, all glyph families, connectors,
-grouping, locking, alignment, cut, copy and paste, zoom (Ctrl+wheel), rulers, grid, units of
-measurement, languages, settings import and export.
+The editor opens an infinite canvas. Older paper formats load on that canvas. Document tabs,
+keyboard shortcuts, pan and zoom, editable connector ends, grouping, locks, undo/redo and bitmap
+export are implemented. Save As, Save All and close commands use the document's dirty state.
+WindowsManager manages tool windows. Core owns editor services and the command and glyph
+metadata caches. Direct2D render targets manage their drawing resources.
 
-Printing puts the sheet on one page, at its real size when it fits. Open items are listed in
-`todo.txt`.
+| Feature | How to use it |
+|---|---|
+| Image and Text | Pick a tool in the Common group. Image embeds the selected file in the document. The display bitmap is sampled to a maximum of 4096 pixels on its longer side. Edit a text block's caption, font and colour in Properties. |
+| Placement and styling | Double-click a palette icon repeatedly to place blocks in free positions around the viewport centre. Drag a resize or rotation handle to snap the pointer to it. Blocks have shadows and palette icons have a uniform background. |
+| Print and preview | File → Page Setup sets the paper and margins. Print Preview and Print tile the content at actual size, from left to right and then top to bottom. |
+| Clipboard | Copy or cut selected blocks, then paste into the same or another document. Groups and connections between copied blocks travel with them. Other applications can read the selection as XML text. Repeated pastes are offset by 5 mm. |
+| Languages and units | On first use the editor selects English, Russian or Ukrainian from the Windows UI culture, and millimetres or inches from regional settings. Explicit preferences take precedence. |
+| About | Help → About shows the editor version, copyright and full MIT license. |
+
+Run the Windows test suite with `dotnet test FlowchartBuilder.slnx -c Release`. It checks history,
+XML settings and clipboard fragments, translations, connector routing, Direct2D bitmap drawing
+and tiled pagination.
 
 ## License
 
-Copyright © 2008-2026 Mykhailo Makarov. All rights reserved.
+Copyright © 2008-2026 Mykhailo Makarov. Distributed under the [MIT License](LICENSE).
 
 ## Support
 

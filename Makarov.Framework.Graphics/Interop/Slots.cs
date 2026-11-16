@@ -13,6 +13,8 @@ internal static class Slots
     public const int ID2D1Factory_CreateWicBitmapRenderTarget = 13;
     public const int ID2D1Factory_CreateHwndRenderTarget = 14;
 
+    public const int ID2D1RenderTarget_CreateBitmap = 4;
+    public const int ID2D1RenderTarget_DrawBitmap = 26;
     public const int ID2D1RenderTarget_CreateSolidColorBrush = 8;
     public const int ID2D1RenderTarget_CreateGradientStopCollection = 9;
     public const int ID2D1RenderTarget_CreateLinearGradientBrush = 10;

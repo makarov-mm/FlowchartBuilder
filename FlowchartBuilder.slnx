@@ -14,11 +14,10 @@
     <Project Path="Makarov.FlowchartBuilder.Glyphs.Shapes/Makarov.FlowchartBuilder.Glyphs.Shapes.csproj" />
     <Project Path="Makarov.FlowchartBuilder.Glyphs.Simple/Makarov.FlowchartBuilder.Glyphs.Simple.csproj" />
   </Folder>
+  <Project Path="FlowchartBuilder.Tests/FlowchartBuilder.Tests.csproj" />
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />
-    <File Path=".editorconfig" />
     <File Path="README.md" />
-    <File Path="MIGRATION.md" />
-    <File Path="todo.txt" />
+    <File Path="LICENSE" />
   </Folder>
 </Solution>

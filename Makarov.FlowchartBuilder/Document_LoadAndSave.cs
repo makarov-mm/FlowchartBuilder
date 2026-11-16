@@ -32,7 +32,7 @@ public sealed partial class Document
         {
             sheet = ReadSheet(xml, fileName, out skippedProperties);
         }
-        catch (Exception e) when (e is FormatException or OverflowException or ArgumentException or KeyNotFoundException)
+        catch (Exception e) when (e is FormatException or OverflowException or ArgumentException or KeyNotFoundException or System.Reflection.TargetInvocationException)
         {
             throw Invalid(fileName, e.Message, e);
         }
@@ -102,7 +102,7 @@ public sealed partial class Document
 
     private string CreateSnapshot() => CreateXml().OuterXml;
 
-    private XmlDocument CreateXml(bool includeView = false)
+    private XmlDocument CreateXml(bool includeView = false, HashSet<AbstractGlyph>? selection = null)
     {
         var xml = new XmlDocument();
 
@@ -123,11 +123,44 @@ public sealed partial class Document
         }
 
         foreach (AbstractGlyph glyph in DocumentSheet.Glyphs)
-            sheetNode.AppendChild(glyph.Serialize(xml));
+            if (selection is null || selection.Contains(glyph))
+                sheetNode.AppendChild(glyph.Serialize(xml));
 
         root.AppendChild(sheetNode);
-        SaveGroups(xml, root);
+        SaveGroups(xml, root, selection);
         return xml;
+    }
+
+    internal string? SelectionXml()
+    {
+        var selection = DocumentSheet.SelectedGlyphs.ToHashSet();
+        foreach (var link in DocumentSheet.Glyphs.OfType<ConnectorGlyph>())
+        {
+            if (link.Source != null && link.Target != null && selection.Contains(link.Source) && selection.Contains(link.Target))
+                selection.Add(link);
+            else
+                selection.Remove(link);
+        }
+        return selection.Count == 0 ? null : CreateXml(selection: selection).OuterXml;
+    }
+
+    internal static Sheet ReadClipboard(string text)
+    {
+        using var reader = XmlReader.Create(new StringReader(text), new XmlReaderSettings
+        {
+            DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = Math.Max(1, text.Length),
+        });
+        var xml = new XmlDocument { XmlResolver = null };
+        xml.Load(reader);
+        if (xml.DocumentElement?.Name != Settings.Xml.Tags.FlowchartBuilderDocument ||
+            xml.DocumentElement.NamespaceURI != Settings.Xml.Namespace)
+            throw new InvalidDataException();
+        var sheet = ReadSheet(xml, "Clipboard", out bool skipped);
+        if (skipped) throw new InvalidDataException();
+        foreach (var glyph in sheet.Glyphs) glyph.AssignNewId();
+        foreach (var link in sheet.Glyphs.OfType<ConnectorGlyph>())
+            link.Connect(link.Source!, link.SourcePort, link.Target!, link.TargetPort);
+        return sheet;
     }
 
     /// <summary>Instantiates a type stored by its full name; it may live in this program or in a plugin.</summary>
@@ -136,7 +169,7 @@ public sealed partial class Document
     {
         Type? type = string.IsNullOrEmpty(typeName)
             ? null
-            : Type.GetType(typeName) ?? Core.Instance.Plugins.FindType(typeName);
+            : typeof(AbstractGlyph).Assembly.GetType(typeName) ?? Core.Instance.GlyphTypes.FirstOrDefault(t => t.FullName == typeName);
 
         if (type is null || type.IsAbstract || !type.IsAssignableTo(typeof(T)))
             throw Invalid(fileName, $"type '{typeName}' is not installed");
@@ -163,7 +196,7 @@ public sealed partial class Document
         }
     }
 
-    private void SaveGroups(XmlDocument xml, XmlElement root)
+    private void SaveGroups(XmlDocument xml, XmlElement root, HashSet<AbstractGlyph>? selection)
     {
         if (DocumentSheet.Groups.Count == 0)
             return;
@@ -174,14 +207,14 @@ public sealed partial class Document
         {
             XmlElement groupNode = xml.CreateElement(Settings.Xml.Tags.Group, Settings.Xml.Namespace);
 
-            foreach (BlockGlyph member in group)
+            foreach (BlockGlyph member in group.Where(member => selection is null || selection.Contains(member)))
             {
                 XmlElement memberNode = xml.CreateElement(Settings.Xml.Tags.GroupMember, Settings.Xml.Namespace);
                 memberNode.SetAttribute(Settings.Xml.Attributes.Id, member.Id);
                 groupNode.AppendChild(memberNode);
             }
 
-            groupsNode.AppendChild(groupNode);
+            if (groupNode.ChildNodes.Count >= 2) groupsNode.AppendChild(groupNode);
         }
 
         root.AppendChild(groupsNode);

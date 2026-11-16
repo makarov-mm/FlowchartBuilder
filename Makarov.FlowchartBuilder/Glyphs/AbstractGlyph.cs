@@ -21,6 +21,8 @@ public abstract partial class AbstractGlyph
 
     public string Id { get; private set; }
 
+    internal void AssignNewId() => Id = Guid.NewGuid().ToString();
+
     public GlyphMetadata Metadata => GlyphMetadata.Of(GetType());
 
     public string Name => Metadata.Name ?? Core.Instance.CurrentTranslator["UndefinedGlyphName"];
@@ -82,12 +84,7 @@ public abstract partial class AbstractGlyph
     /// <summary>Palette image background; glyphs draw their picture over it.</summary>
     protected virtual void DrawThumbnail(Canvas canvas) =>
         canvas.FillRectangle(
-            new RectangleF(0, 0, ThumbnailWidth, ThumbnailHeight),
-            new LinearGradient(
-                new PointF(ThumbnailWidth / 2f, 0),
-                new PointF(ThumbnailWidth / 2f, ThumbnailHeight),
-                Settings.Colors.ThumbnailGradientStart,
-                Settings.Colors.ThumbnailGradientEnd));
+            new RectangleF(0, 0, ThumbnailWidth, ThumbnailHeight), SystemColors.Window);
 
     protected void DrawThumbnailBorder(Canvas canvas) =>
         canvas.DrawRectangle(new RectangleF(0, 0, ThumbnailWidth - 1, ThumbnailHeight - 1), Settings.Strokes.ThumbnailBorder);

@@ -74,6 +74,7 @@ public abstract class AbstractFlowchartGlyph : BlockGlyph
     protected override void DrawGlyph(Canvas canvas)
     {
         using Geometry outline = CreateOutline();
+        DrawShadow(canvas, outline);
         var stroke = new Stroke(BorderColor, ScaledBorderWidth);
 
         canvas.FillGeometry(
