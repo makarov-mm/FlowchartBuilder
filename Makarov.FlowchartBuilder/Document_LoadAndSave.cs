@@ -20,7 +20,12 @@ public sealed partial class Document
     /// <exception cref="IOException">The file cannot be read.</exception>
     /// <exception cref="XmlException">The file is not well-formed XML.</exception>
     /// <exception cref="InvalidDataException">The file is not a valid document or uses glyph types that are not installed.</exception>
-    public static Document Load(string fileName)
+    public static Document Load(string fileName) => Load(fileName, asExample: false);
+
+    // Examples start a fresh document. Save will ask for a destination on the first write.
+    public static Document LoadExample(string fileName) => Load(fileName, asExample: true);
+
+    private static Document Load(string fileName, bool asExample)
     {
         XmlDocument xml = new();
         xml.Load(fileName);
@@ -40,7 +45,7 @@ public sealed partial class Document
         return new Document(sheet)
         {
             Name = Path.GetFileNameWithoutExtension(fileName),
-            FileName = fileName,
+            FileName = asExample ? null : fileName,
             HasSkippedProperties = skippedProperties,
         };
     }
@@ -50,9 +55,12 @@ public sealed partial class Document
         CommitChange();
         CreateXml(includeView: true).Save(fileName);
 
+        string name = Path.GetFileNameWithoutExtension(fileName);
+        bool renamed = Name != name;
         FileName = fileName;
-        Name = Path.GetFileNameWithoutExtension(fileName);
+        Name = name;
         _savedSnapshot = History.Current;
+        if (renamed) Changed?.Invoke(this, EventArgs.Empty);
     }
 
     private static XmlDocument ParseXml(string text)

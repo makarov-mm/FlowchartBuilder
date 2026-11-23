@@ -9,6 +9,7 @@ using Xunit;
 
 namespace FlowchartBuilder.Tests;
 
+[Collection("Editor")]
 public class EditorTests
 {
     [Fact]
@@ -317,10 +318,9 @@ public class EditorTests
     public void CountdownExportPreservesBothBranchesAndLoopBack()
     {
         var code = Tools.PythonExport.PythonGenerator.Generate(OpenExample("Countdown.mfb"));
-        Assert.Contains("n = 3", code);
-        Assert.Contains("_flow_step = 3 if (n > 0) else 4", code);
-        Assert.Contains("print(n)", code);
-        Assert.Contains("n -= 1" + Environment.NewLine + "            _flow_step = 2", code);
+        string[] expected = ["def main():", "    n = 3", "    while n > 0:",
+            "        print(n)", "        n -= 1", "    return"];
+        Assert.Equal(expected, code.Split(Environment.NewLine).Take(expected.Length));
     }
 
     [Fact]

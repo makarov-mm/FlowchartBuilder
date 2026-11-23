@@ -171,6 +171,13 @@ public class ConnectorGlyph : AbstractGlyph
             Cap = StrokeCap.Round,
         };
 
+    /// <summary>Whether a connector tool may start, finish, or reconnect on this block.</summary>
+    public virtual bool AcceptsEndpoint(BlockGlyph block) => block.SupportsLinks;
+
+    /// <summary>Draws this connector's line and its notation on the sheet, in a drag preview or in the palette.</summary>
+    public virtual void DrawConnection(Canvas canvas, ConnectorRoute route, Stroke stroke, float arrowLength) =>
+        DrawRoute(canvas, route, stroke, ArrowHead, arrowLength);
+
     public void Connect(BlockGlyph source, int sourcePort, BlockGlyph target, int targetPort)
     {
         Source = source;
@@ -242,7 +249,7 @@ public class ConnectorGlyph : AbstractGlyph
         if (CreateRoute() is { } route)
         {
             Stroke stroke = CreateStroke(LineColor, LineWidthInMM);
-            DrawRoute(canvas, route, stroke, ArrowHead, ArrowLength(stroke.Width));
+            DrawConnection(canvas, route, stroke, ArrowLength(stroke.Width));
         }
     }
 
@@ -251,7 +258,7 @@ public class ConnectorGlyph : AbstractGlyph
         if (CreateRoute() is { } route)
         {
             Stroke stroke = CreateStroke(Settings.Colors.SelectedConnector, LineWidthInMM * 1.5f);
-            DrawRoute(canvas, route, stroke, ArrowHead, ArrowLength(stroke.Width));
+            DrawConnection(canvas, route, stroke, ArrowLength(stroke.Width));
         }
     }
 
@@ -294,7 +301,7 @@ public class ConnectorGlyph : AbstractGlyph
             10f);
 
         var stroke = new Stroke(Settings.Colors.ThumbnailBorder, 1.5f) { Join = StrokeJoin.Round, Cap = StrokeCap.Round };
-        DrawRoute(canvas, route, stroke, ArrowHead, arrowLength: 8f);
+        DrawConnection(canvas, route, stroke, arrowLength: 8f);
         DrawThumbnailBorder(canvas);
     }
 
@@ -304,7 +311,7 @@ public class ConnectorGlyph : AbstractGlyph
         return Math.Abs(point.X - handle.X) <= reach && Math.Abs(point.Y - handle.Y) <= reach;
     }
 
-    private ConnectorRoute? CreateRoute()
+    internal ConnectorRoute? CreateRoute()
     {
         if (_source is null || _target is null)
             return null;

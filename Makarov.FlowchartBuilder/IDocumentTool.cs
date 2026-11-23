@@ -5,5 +5,6 @@ public interface IDocumentTool
 {
     string Title(string language);
     string? ExampleFileName => null;
+    string? ExampleInstructions(string language) => null;
     void Run(Document document, IWin32Window owner, string language);
 }

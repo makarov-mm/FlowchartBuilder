@@ -33,9 +33,9 @@ public abstract partial class Sheet
         {
             if (glyphType.IsAssignableTo(typeof(ConnectorGlyph)))
             {
-                // A link tool from the palette: drag from any block that has link ports.
-                if (FindLinkableBlock(point, except: null) is { } source)
-                    StartConnector(source, NearestLinkPoint(source, point), glyphType, point);
+                var connector = (ConnectorGlyph)Activator.CreateInstance(glyphType)!;
+                if (FindLinkableBlock(point, except: null, connector) is { } source)
+                    StartConnector(source, NearestLinkPoint(source, point), connector, point);
 
                 return;
             }
@@ -58,7 +58,7 @@ public abstract partial class Sheet
         if (_connectorSource is not null || _draggedConnector is not null)
         {
             _connectorCurrent = point;
-            _hoveredBlock = FindLinkableBlock(point, except: AnchorBlock);
+            _hoveredBlock = FindLinkableBlock(point, AnchorBlock, _connectorPrototype ?? _draggedConnector!);
             _hoveredPort = _hoveredBlock is null ? 0 : NearestLinkPoint(_hoveredBlock, point);
             _lastMousePosition = point;
             Core.Instance.Redraw();
@@ -136,18 +136,20 @@ public abstract partial class Sheet
             if (port < 0)
                 continue;
 
-            StartConnector(glyph, port, glyph.DefaultConnectorType, point);
+            var connector = (ConnectorGlyph)Activator.CreateInstance(glyph.DefaultConnectorType)!;
+            if (!connector.AcceptsEndpoint(glyph)) continue;
+            StartConnector(glyph, port, connector, point);
             return true;
         }
 
         return false;
     }
 
-    private void StartConnector(BlockGlyph source, int port, Type connectorType, Point point)
+    private void StartConnector(BlockGlyph source, int port, ConnectorGlyph connector, Point point)
     {
         _connectorSource = source;
         _connectorSourcePort = port;
-        _connectorPrototype = (ConnectorGlyph)Activator.CreateInstance(connectorType)!;
+        _connectorPrototype = connector;
         _hoveredBlock = null;
         _connectorCurrent = point;
 
@@ -161,7 +163,7 @@ public abstract partial class Sheet
         BlockGlyph source = _connectorSource!;
         ConnectorGlyph connector = _connectorPrototype!;
 
-        if (_connectorCurrent is { } release && FindLinkableBlock(release, except: source) is { } target)
+        if (_connectorCurrent is { } release && FindLinkableBlock(release, source, connector) is { } target)
         {
             connector.Connect(source, _connectorSourcePort, target, NearestLinkPoint(target, release));
             Add(connector);
@@ -207,7 +209,7 @@ public abstract partial class Sheet
     {
         ConnectorGlyph connector = _draggedConnector!;
 
-        if (_connectorCurrent is { } release && FindLinkableBlock(release, except: AnchorBlock) is { } block)
+        if (_connectorCurrent is { } release && FindLinkableBlock(release, AnchorBlock, connector) is { } block)
             connector.Reconnect(_draggedEnd, block, NearestLinkPoint(block, release));
 
         _draggedConnector = null;
@@ -217,9 +219,9 @@ public abstract partial class Sheet
     }
 
     /// <summary>The topmost block under <paramref name="point"/> (or its link ports) that accepts connectors.</summary>
-    private BlockGlyph? FindLinkableBlock(Point point, BlockGlyph? except) =>
+    private BlockGlyph? FindLinkableBlock(Point point, BlockGlyph? except, ConnectorGlyph connector) =>
         NonFixedGlyphs.OfType<BlockGlyph>().FirstOrDefault(glyph =>
-            glyph.SupportsLinks && !ReferenceEquals(glyph, except) && (glyph.Contains(point) || HitLinkPoint(glyph, point) >= 0));
+            !ReferenceEquals(glyph, except) && connector.AcceptsEndpoint(glyph) && (glyph.Contains(point) || HitLinkPoint(glyph, point) >= 0));
 
     private bool TryHitBlock(Point point)
     {

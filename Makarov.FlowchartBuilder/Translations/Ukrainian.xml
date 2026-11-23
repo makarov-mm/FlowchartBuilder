@@ -209,4 +209,12 @@
   <fb:Word Key="Contacts closed">Контакти замкнені</fb:Word>
   <fb:Word Key="Menu_Plugins">Плагіни</fb:Word>
   <fb:Word Key="Menu_Examples">Приклади</fb:Word>
+  <fb:Word Key="UML">Класи UML</fb:Word>
+  <fb:Word Key="UML class">Клас</fb:Word>
+  <fb:Word Key="UML inheritance">Успадкування</fb:Word>
+  <fb:Word Key="UML association">Асоціація</fb:Word>
+  <fb:Word Key="Attributes">Атрибути</fb:Word>
+  <fb:Word Key="Methods">Методи</fb:Word>
+  <fb:Word Key="One attribute per line.">По одному атрибуту з типом на рядок, наприклад name: str.</fb:Word>
+  <fb:Word Key="One method per line.">По одній сигнатурі на рядок, наприклад find(key: str) -> bool.</fb:Word>
 </fb:Translation>

@@ -113,7 +113,7 @@ public abstract partial class Sheet
                 Cap = StrokeCap.Flat,
             };
 
-            ConnectorGlyph.DrawRoute(canvas, route, stroke, prototype.ArrowHead, ConnectorGlyph.ArrowLength(stroke.Width));
+            prototype.DrawConnection(canvas, route, stroke, ConnectorGlyph.ArrowLength(stroke.Width));
         }
 
         if (_draggedConnector is { Source: { } sourceBlock, Target: { } targetBlock } connector && _connectorCurrent is { } point)
@@ -137,7 +137,7 @@ public abstract partial class Sheet
         ConnectorRoute route = ConnectorGlyph.CreateRoute(connector.Routing, start, startNormal, startBounds, end, endNormal, endBounds);
         Stroke stroke = ConnectorGlyph.CreateStroke(Settings.Colors.SelectedConnector, connector.LineWidthInMM * 1.5f);
 
-        ConnectorGlyph.DrawRoute(canvas, route, stroke, connector.ArrowHead, ConnectorGlyph.ArrowLength(stroke.Width));
+        connector.DrawConnection(canvas, route, stroke, ConnectorGlyph.ArrowLength(stroke.Width));
         ConnectorGlyph.DrawEndHandles(canvas, route.Start, route.End);
     }
 

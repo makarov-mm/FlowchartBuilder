@@ -27,7 +27,18 @@ internal sealed class SimulationForm : Form
         var reset = new Button { Text = T("Reset", "Сброс", "Скинути"), AutoSize = true };
         var dc = new Button { Text = T("DC operating point", "Расчёт DC", "Розрахунок DC"), AutoSize = true };
         _sweep.Text = T("AC sweep", "АЧХ", "АЧХ");
-        bar.Controls.AddRange([_run, reset, dc, new Label { AutoSize = true, Text = T("Step (µs)", "Шаг (мкс)", "Крок (мкс)"), Padding = new Padding(4,7,0,0) }, _step, _sweep, _reading]);
+        var transfer = new Button
+        {
+            AutoSize = true, Enabled = model.HasAcSource && model.Network.Nodes.Count > 1,
+            Text = T("Gain and phase…", "Усиление и фаза…", "Підсилення та фаза…")
+        };
+        transfer.Click += (_, _) =>
+        {
+            SetRunning(false);
+            using var form = new TransferForm(_model, _language) { Text = transfer.Text.TrimEnd('…') };
+            form.ShowDialog(this);
+        };
+        bar.Controls.AddRange([_run, reset, dc, new Label { AutoSize = true, Text = T("Step (µs)", "Шаг (мкс)", "Крок (мкс)"), Padding = new Padding(4,7,0,0) }, _step, _sweep, transfer, _reading]);
         var split = new SplitContainer { Dock = DockStyle.Fill, Width = 860, SplitterDistance = 220 };
         split.Panel1.Controls.Add(_probes);
         split.Panel2.Controls.Add(_trace);

@@ -1,0 +1,45 @@
+<fb:FlowchartBuilderDocument Version="2.0.0.0" xmlns:fb="http://flowchartbuilder.blogspot.com">
+  <fb:Sheet fb:ClassName="Makarov.FlowchartBuilder.Sheets.InfiniteSheet">
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Uml.ClassGlyph" id="person">
+      <fb:Property fb:Value="Caption">Person</fb:Property>
+      <fb:Property fb:Value="Attributes">name: str</fb:Property>
+      <fb:Property fb:Value="Methods"></fb:Property>
+      <fb:Property fb:Value="XInMM">54</fb:Property>
+      <fb:Property fb:Value="YInMM">25</fb:Property>
+      <fb:Property fb:Value="WidthInMM">84</fb:Property>
+      <fb:Property fb:Value="HeightInMM">30</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Uml.ClassGlyph" id="member">
+      <fb:Property fb:Value="Caption">Member</fb:Property>
+      <fb:Property fb:Value="Attributes">member_id: int</fb:Property>
+      <fb:Property fb:Value="Methods">can_borrow(active_loans: int) -&gt; bool</fb:Property>
+      <fb:Property fb:Value="XInMM">54</fb:Property>
+      <fb:Property fb:Value="YInMM">82</fb:Property>
+      <fb:Property fb:Value="WidthInMM">84</fb:Property>
+      <fb:Property fb:Value="HeightInMM">34</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Uml.ClassGlyph" id="loan">
+      <fb:Property fb:Value="Caption">Loan</fb:Property>
+      <fb:Property fb:Value="Attributes">due_day: int</fb:Property>
+      <fb:Property fb:Value="Methods">is_overdue(day: int) -&gt; bool</fb:Property>
+      <fb:Property fb:Value="XInMM">168</fb:Property>
+      <fb:Property fb:Value="YInMM">82</fb:Property>
+      <fb:Property fb:Value="WidthInMM">68</fb:Property>
+      <fb:Property fb:Value="HeightInMM">34</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Uml.InheritanceGlyph" id="member-is-person">
+      <fb:Property fb:Value="Caption"></fb:Property>
+      <fb:Property fb:Value="SourceGlyphId">member</fb:Property>
+      <fb:Property fb:Value="SourcePort">0</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">person</fb:Property>
+      <fb:Property fb:Value="TargetPort">2</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.Uml.AssociationGlyph" id="loan-borrower">
+      <fb:Property fb:Value="Caption">borrower</fb:Property>
+      <fb:Property fb:Value="SourceGlyphId">loan</fb:Property>
+      <fb:Property fb:Value="SourcePort">3</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">member</fb:Property>
+      <fb:Property fb:Value="TargetPort">1</fb:Property>
+    </fb:Glyph>
+  </fb:Sheet>
+</fb:FlowchartBuilderDocument>

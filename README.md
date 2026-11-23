@@ -33,6 +33,8 @@ Drag the divider to resize a docked panel. Escape cancels a drag. The layout is 
 | `Makarov.FlowchartBuilder` | The application: documents, an infinite canvas, glyph base classes, editor commands, windows |
 | `Makarov.FlowchartBuilder.API` | Attributes that describe glyphs: `[GlyphName]`, `[GlyphFamily]`, `[GlyphDefaultWidth]`, `[VisibleGlyph]`, `[CommandGlyph]`, `[ActiveProperty]` and others |
 | `Makarov.FlowchartBuilder.Glyphs.Flowchart` | Begin, End, If, In/Out, Operation, Subroutine |
+| `Makarov.FlowchartBuilder.Glyphs.Uml` | UML classes, inheritance and directed associations |
+| `Makarov.FlowchartBuilder.Tools.ClassPython` | Python class module generation and diagram diagnostics |
 | `Makarov.FlowchartBuilder.Glyphs.Electrical` | Electrical components, wire junctions and orthogonal wires |
 | `Makarov.FlowchartBuilder.Glyphs.Shapes` | 14 geometric shapes |
 | `Makarov.FlowchartBuilder.Glyphs.Containers` | Group, Panel, Stack, Table |
@@ -98,11 +100,40 @@ Explorer) passes the file names to the running copy and brings it to the front.
 
 ## Simulation and code export
 
-The **Plugins** menu lists commands from optional `IDocumentTool` assemblies in the executable's `Plugins` directory. Each DLL can be distributed or removed separately. Restart the editor after changing the contents of this directory. **Plugins → Examples** opens editable diagrams from the adjacent `Examples` directory.
+The **Plugins** menu lists commands from optional `IDocumentTool` assemblies in the executable's `Plugins` directory. Each DLL can be distributed or removed separately. Restart the editor after changing the contents of this directory. **Plugins → Examples** opens a fresh copy of a diagram in its own tab. The first save asks for a destination. Opening a regular `.mfb` file still edits that file.
 
 - **Circuit simulation.** Open **RC-low-pass**, then **Plugins → Circuit simulation**. Select the voltage at C1 or a component current and press **Run**. The oscilloscope shows time in seconds and the selected quantity in volts or amperes. Change the integration step in microseconds, pause, or reset to zero initial energy. **DC operating point** starts at DC equilibrium. **AC sweep** plots the selected node's voltage magnitude from 1 Hz to 100 kHz for a circuit with an AC source. With 1 kΩ and 1 µF the example's cutoff is about 159 Hz.
 - The simulator joins explicit wire endpoints and junctions. Connect both terminals of each component and provide ground and a source. Set **Component value** to e.g. `1k`, `100nF`, `10mH`, `9V`, `5V 50Hz`, `12V 5W` or `2A`. The AC amplitude is peak voltage. The model supports R, L, C, batteries, DC/AC sources, piecewise-linear diodes, resistive lamps, switches and fuses. Switch controls change the simulation session. Reset clears a blown fuse. NPN simulation is unsupported and produces a diagnostic. The adapted MNA solver and SI units parser are from Schematic Editor; its MIT notice ships with the plugin.
-- **Flowchart → Python.** Open **Countdown**, choose the export command and save the preview as `countdown.py`. Running `python countdown.py` prints 3, 2 and 1. A diagram starts at one Begin and reaches its blocks through directed connectors. Operation takes a single Python statement, Subroutine a call, If a Python expression, and In/Out takes `input name` (a string) or `output expression`. Label the two outgoing If connections `true` and `false` (also yes/no, да/нет or так/ні). Straight-line diagrams generate sequential statements; branching and looping diagrams use a dispatch loop. Python snippets in captions are copied into the exported source. The editor previews and saves the code without executing it.
+- **Flowchart → Python.** Open **Countdown**, choose the export command and save the preview as `countdown.py`. Running `python countdown.py` prints 3, 2 and 1. A diagram starts at one Begin and reaches its blocks through directed connectors. Operation takes a single Python statement, Subroutine a call, If a Python expression, and In/Out takes `input name` (a string) or `output expression`. Label the two outgoing If connections `true` and `false` (also yes/no, да/нет or так/ні). Simple sequences, single-entry decisions and pre-test loops produce Python statements, `if` / `else` and `while`. Other control-flow graphs use a dispatch loop. Python snippets in captions are copied into the exported source. The preview stays open while you edit the diagram. Click a code line to select its block, or select a block to highlight its code. The preview lets you save the program for execution in Python.
+
+### Class diagrams and Python
+
+Open **Plugins → Examples → Library-classes**, then **Plugins → Class diagram → Python**. The example models a library member and a loan. Save the preview as `models.py`. The generated module contains typed dataclasses with constructors and method stubs. For example, in Python:
+
+```python
+from models import Loan, Member
+
+reader = Member(name="Ada", member_id=7)
+loan = Loan(due_day=14, borrower=reader)
+assert loan.borrower.name == "Ada"
+```
+
+To create a diagram, place a **Class** from the **UML classes** palette. Set **Caption** to the Python class name. Enter one field per line in **Attributes** (e.g. `name: str`) and one signature per line in **Methods** (e.g. `can_borrow(active_loans: int) -> bool`). The generator adds `self` and leaves the method body for you to implement.
+
+Draw **Inheritance** from a child to its base class. Draw **Association** from the class that owns a reference to its target, then set the arrow's **Caption** to the field name (e.g. `borrower`). The exporter supports single inheritance and any number of named associations. Use ASCII Python identifiers for class, field and method names. Field and method types can use class names, scalar types, typed collections such as `list[str]` and unions such as `Member | None`. Use Python 3.10 or newer for these annotations. The preview updates after edits and undo. Click a diagnostic to select the class or relationship that needs attention.
+
+### First lesson — fix the countdown
+
+1. Open **Plugins → Examples → Countdown-exercise**. Predict what happens when `n` reaches zero.
+2. Choose **Plugins → Check flowchart**. The two exits of `n > 0` have identical labels. Select each issue to find its arrow on the canvas. Select the arrow leading to End and change its **Caption** to `false` in Properties. The issue list updates when you finish the edit.
+3. Open **Plugins → Flowchart → Python**. Select the line `while n > 0:` to find the decision. Select the block labelled `n -= 1` to find the decrement in Python.
+4. Predict the output, then save the preview as `countdown.py` and run `python countdown.py`. The output is 3, 2, 1 on separate lines. Explain why zero is skipped. Change the starting value to 5 and check your prediction again.
+
+### Filter lab — find the cutoff
+
+1. Open **Plugins → Examples → RC-low-pass**, then **Plugins → Circuit simulation → Gain and phase…**. Select the source terminal as input and the resistor-capacitor junction as output. The RC example selects this pair by default.
+2. Click either plot to move the shared cursor, or enter **159.15 Hz**. With 1 kΩ and 1 µF, the output/input voltage ratio is about **−3.01 dB** and the phase is **−45°**.
+3. Close both measurement and simulation windows. Set C1’s **Component value** to `2uF`, reopen the measurement, and find the same gain and phase at **79.58 Hz**. The time constant doubled, so the cutoff frequency halved.
 
 ## Building
 

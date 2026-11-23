@@ -4,102 +4,75 @@ using Makarov.FlowchartBuilder.Glyphs;
 
 namespace Makarov.FlowchartBuilder.Tools.PythonExport;
 
+internal sealed record PythonGenerationResult(string Code, IReadOnlyDictionary<int, string> LineToBlockId);
+
+internal readonly record struct PythonLine(int Indent, string Text, string? BlockId = null);
+
 internal static class PythonGenerator
 {
-    private static readonly string[] TrueLabels = ["true", "yes", "да", "так", "1"];
-    private static readonly string[] FalseLabels = ["false", "no", "нет", "ні", "0"];
+    public static string Generate(Document document) => GenerateWithSourceMap(document).Code;
 
-    private static readonly HashSet<string> Keywords = new(StringComparer.Ordinal)
-    {
-        "False","None","True","and","as","assert","async","await","break","class","continue","def","del",
-        "elif","else","except","finally","for","from","global","if","import","in","is","lambda","nonlocal",
-        "not","or","pass","raise","return","try","while","with","yield"
-    };
+    public static PythonGenerationResult GenerateWithSourceMap(Document document) =>
+        GenerateWithSourceMap(FlowchartValidator.Analyze(document));
 
-    public static string Generate(Document document)
+    internal static PythonGenerationResult GenerateWithSourceMap(FlowchartAnalysis graph)
     {
-        var glyphs = document.DocumentSheet.Glyphs;
-        var nodes = glyphs.OfType<BlockGlyph>().Where(b => b.Family == "Flowchart").ToHashSet();
-        var starts = nodes.Where(b => b.Name == "Begin").ToArray();
-        if (starts.Length != 1) throw new InvalidDataException("The flowchart needs exactly one Begin block.");
-        if (!nodes.Any(b => b.Name == "End")) throw new InvalidDataException("Add an End block.");
-        var outgoing = nodes.ToDictionary(b => b, _ => new List<ConnectorGlyph>());
-        foreach (var edge in glyphs.OfType<ConnectorGlyph>())
+        if (graph.Diagnostics.Count > 0)
+            throw new InvalidDataException(graph.Diagnostics[0].Message("English"));
+
+        List<PythonLine> lines = [new(0, "def main():", graph.Order[0].Id)];
+        if (!graph.Order.Any(b => b.Name == "If"))
         {
-            bool from = edge.Source != null && nodes.Contains(edge.Source);
-            bool to = edge.Target != null && nodes.Contains(edge.Target);
-            if (!from && !to) continue;
-            if (!(from && to)) throw new InvalidDataException("A flowchart connection has an endpoint outside the flowchart.");
-            if (edge.Target == starts[0]) throw new InvalidDataException("Begin cannot have incoming connections.");
-            outgoing[edge.Source!].Add(edge);
+            foreach (var block in graph.Order.Skip(1))
+                lines.Add(new(1, block.Name == "End" ? "return" : graph.Statements[block], block.Id));
         }
-        List<BlockGlyph> order = [starts[0]];
-        var ids = new Dictionary<BlockGlyph, int> { [starts[0]] = 0 };
-        var successors = new Dictionary<BlockGlyph, BlockGlyph[]>();
-        for (int i = 0; i < order.Count; i++)
+        else
         {
-            var block = order[i];
-            var edges = outgoing[block];
-            int count = block.Name switch { "If" => 2, "End" => 0, _ => 1 };
-            if (edges.Count != count) throw new InvalidDataException($"{block.Name} '{block.Caption}' needs {count} outgoing connections (found {edges.Count}).");
-            if (block.Name == "If")
-            {
-                var yes = edges.Where(e => TrueLabels.Contains(e.Caption.Trim(), StringComparer.OrdinalIgnoreCase)).ToArray();
-                var no = edges.Where(e => FalseLabels.Contains(e.Caption.Trim(), StringComparer.OrdinalIgnoreCase)).ToArray();
-                if (yes.Length != 1 || no.Length != 1)
-                    throw new InvalidDataException($"Label the two outgoing connections of '{block.Caption}' true and false.");
-                edges = [yes[0], no[0]];
-            }
-            var next = edges.Select(e => e.Target!).ToArray();
-            successors[block] = next;
-            foreach (var target in next)
-                if (ids.TryAdd(target, ids.Count)) order.Add(target);
+            // A break or continue in a caption can explicitly target the dispatch loop.
+            bool usesLoopControl = graph.Statements.Values.Any(s => Regex.IsMatch(s, @"\b(break|continue)\b"));
+            var body = usesLoopControl ? null : StructuredFlowchart.TryBuild(graph);
+            lines.AddRange(body ?? Dispatch(graph));
         }
-        if (order.Count != nodes.Count) throw new InvalidDataException("Every flowchart block must be reachable from Begin.");
+        lines.Add(new(0, ""));
+        lines.Add(new(0, ""));
+        lines.Add(new(0, "if __name__ == \"__main__\":"));
+        lines.Add(new(1, "main()"));
+
         var code = new StringBuilder();
-        code.AppendLine("def main():");
-        bool branching = order.Any(b => b.Name == "If");
-        string state = "_flow_step";
-        while (order.Any(b => b.Caption.Contains(state, StringComparison.Ordinal))) state += "_";
-        if (branching)
+        var sourceMap = new Dictionary<int, string>();
+        for (int i = 0; i < lines.Count; i++)
         {
-            code.AppendLine($"    {state} = 0");
-            code.AppendLine("    while True:");
+            var line = lines[i];
+            code.Append(' ', line.Indent * 4).AppendLine(line.Text);
+            if (line.BlockId is { } id) sourceMap.Add(i + 1, id);
         }
-        foreach (var block in order)
-        {
-            var next = successors[block];
-            string indent = branching ? "            " : "    ";
-            if (branching) code.AppendLine($"        {(ids[block] == 0 ? "if" : "elif")} {state} == {ids[block]}:");
-            if (block.Name == "End") { code.AppendLine(indent + "return"); continue; }
-            string body = block.Caption.Trim();
-            if (block.Name != "Begin")
-            {
-                if (string.IsNullOrWhiteSpace(body) || body.Contains('\n') || body.Contains('\r') ||
-                    body == block.Name || Core.Instance.Translators.Languages.Any(l => Core.Instance.Translators[l].Contains(block.Name) && Core.Instance.Translators[l][block.Name] == body))
-                    throw new InvalidDataException($"Set a single-line Python caption on the {block.Name} block.");
-                if (block.Name == "If")
-                {
-                    code.AppendLine($"{indent}{state} = {ids[next[0]]} if ({body}) else {ids[next[1]]}");
-                    continue;
-                }
-                if (block.Name == "In/Out") body = InputOutput(body);
-                else if (block.Name is not ("Operation" or "Subroutine"))
-                    throw new InvalidDataException($"Unsupported block: {block.Name}.");
-                code.AppendLine(indent + body);
-            }
-            if (branching) code.AppendLine($"{indent}{state} = {ids[next[0]]}");
-        }
-        code.AppendLine().AppendLine().AppendLine("if __name__ == \"__main__\":").AppendLine("    main()");
-        return code.ToString();
+        return new(code.ToString(), sourceMap);
     }
 
-    private static string InputOutput(string caption)
+    private static List<PythonLine> Dispatch(FlowchartAnalysis graph)
     {
-        if (caption.StartsWith("output ", StringComparison.OrdinalIgnoreCase) && caption[7..].Trim() is { Length: > 0 } expression)
-            return $"print({expression})";
-        if (caption.StartsWith("input ", StringComparison.OrdinalIgnoreCase) && Regex.IsMatch(caption[6..].Trim(), @"^[A-Za-z_][A-Za-z_0-9]*$") && !Keywords.Contains(caption[6..].Trim()))
-            return $"{caption[6..].Trim()} = input()";
-        throw new InvalidDataException("Use 'input name' or 'output expression' in an In/Out block.");
+        string state = "_flow_step";
+        while (graph.Order.Any(b => b.Caption.Contains(state, StringComparison.Ordinal))) state += "_";
+        var ids = graph.Order.Select((block, index) => (block, index)).ToDictionary(p => p.block, p => p.index);
+        List<PythonLine> body = [new(1, $"{state} = 0"), new(1, "while True:")];
+        foreach (var block in graph.Order)
+        {
+            var next = graph.Successors[block];
+            body.Add(new(2, $"{(ids[block] == 0 ? "if" : "elif")} {state} == {ids[block]}:", block.Id));
+            switch (block.Name)
+            {
+                case "End":
+                    body.Add(new(3, "return", block.Id));
+                    break;
+                case "If":
+                    body.Add(new(3, $"{state} = {ids[next[0]]} if ({graph.Statements[block]}) else {ids[next[1]]}", block.Id));
+                    break;
+                default:
+                    if (block.Name != "Begin") body.Add(new(3, graph.Statements[block], block.Id));
+                    body.Add(new(3, $"{state} = {ids[next[0]]}", block.Id));
+                    break;
+            }
+        }
+        return body;
     }
 }

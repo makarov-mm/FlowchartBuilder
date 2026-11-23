@@ -16,10 +16,14 @@ public sealed partial class Core
     public string CreateUntitledName() => $"{CurrentTranslator["Document"]} {++_untitledDocuments}";
 
     /// <summary>Opens a document file, or switches to it when it is already open; reports failures to the user.</summary>
-    public bool TryOpenDocument(string fileName)
+    public bool TryOpenDocument(string fileName) => TryOpen(fileName, asExample: false);
+
+    internal bool TryOpenExample(string fileName) => TryOpen(fileName, asExample: true);
+
+    private bool TryOpen(string fileName, bool asExample)
     {
         string fullPath = Path.GetFullPath(fileName);
-        if (_documents.Find(document => document.FileName is { } open && PathsEqual(open, fullPath)) is { } alreadyOpen)
+        if (!asExample && _documents.Find(document => document.FileName is { } open && PathsEqual(open, fullPath)) is { } alreadyOpen)
         {
             SelectDocument(alreadyOpen.Id);
             return true;
@@ -28,7 +32,9 @@ public sealed partial class Core
         Document document;
         try
         {
-            document = Document.Load(fullPath);
+            document = asExample ? Document.LoadExample(fullPath) : Document.Load(fullPath);
+            if (asExample)
+                document.Name = $"{document.DisplayName} — {CreateUntitledName()}";
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or XmlException or InvalidDataException)
         {
@@ -137,6 +143,7 @@ public sealed partial class Core
             MainWindow.DocumentsTabs.SelectTab(CurrentDocument.Id);
 
         OnCurrentDocumentChanged();
+        DocumentClosed?.Invoke(document);
         return true;
     }
 
@@ -237,7 +244,10 @@ public sealed partial class Core
         if (ActiveSheet is { } sheet)
             sheet.ShowProperties();
         else
+        {
             _windows.GetWindow<PropertiesForm>().Grid.SelectedObjects = [];
+            NotifySelectionChanged();
+        }
 
         RefreshDocumentState();
         Redraw();

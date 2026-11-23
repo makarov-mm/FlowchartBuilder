@@ -34,6 +34,8 @@ public sealed partial class Document
 
     public DocumentHistory History { get; }
 
+    public event EventHandler? Changed;
+
     /// <summary>Whether the document changed since it was created, opened or saved.</summary>
     public bool IsModified => History.Current != _savedSnapshot;
 
@@ -44,7 +46,14 @@ public sealed partial class Document
     public string Caption => DisplayName + (IsModified ? " *" : string.Empty);
 
     /// <summary>Records the current state as an undo step if it changed since the last one.</summary>
-    public bool CommitChange() => History.Commit(CreateSnapshot());
+    public bool CommitChange()
+    {
+        if (!History.Commit(CreateSnapshot()))
+            return false;
+
+        Changed?.Invoke(this, EventArgs.Empty);
+        return true;
+    }
 
     public bool Undo() => Restore(History.Undo());
 
@@ -60,6 +69,7 @@ public sealed partial class Document
         sheet.ViewOrigin = DocumentSheet.ViewOrigin;
         sheet.ScaleFactor = DocumentSheet.ScaleFactor;
         DocumentSheet = sheet;
+        Changed?.Invoke(this, EventArgs.Empty);
         return true;
     }
 }

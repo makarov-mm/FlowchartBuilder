@@ -145,8 +145,12 @@ public abstract partial class Sheet
     }
 
     /// <summary>Shows the selected block glyphs in the properties window.</summary>
-    public void ShowProperties() =>
-        Core.Instance.Windows.GetWindow<PropertiesForm>().Grid.SelectedObjects = [.. SelectedGlyphs];
+    public void ShowProperties()
+    {
+        var core = Core.Instance;
+        core.Windows.GetWindow<PropertiesForm>().Grid.SelectedObjects = [.. SelectedGlyphs];
+        core.NotifySelectionChanged();
+    }
 
     /// <summary>Enables the commands that make sense for the current selection.</summary>
     public void UpdateGlyphsCommands()

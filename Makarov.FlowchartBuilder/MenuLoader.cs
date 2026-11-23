@@ -45,7 +45,15 @@ public static class MenuLoader
             if (tool.ExampleFileName is { } name)
             {
                 var file = Path.Combine(AppContext.BaseDirectory, "Examples", Path.GetFileName(name));
-                if (File.Exists(file)) examples.DropDownItems.Add(Path.GetFileNameWithoutExtension(file), null, (_, _) => core.TryOpenDocument(file));
+                if (File.Exists(file))
+                {
+                    string label = Path.GetFileNameWithoutExtension(file);
+                    examples.DropDownItems.Add(label, null, (_, _) =>
+                    {
+                        if (core.TryOpenExample(file) && tool.ExampleInstructions(language) is { } instructions)
+                            MessageBox.Show(window, instructions, label, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    });
+                }
             }
         }
         if (examples.DropDownItems.Count > 0) menu.DropDownItems.Add(examples); else examples.Dispose();
