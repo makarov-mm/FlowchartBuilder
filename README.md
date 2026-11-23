@@ -12,6 +12,8 @@ Launch `Makarov.FlowchartBuilder.exe` from the extracted Windows application fol
 2. Select the block labelled `n = 3` and change its **Caption** to `n = 5` in Properties. The preview updates. Press **Ctrl+S** in the editor to save your copy of the diagram as an `.mfb` file.
 3. Choose **Save .py…** in the preview and name the file `countdown.py`. With Python 3 installed, run `python countdown.py` from the folder where you saved it. The edited example prints 5, 4, 3, 2 and 1 on separate lines.
 
+![Countdown with the n > 0 decision selected on the canvas and its while line highlighted in the Python preview](docs/screenshots/countdown-python.png)
+
 ### Choose an example
 
 Open any of these by name under **Plugins → Examples**. Each one opens in a fresh document tab.
@@ -52,6 +54,10 @@ The **Test database** tab starts with one title, two physical copies and two rea
 3. Run **Return copy 1** and then **Lend copy 1 to Oleg** again. Run **Show loans** to see the closed loan and both open loans. Each successful issue adds a row to the history.
 4. Run **Return copy 1** again to free that copy. To test another reader, pick `readers` in **Table** and click **Add row…**. Leave `id` on **Automatic**, enter the name and click **Add**. Select `loans` and click **Add row…** again. Choose the new reader and copy 1, enter `issued_on` and `due_on`, and leave `returned_on` as **NULL**. If a constraint fails you can correct the values in the same form. The SQL draft stays in the query editor.
 
+![Library ER diagram beside the Show loans query and its two result rows in the Test database tab](docs/screenshots/sqlite-library-loans.png)
+
+*After step 2, Anna has copy 1 and Oleg has copy 2 of the same book. Both loans are open, so `returned_on` is `NULL` in both rows.*
+
 Each diagram has a separate in-memory database. After a schema edit, undo the edit to keep testing with your existing rows or click **Rebuild database** to test the new structure with fresh data. Closing the tool ends the session. The **SQL** tab saves the table definitions, keys and indexes in a UTF-8 `.sql` file. Test rows belong to the temporary session.
 
 The form uses the fields and relationships in the current diagram. For foreign keys it suggests up to 100 existing keys and displays a name or title when the referenced table has a corresponding text column. You can also enter a key directly. For a nullable text field, choose **Value** to store an empty string or **NULL** to leave it unset.
@@ -69,10 +75,6 @@ Supported types are `INTEGER`, `TEXT`, `REAL`, `BLOB` and `NUMERIC`. Quote field
 #### Check the exported schema in SQLite
 
 Save the schema as `library.sql`. With the SQLite command-line shell installed, run `sqlite3 library.db` in that directory using a new database name. At the `sqlite>` prompt, run `.read library.sql` to create the four tables. You can inspect the relationships with `PRAGMA foreign_key_list(loans);` and the open-loan index with `.indexes loans`. When you open the database in a new connection, run `PRAGMA foreign_keys = ON;` to enforce its foreign keys there as well.
-
-![SQLite rejects a duplicate loan for copy 1 and lists Anna and Oleg with different copies of the same book](docs/screenshots/sqlite-library-loans.png)
-
-*SQLite session using the exported library schema and the example's sample data. Anna already holds copy 1 when the first INSERT runs. The query at the bottom shows the two open loans after Oleg receives copy 2.*
 
 ### State diagrams — try a book loan
 
@@ -138,9 +140,7 @@ I wrote it in 2008-2011 to explore plugin architecture and declarative metadata,
 modern DI containers and `System.Text.Json` were not part of .NET yet. In 2026 the code was moved
 to .NET 11, cleaned up and given a Direct2D renderer.
 
-![Earlier FlowchartBuilder editor with the View menu open above a fixed sheet and a selected Subroutine block in Properties](docs/screenshots/classic-editor.png)
-
-*The April 2026 editor used a fixed sheet. The screenshot shows the shape palette on the left, the zoom controls under View, and the selected block’s properties on the right. [Archived revision](https://github.com/makarov-mm/FlowchartBuilder/commit/f25fcb7c859291eb622d864df04a56b70791532e)*
+The April 2026 editor used a fixed sheet. [Archived screenshot](docs/screenshots/classic-editor.png) · [Archived revision](https://github.com/makarov-mm/FlowchartBuilder/commit/f25fcb7c859291eb622d864df04a56b70791532e)
 
 ## Solution layout
 
