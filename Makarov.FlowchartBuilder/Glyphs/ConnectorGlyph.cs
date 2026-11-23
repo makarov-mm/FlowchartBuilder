@@ -174,6 +174,12 @@ public class ConnectorGlyph : AbstractGlyph
     /// <summary>Whether a connector tool may start, finish, or reconnect on this block.</summary>
     public virtual bool AcceptsEndpoint(BlockGlyph block) => block.SupportsLinks;
 
+    /// <summary>Whether the user can return a connector to a different port of its starting block.</summary>
+    public virtual bool AllowsSelfConnection => false;
+
+    internal ConnectorRouting RoutingBetween(BlockGlyph? first, BlockGlyph? second) =>
+        AllowsSelfConnection && first is not null && ReferenceEquals(first, second) ? ConnectorRouting.Orthogonal : Routing;
+
     /// <summary>Draws this connector's line and its notation on the sheet, in a drag preview or in the palette.</summary>
     public virtual void DrawConnection(Canvas canvas, ConnectorRoute route, Stroke stroke, float arrowLength) =>
         DrawRoute(canvas, route, stroke, ArrowHead, arrowLength);
@@ -317,6 +323,6 @@ public class ConnectorGlyph : AbstractGlyph
             return null;
 
         return CreateRoute(
-            Routing, _source, SourcePort, PortLocation(_target, TargetPort), _target.PortDirection(TargetPort), _target.RoutingBounds(true));
+            RoutingBetween(_source, _target), _source, SourcePort, PortLocation(_target, TargetPort), _target.PortDirection(TargetPort), _target.RoutingBounds(true));
     }
 }

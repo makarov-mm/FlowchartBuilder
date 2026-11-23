@@ -1,0 +1,55 @@
+<fb:FlowchartBuilderDocument Version="2.0.0.0" xmlns:fb="http://flowchartbuilder.blogspot.com">
+  <fb:Sheet fb:ClassName="Makarov.FlowchartBuilder.Sheets.InfiniteSheet">
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.States.StateGlyph" id="active">
+      <fb:Property fb:Value="Caption">Активна</fb:Property>
+      <fb:Property fb:Value="IsInitial">True</fb:Property>
+      <fb:Property fb:Value="IsFinal">False</fb:Property>
+      <fb:Property fb:Value="XInMM">40</fb:Property>
+      <fb:Property fb:Value="YInMM">30</fb:Property>
+      <fb:Property fb:Value="WidthInMM">50</fb:Property>
+      <fb:Property fb:Value="HeightInMM">24</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.States.StateGlyph" id="overdue">
+      <fb:Property fb:Value="Caption">Просрочена</fb:Property>
+      <fb:Property fb:Value="IsInitial">False</fb:Property>
+      <fb:Property fb:Value="IsFinal">False</fb:Property>
+      <fb:Property fb:Value="XInMM">160</fb:Property>
+      <fb:Property fb:Value="YInMM">30</fb:Property>
+      <fb:Property fb:Value="WidthInMM">50</fb:Property>
+      <fb:Property fb:Value="HeightInMM">24</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.States.StateGlyph" id="closed">
+      <fb:Property fb:Value="Caption">Закрыта</fb:Property>
+      <fb:Property fb:Value="IsInitial">False</fb:Property>
+      <fb:Property fb:Value="IsFinal">True</fb:Property>
+      <fb:Property fb:Value="XInMM">100</fb:Property>
+      <fb:Property fb:Value="YInMM">102</fb:Property>
+      <fb:Property fb:Value="WidthInMM">50</fb:Property>
+      <fb:Property fb:Value="HeightInMM">24</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.States.TransitionGlyph" id="expire">
+      <fb:Property fb:Value="Caption">Истёк срок</fb:Property>
+      <fb:Property fb:Value="SourceGlyphId">active</fb:Property>
+      <fb:Property fb:Value="SourcePort">1</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">overdue</fb:Property>
+      <fb:Property fb:Value="TargetPort">3</fb:Property>
+      <fb:Property fb:Value="Routing">Straight</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.States.TransitionGlyph" id="return-on-time">
+      <fb:Property fb:Value="Caption">Книгу вернули</fb:Property>
+      <fb:Property fb:Value="SourceGlyphId">active</fb:Property>
+      <fb:Property fb:Value="SourcePort">2</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">closed</fb:Property>
+      <fb:Property fb:Value="TargetPort">3</fb:Property>
+      <fb:Property fb:Value="Routing">Straight</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.States.TransitionGlyph" id="return-late">
+      <fb:Property fb:Value="Caption">Книгу вернули</fb:Property>
+      <fb:Property fb:Value="SourceGlyphId">overdue</fb:Property>
+      <fb:Property fb:Value="SourcePort">2</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">closed</fb:Property>
+      <fb:Property fb:Value="TargetPort">1</fb:Property>
+      <fb:Property fb:Value="Routing">Straight</fb:Property>
+    </fb:Glyph>
+  </fb:Sheet>
+</fb:FlowchartBuilderDocument>

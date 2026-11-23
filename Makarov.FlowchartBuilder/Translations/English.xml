@@ -218,4 +218,9 @@
   <fb:Word Key="Methods">Methods</fb:Word>
   <fb:Word Key="One attribute per line.">One typed attribute per line, for example name: str.</fb:Word>
   <fb:Word Key="One method per line.">One signature per line, for example find(key: str) -> bool.</fb:Word>
+  <fb:Word Key="States">States</fb:Word>
+  <fb:Word Key="State">State</fb:Word>
+  <fb:Word Key="Transition">Transition</fb:Word>
+  <fb:Word Key="Initial state">Initial state</fb:Word>
+  <fb:Word Key="Final state">Final state</fb:Word>
 </fb:Translation>

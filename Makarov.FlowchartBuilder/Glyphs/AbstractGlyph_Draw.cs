@@ -23,6 +23,7 @@ public abstract partial class AbstractGlyph
         if (!adornments)
             return;
 
+        DrawAdornment(canvas);
         if (Selected)
         {
             DrawDots(canvas);
@@ -45,6 +46,9 @@ public abstract partial class AbstractGlyph
     protected virtual void DrawSelectedGlyph(Canvas canvas) => DrawGlyph(canvas);
 
     protected virtual void DrawText(Canvas canvas) { }
+
+    /// <summary>On-screen overlays, including simulation indicators, drawn before editing handles.</summary>
+    protected virtual void DrawAdornment(Canvas canvas) { }
 
     /// <summary>Selection handles.</summary>
     protected virtual void DrawDots(Canvas canvas) { }

@@ -17,11 +17,15 @@ public abstract partial class Sheet
     private Point? _connectorCurrent;
 
     /// <summary>
-    /// The block at the fixed end of the connector being created or edited; a connector never links a block to itself.
+    /// The block at the fixed end of the connector being created or edited.
     /// </summary>
     private BlockGlyph? AnchorBlock => _draggedConnector is { } connector
         ? connector.BlockAt(_draggedEnd == ConnectorEnd.Source ? ConnectorEnd.Target : ConnectorEnd.Source)
         : _connectorSource;
+
+    private int AnchorPort => _draggedConnector is { } connector
+        ? (_draggedEnd == ConnectorEnd.Source ? connector.TargetPort : connector.SourcePort)
+        : _connectorSourcePort;
 
     public void MouseDown(Point point)
     {
@@ -34,7 +38,7 @@ public abstract partial class Sheet
             if (glyphType.IsAssignableTo(typeof(ConnectorGlyph)))
             {
                 var connector = (ConnectorGlyph)Activator.CreateInstance(glyphType)!;
-                if (FindLinkableBlock(point, except: null, connector) is { } source)
+                if (FindLinkableBlock(point, anchor: null, connector) is { } source)
                     StartConnector(source, NearestLinkPoint(source, point), connector, point);
 
                 return;
@@ -219,9 +223,14 @@ public abstract partial class Sheet
     }
 
     /// <summary>The topmost block under <paramref name="point"/> (or its link ports) that accepts connectors.</summary>
-    private BlockGlyph? FindLinkableBlock(Point point, BlockGlyph? except, ConnectorGlyph connector) =>
+    private BlockGlyph? FindLinkableBlock(Point point, BlockGlyph? anchor, ConnectorGlyph connector) =>
         NonFixedGlyphs.OfType<BlockGlyph>().FirstOrDefault(glyph =>
-            !ReferenceEquals(glyph, except) && connector.AcceptsEndpoint(glyph) && (glyph.Contains(point) || HitLinkPoint(glyph, point) >= 0));
+        {
+            if (!connector.AcceptsEndpoint(glyph)) return false;
+            if (ReferenceEquals(glyph, anchor))
+                return connector.AllowsSelfConnection && HitLinkPoint(glyph, point) >= 0 && NearestLinkPoint(glyph, point) != AnchorPort;
+            return glyph.Contains(point) || HitLinkPoint(glyph, point) >= 0;
+        });
 
     private bool TryHitBlock(Point point)
     {

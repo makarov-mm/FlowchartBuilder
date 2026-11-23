@@ -217,4 +217,9 @@
   <fb:Word Key="Methods">Методи</fb:Word>
   <fb:Word Key="One attribute per line.">По одному атрибуту з типом на рядок, наприклад name: str.</fb:Word>
   <fb:Word Key="One method per line.">По одній сигнатурі на рядок, наприклад find(key: str) -> bool.</fb:Word>
+  <fb:Word Key="States">Стани</fb:Word>
+  <fb:Word Key="State">Стан</fb:Word>
+  <fb:Word Key="Transition">Перехід</fb:Word>
+  <fb:Word Key="Initial state">Початковий стан</fb:Word>
+  <fb:Word Key="Final state">Кінцевий стан</fb:Word>
 </fb:Translation>

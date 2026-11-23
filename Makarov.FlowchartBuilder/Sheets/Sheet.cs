@@ -50,7 +50,7 @@ public abstract partial class Sheet
         foreach (var link in Glyphs.OfType<ConnectorGlyph>())
         {
             if (link.Source is not { } source || link.Target is not { } target) continue;
-            var route = ConnectorRoute.Create(link.Routing,
+            var route = ConnectorRoute.Create(link.RoutingBetween(source, target),
                 source.PortPosition(link.SourcePort, false), source.PortDirection(link.SourcePort), source.RoutingBounds(false),
                 target.PortPosition(link.TargetPort, false), target.PortDirection(link.TargetPort), target.RoutingBounds(false),
                 Math.Max(8f, UnitsConverter.MMToPxExact(6f)));

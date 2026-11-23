@@ -105,7 +105,7 @@ public abstract partial class Sheet
         {
             PointF from = ConnectorGlyph.PortLocation(source, _connectorSourcePort);
             var (end, endNormal, endBounds) = GetMovingEnd(current, towards: from);
-            ConnectorRoute route = ConnectorGlyph.CreateRoute(prototype.Routing, source, _connectorSourcePort, end, endNormal, endBounds);
+            ConnectorRoute route = ConnectorGlyph.CreateRoute(prototype.RoutingBetween(source, _hoveredBlock), source, _connectorSourcePort, end, endNormal, endBounds);
 
             Stroke stroke = ConnectorGlyph.CreateStroke(Settings.Colors.SelectedConnector, prototype.LineWidthInMM) with
             {
@@ -134,7 +134,7 @@ public abstract partial class Sheet
             ? GetMovingEnd(point, towards: sourcePort)
             : (targetPort, target.PortDirection(connector.TargetPort), target.RoutingBounds(true));
 
-        ConnectorRoute route = ConnectorGlyph.CreateRoute(connector.Routing, start, startNormal, startBounds, end, endNormal, endBounds);
+        ConnectorRoute route = ConnectorGlyph.CreateRoute(connector.RoutingBetween(AnchorBlock, _hoveredBlock), start, startNormal, startBounds, end, endNormal, endBounds);
         Stroke stroke = ConnectorGlyph.CreateStroke(Settings.Colors.SelectedConnector, connector.LineWidthInMM * 1.5f);
 
         connector.DrawConnection(canvas, route, stroke, ConnectorGlyph.ArrowLength(stroke.Width));

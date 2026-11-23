@@ -33,6 +33,8 @@ Drag the divider to resize a docked panel. Escape cancels a drag. The layout is 
 | `Makarov.FlowchartBuilder` | The application: documents, an infinite canvas, glyph base classes, editor commands, windows |
 | `Makarov.FlowchartBuilder.API` | Attributes that describe glyphs: `[GlyphName]`, `[GlyphFamily]`, `[GlyphDefaultWidth]`, `[VisibleGlyph]`, `[CommandGlyph]`, `[ActiveProperty]` and others |
 | `Makarov.FlowchartBuilder.Glyphs.Flowchart` | Begin, End, If, In/Out, Operation, Subroutine |
+| `Makarov.FlowchartBuilder.Glyphs.States` | States, initial/final markers and named transitions |
+| `Makarov.FlowchartBuilder.Tools.StateMachine` | Interactive transition testing and Python state machine export |
 | `Makarov.FlowchartBuilder.Glyphs.Uml` | UML classes, inheritance and directed associations |
 | `Makarov.FlowchartBuilder.Tools.ClassPython` | Python class module generation and diagram diagnostics |
 | `Makarov.FlowchartBuilder.Glyphs.Electrical` | Electrical components, wire junctions and orthogonal wires |
@@ -105,6 +107,27 @@ The **Plugins** menu lists commands from optional `IDocumentTool` assemblies in 
 - **Circuit simulation.** Open **RC-low-pass**, then **Plugins → Circuit simulation**. Select the voltage at C1 or a component current and press **Run**. The oscilloscope shows time in seconds and the selected quantity in volts or amperes. Change the integration step in microseconds, pause, or reset to zero initial energy. **DC operating point** starts at DC equilibrium. **AC sweep** plots the selected node's voltage magnitude from 1 Hz to 100 kHz for a circuit with an AC source. With 1 kΩ and 1 µF the example's cutoff is about 159 Hz.
 - The simulator joins explicit wire endpoints and junctions. Connect both terminals of each component and provide ground and a source. Set **Component value** to e.g. `1k`, `100nF`, `10mH`, `9V`, `5V 50Hz`, `12V 5W` or `2A`. The AC amplitude is peak voltage. The model supports R, L, C, batteries, DC/AC sources, piecewise-linear diodes, resistive lamps, switches and fuses. Switch controls change the simulation session. Reset clears a blown fuse. NPN simulation is unsupported and produces a diagnostic. The adapted MNA solver and SI units parser are from Schematic Editor; its MIT notice ships with the plugin.
 - **Flowchart → Python.** Open **Countdown**, choose the export command and save the preview as `countdown.py`. Running `python countdown.py` prints 3, 2 and 1. A diagram starts at one Begin and reaches its blocks through directed connectors. Operation takes a single Python statement, Subroutine a call, If a Python expression, and In/Out takes `input name` (a string) or `output expression`. Label the two outgoing If connections `true` and `false` (also yes/no, да/нет or так/ні). Simple sequences, single-entry decisions and pre-test loops produce Python statements, `if` / `else` and `while`. Other control-flow graphs use a dispatch loop. Python snippets in captions are copied into the exported source. The preview stays open while you edit the diagram. Click a code line to select its block, or select a block to highlight its code. The preview lets you save the program for execution in Python.
+
+### State diagrams — try a book loan
+
+Open **Plugins → Examples → Book-loan**, then **Plugins → State diagram…**. The **Transitions** tab starts at **Активна** (active). Click **Книгу вернули** (book returned) for an on-time return. Click **Restart**, choose **Истёк срок** (due date passed), then **Книгу вернули** to return an overdue loan. Both paths end at **Закрыта** (closed). The canvas highlights the current state, and the history records each event and its destination. You can change the diagram with the window open. The runner keeps a path that still exists and restarts when an edit invalidates it.
+
+To draw an automaton, place **State** blocks from the **States** palette. Give each a unique caption. The first state placed is initial. Use **Initial state** and **Final state** in Properties to edit these markers. Drag from a port to another state to create a **Transition**, then set its caption to the event name. To create a self-transition, drag between two different ports of the same state. Event names must be unique within a source state. The tool links validation messages to the affected elements for corrections.
+
+On the **Python** tab, save the module as `book_loan.py`. It uses the standard library and the same transitions as the editor.
+
+```python
+from book_loan import StateMachine
+
+loan = StateMachine()
+assert loan.state.value == "Активна"
+assert loan.handle("Истёк срок").value == "Просрочена"
+assert loan.handle("Книгу вернули").value == "Закрыта"
+assert loan.is_final and loan.available_events() == ()
+loan.reset()
+```
+
+`handle(event)` raises `ValueError` if the event is unavailable. The machine stays in its current state.
 
 ### Class diagrams and Python
 
