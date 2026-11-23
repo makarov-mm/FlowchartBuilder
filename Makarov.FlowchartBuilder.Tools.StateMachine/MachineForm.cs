@@ -11,6 +11,7 @@ internal sealed class MachineForm : Form
     private readonly Label _current = new() { AutoSize = true, UseMnemonic = false, Margin = new Padding(4, 4, 4, 10) };
     private readonly FlowLayoutPanel _events = new() { Dock = DockStyle.Fill, AutoScroll = true, WrapContents = true };
     private readonly ListBox _history = new() { Dock = DockStyle.Fill, HorizontalScrollbar = true, IntegralHeight = false };
+    private readonly Button _back = new() { AutoSize = true, Enabled = false };
     private readonly DataGridView _issues = new()
     {
         Dock = DockStyle.Fill, ReadOnly = true, MultiSelect = false, RowHeadersVisible = false,
@@ -69,6 +70,13 @@ internal sealed class MachineForm : Form
 
         _events.AccessibleName = T("Available events", "Доступные события", "Доступні події");
         _history.AccessibleName = T("Transition history", "История переходов", "Історія переходів");
+        _back.Text = T("Step back", "Шаг назад", "Крок назад");
+        _back.Click += (_, _) =>
+        {
+            if (_run?.StepBack() != true) return;
+            _history.Items.RemoveAt(_history.Items.Count - 1);
+            ShowCurrent(reveal: true);
+        };
         var reset = new Button { AutoSize = true, Text = T("Restart", "Начать заново", "Почати спочатку") };
         reset.Click += (_, _) =>
         {
@@ -80,7 +88,7 @@ internal sealed class MachineForm : Form
         var locate = new Button { AutoSize = true, Text = T("Show on canvas", "Показать на холсте", "Показати на полотні") };
         locate.Click += (_, _) => { if (_run != null) Core.Instance.RevealGlyph(Document, _run.Current.Id); };
         var actions = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
-        actions.Controls.AddRange([reset, locate]);
+        actions.Controls.AddRange([_back, reset, locate]);
         layout.Controls.Add(_current, 0, 0);
         layout.Controls.Add(new Label { AutoSize = true, Text = _events.AccessibleName }, 0, 1);
         layout.Controls.Add(_events, 0, 2);
@@ -185,6 +193,7 @@ internal sealed class MachineForm : Form
     {
         if (_run == null) return;
         var current = _run.Current;
+        _back.Enabled = _run.History.Count > 0;
         _current.Text = T("Current state", "Текущее состояние", "Поточний стан") + " — " + current.Name;
         var available = _run.Definition.Available(current.Id);
         _events.SuspendLayout();

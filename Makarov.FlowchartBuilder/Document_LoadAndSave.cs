@@ -53,7 +53,8 @@ public sealed partial class Document
     public void Save(string fileName)
     {
         CommitChange();
-        CreateXml(includeView: true).Save(fileName);
+        var xml = CreateXml(includeView: true);
+        DocumentFile.Write(fileName, xml.Save);
 
         string name = Path.GetFileNameWithoutExtension(fileName);
         bool renamed = Name != name;

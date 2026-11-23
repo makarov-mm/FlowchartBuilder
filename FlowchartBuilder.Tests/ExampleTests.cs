@@ -40,6 +40,32 @@ public sealed class ExampleTests
     }
 
     [Fact]
+    public void FailedSaveAsKeepsPreviousPathAndUnsavedChangesForRetry()
+    {
+        Core.Initialize(new MemoryStorage());
+        var document = Document.LoadExample(Path.Combine(AppContext.BaseDirectory, "Examples", "Countdown.mfb"));
+        var directory = Directory.CreateTempSubdirectory();
+        try
+        {
+            string path = Path.Combine(directory.FullName, "saved.mfb");
+            document.Save(path);
+            document.DocumentSheet.Glyphs.Single(g => g.Id == "init").Caption = "n = 8";
+
+            string unavailable = Path.Combine(directory.FullName, "missing", "new-name.mfb");
+            Assert.Throws<DirectoryNotFoundException>(() => document.Save(unavailable));
+            Assert.True(document.IsModified);
+            Assert.Equal(path, document.FileName);
+            Assert.Equal("saved", document.DisplayName);
+            Assert.Equal("n = 3", Document.Load(path).DocumentSheet.Glyphs.Single(g => g.Id == "init").Caption);
+
+            document.Save(path);
+            Assert.False(document.IsModified);
+            Assert.Equal("n = 8", Document.Load(path).DocumentSheet.Glyphs.Single(g => g.Id == "init").Caption);
+        }
+        finally { directory.Delete(recursive: true); }
+    }
+
+    [Fact]
     public void CorrectingExerciseExitRestoresTheWorkingCountdown()
     {
         Core.Initialize(new MemoryStorage());

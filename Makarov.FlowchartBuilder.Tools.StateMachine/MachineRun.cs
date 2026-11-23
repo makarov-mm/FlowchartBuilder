@@ -16,6 +16,14 @@ internal sealed class MachineRun(MachineDefinition definition)
         return true;
     }
 
+    public bool StepBack()
+    {
+        if (_history.Count == 0) return false;
+        Current = Definition.State(_history[^1].SourceId);
+        _history.RemoveAt(_history.Count - 1);
+        return true;
+    }
+
     public void Reset()
     {
         _history.Clear();

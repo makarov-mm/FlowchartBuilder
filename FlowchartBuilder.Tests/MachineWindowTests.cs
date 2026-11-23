@@ -41,12 +41,24 @@ public sealed class MachineWindowTests
         var history = Descendants(window).OfType<ListBox>().Single();
 
         Assert.Equal("active", Highlight());
+        Assert.False(Button("Шаг назад").Enabled);
         Button("Истёк срок").PerformClick();
         Assert.Equal("overdue", Highlight());
         Button("Книгу вернули").PerformClick();
         Assert.Equal("closed", Highlight());
         Assert.Equal(2, history.Items.Count);
         Assert.DoesNotContain(Descendants(window).OfType<Button>(), b => b.Visible && b.Text == "Книгу вернули");
+        Assert.True(Button("Шаг назад").Enabled);
+        Button("Шаг назад").PerformClick();
+        Assert.Equal("overdue", Highlight());
+        Assert.Single(history.Items.Cast<object>());
+        Button("Шаг назад").PerformClick();
+        Assert.Equal("active", Highlight());
+        Assert.False(Button("Шаг назад").Enabled);
+        Assert.Empty(history.Items.Cast<object>());
+        Button("Книгу вернули").PerformClick();
+        Assert.Equal("closed", Highlight());
+        Assert.Single(history.Items.Cast<object>());
         Button("Начать заново").PerformClick();
         Assert.Equal("active", Highlight());
         Assert.Empty(history.Items.Cast<object>());

@@ -9,6 +9,8 @@
     <Project Path="Makarov.Framework.Serialization/Makarov.Framework.Serialization.csproj" />
   </Folder>
   <Folder Name="/Plugins/">
+    <Project Path="Makarov.FlowchartBuilder.Glyphs.EntityRelationship/Makarov.FlowchartBuilder.Glyphs.EntityRelationship.csproj" />
+    <Project Path="Makarov.FlowchartBuilder.Tools.EntityRelationship/Makarov.FlowchartBuilder.Tools.EntityRelationship.csproj" />
     <Project Path="Makarov.FlowchartBuilder.Glyphs.States/Makarov.FlowchartBuilder.Glyphs.States.csproj" />
     <Project Path="Makarov.FlowchartBuilder.Tools.StateMachine/Makarov.FlowchartBuilder.Tools.StateMachine.csproj" />
     <Project Path="Makarov.FlowchartBuilder.Glyphs.Uml/Makarov.FlowchartBuilder.Glyphs.Uml.csproj" />

@@ -10,6 +10,8 @@
     <ProjectReference Include="../Makarov.FlowchartBuilder.Tools.PythonExport/Makarov.FlowchartBuilder.Tools.PythonExport.csproj" />
     <ProjectReference Include="../Makarov.FlowchartBuilder.Glyphs.Uml/Makarov.FlowchartBuilder.Glyphs.Uml.csproj" />
     <ProjectReference Include="../Makarov.FlowchartBuilder.Tools.ClassPython/Makarov.FlowchartBuilder.Tools.ClassPython.csproj" />
+    <ProjectReference Include="../Makarov.FlowchartBuilder.Glyphs.EntityRelationship/Makarov.FlowchartBuilder.Glyphs.EntityRelationship.csproj" />
+    <ProjectReference Include="../Makarov.FlowchartBuilder.Tools.EntityRelationship/Makarov.FlowchartBuilder.Tools.EntityRelationship.csproj" />
     <ProjectReference Include="../Makarov.FlowchartBuilder.Glyphs.States/Makarov.FlowchartBuilder.Glyphs.States.csproj" />
     <ProjectReference Include="../Makarov.FlowchartBuilder.Tools.StateMachine/Makarov.FlowchartBuilder.Tools.StateMachine.csproj" />
     <ProjectReference Include="../Makarov.FlowchartBuilder.Glyphs.Flowchart/Makarov.FlowchartBuilder.Glyphs.Flowchart.csproj" ReferenceOutputAssembly="false" />
@@ -20,6 +22,6 @@
     <ProjectReference Include="../Makarov.FlowchartBuilder.Glyphs.Simple/Makarov.FlowchartBuilder.Glyphs.Simple.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <Target Name="CopyTestPlugin" AfterTargets="Build">
-    <Copy SourceFiles="../Build/$(Configuration)/Plugins/Makarov.FlowchartBuilder.Glyphs.Simple.dll;../Build/$(Configuration)/Plugins/Makarov.FlowchartBuilder.Glyphs.Electrical.dll;../Build/$(Configuration)/Plugins/Makarov.FlowchartBuilder.Glyphs.Flowchart.dll;../Build/$(Configuration)/Plugins/Makarov.FlowchartBuilder.Glyphs.Uml.dll;../Build/$(Configuration)/Plugins/Makarov.FlowchartBuilder.Glyphs.States.dll" DestinationFolder="$(TargetDir)Plugins/" />
+    <Copy SourceFiles="../Build/$(Configuration)/Plugins/Makarov.FlowchartBuilder.Glyphs.Simple.dll;../Build/$(Configuration)/Plugins/Makarov.FlowchartBuilder.Glyphs.Electrical.dll;../Build/$(Configuration)/Plugins/Makarov.FlowchartBuilder.Glyphs.Flowchart.dll;../Build/$(Configuration)/Plugins/Makarov.FlowchartBuilder.Glyphs.Uml.dll;../Build/$(Configuration)/Plugins/Makarov.FlowchartBuilder.Glyphs.States.dll;../Build/$(Configuration)/Plugins/Makarov.FlowchartBuilder.Glyphs.EntityRelationship.dll" DestinationFolder="$(TargetDir)Plugins/" />
   </Target>
 </Project>

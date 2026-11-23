@@ -33,6 +33,8 @@ Drag the divider to resize a docked panel. Escape cancels a drag. The layout is 
 | `Makarov.FlowchartBuilder` | The application: documents, an infinite canvas, glyph base classes, editor commands, windows |
 | `Makarov.FlowchartBuilder.API` | Attributes that describe glyphs: `[GlyphName]`, `[GlyphFamily]`, `[GlyphDefaultWidth]`, `[VisibleGlyph]`, `[CommandGlyph]`, `[ActiveProperty]` and others |
 | `Makarov.FlowchartBuilder.Glyphs.Flowchart` | Begin, End, If, In/Out, Operation, Subroutine |
+| `Makarov.FlowchartBuilder.Glyphs.EntityRelationship` | Database tables, fields and one-to-many relationships |
+| `Makarov.FlowchartBuilder.Tools.EntityRelationship` | SQLite schema export and an in-memory database for testing queries |
 | `Makarov.FlowchartBuilder.Glyphs.States` | States, initial/final markers and named transitions |
 | `Makarov.FlowchartBuilder.Tools.StateMachine` | Interactive transition testing and Python state machine export |
 | `Makarov.FlowchartBuilder.Glyphs.Uml` | UML classes, inheritance and directed associations |
@@ -108,9 +110,29 @@ The **Plugins** menu lists commands from optional `IDocumentTool` assemblies in 
 - The simulator joins explicit wire endpoints and junctions. Connect both terminals of each component and provide ground and a source. Set **Component value** to e.g. `1k`, `100nF`, `10mH`, `9V`, `5V 50Hz`, `12V 5W` or `2A`. The AC amplitude is peak voltage. The model supports R, L, C, batteries, DC/AC sources, piecewise-linear diodes, resistive lamps, switches and fuses. Switch controls change the simulation session. Reset clears a blown fuse. NPN simulation is unsupported and produces a diagnostic. The adapted MNA solver and SI units parser are from Schematic Editor; its MIT notice ships with the plugin.
 - **Flowchart → Python.** Open **Countdown**, choose the export command and save the preview as `countdown.py`. Running `python countdown.py` prints 3, 2 and 1. A diagram starts at one Begin and reaches its blocks through directed connectors. Operation takes a single Python statement, Subroutine a call, If a Python expression, and In/Out takes `input name` (a string) or `output expression`. Label the two outgoing If connections `true` and `false` (also yes/no, да/нет or так/ні). Simple sequences, single-entry decisions and pre-test loops produce Python statements, `if` / `else` and `while`. Other control-flow graphs use a dispatch loop. Python snippets in captions are copied into the exported source. The preview stays open while you edit the diagram. Click a code line to select its block, or select a block to highlight its code. The preview lets you save the program for execution in Python.
 
+### ER diagrams and SQLite — try a library database
+
+Open **Plugins → Examples → Library-database**, then **Plugins → ER diagram → SQLite…**. The diagram separates a book title from its physical copies. Each loan links one copy to one reader and records the issue date, due date and return date.
+
+The **SQL** tab previews the generated schema and saves a UTF-8 `.sql` file. The **Test database** tab opens an in-memory SQLite database. In the library example, try issuing the first copy to a reader, then issuing it again to another reader. The second issue fails while the first loan is open. Issue the second copy of the same title, return the first copy and lend it again. You can edit the SQL commands and inspect the rows. Each diagram has its own temporary data. After a schema edit, the tab keeps your rows, last result and SQL draft. Undo the edit to continue with the same data, or choose **Rebuild database** to start testing the revised schema with fresh data. Each table has a query template for viewing its rows. Closing the tool ends the session.
+
+To add test data, pick `readers` in **Table** and click **Add row…**. Leave `id` on **Automatic**, enter a reader's name and click **Add**. Then choose `loans` to lend a copy to that reader. Pick the copy and reader keys, enter the issue and due dates, and leave `returned_on` as **NULL**. If a copy is already on loan, you can correct the values in the open form. After a successful insert the result grid shows the table, and your SQL draft remains available.
+
+The form uses the fields and relationships in the current diagram. For foreign keys it suggests up to 100 existing keys and displays a name or title when the referenced table has a corresponding text column. You can also enter a key directly. For a nullable text field, choose **Value** to store an empty string or **NULL** to leave it unset.
+
+To create your own diagram, place **Database table** blocks from the **Entity relationship** palette. Set each table name and enter one field per line in **Table fields**, for example:
+
+```text
+id INTEGER PK
+title TEXT NOT NULL
+isbn TEXT UNIQUE
+```
+
+Supported types are `INTEGER`, `TEXT`, `REAL`, `BLOB` and `NUMERIC`. Quote field names containing spaces with double quotes. Drag a **One-to-many relationship** from the parent table to the child, then set its **Foreign key field** to the child column that references the parent's primary key. In the library example, `loans.copy_id` references `copies.id`. In Properties for `loans`, **Unique field** is `copy_id` and **While null field** is `returned_on`. The exported partial unique index enforces one open loan per copy while keeping its loan history.
+
 ### State diagrams — try a book loan
 
-Open **Plugins → Examples → Book-loan**, then **Plugins → State diagram…**. The **Transitions** tab starts at **Активна** (active). Click **Книгу вернули** (book returned) for an on-time return. Click **Restart**, choose **Истёк срок** (due date passed), then **Книгу вернули** to return an overdue loan. Both paths end at **Закрыта** (closed). The canvas highlights the current state, and the history records each event and its destination. You can change the diagram with the window open. The runner keeps a path that still exists and restarts when an edit invalidates it.
+Open **Plugins → Examples → Book-loan**, then **Plugins → State diagram…**. The **Transitions** tab starts at **Активна** (active). Click **Книгу вернули** (book returned) for an on-time return. Choose **Step back** to undo that test event. From **Активна**, choose **Истёк срок** (due date passed), then **Книгу вернули** to return an overdue loan. You can step back through the run one event at a time or use **Restart** to return to the initial state. Both paths end at **Закрыта** (closed). The canvas highlights the current state, and the history records each event and its destination. You can change the diagram with the window open. The runner keeps a path that still exists and restarts when an edit invalidates it.
 
 To draw an automaton, place **State** blocks from the **States** palette. Give each a unique caption. The first state placed is initial. Use **Initial state** and **Final state** in Properties to edit these markers. Drag from a port to another state to create a **Transition**, then set its caption to the event name. To create a self-transition, drag between two different ports of the same state. Event names must be unique within a source state. The tool links validation messages to the affected elements for corrections.
 
@@ -180,7 +202,7 @@ To move to a newer .NET, change `TargetFramework` in `Directory.Build.props`.
 
 The editor opens an infinite canvas. Older paper formats load on that canvas. Document tabs,
 keyboard shortcuts, pan and zoom, editable connector ends, grouping, locks, undo/redo and bitmap
-export are implemented. Save As, Save All and close commands use the document's dirty state.
+export are implemented. Save As, Save All and close commands use the document's dirty state. Saving a diagram writes and flushes a temporary file in the same directory before replacing the previous copy. If the write fails, the previous diagram remains available and you can retry with your edits still open.
 WindowsManager manages tool windows. Core owns editor services and the command and glyph
 metadata caches. Direct2D render targets manage their drawing resources.
 

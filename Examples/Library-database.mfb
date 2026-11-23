@@ -1,0 +1,67 @@
+<fb:FlowchartBuilderDocument Version="2.0.0.0" xmlns:fb="http://flowchartbuilder.blogspot.com">
+  <fb:Sheet fb:ClassName="Makarov.FlowchartBuilder.Sheets.InfiniteSheet">
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.EntityRelationship.TableGlyph" id="books">
+      <fb:Property fb:Value="Caption">books</fb:Property>
+      <fb:Property fb:Value="Fields">id INTEGER PK
+title TEXT NOT NULL</fb:Property>
+      <fb:Property fb:Value="XInMM">50</fb:Property>
+      <fb:Property fb:Value="YInMM">32</fb:Property>
+      <fb:Property fb:Value="WidthInMM">66</fb:Property>
+      <fb:Property fb:Value="HeightInMM">26</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.EntityRelationship.TableGlyph" id="copies">
+      <fb:Property fb:Value="Caption">copies</fb:Property>
+      <fb:Property fb:Value="Fields">id INTEGER PK
+book_id INTEGER NOT NULL</fb:Property>
+      <fb:Property fb:Value="XInMM">152</fb:Property>
+      <fb:Property fb:Value="YInMM">32</fb:Property>
+      <fb:Property fb:Value="WidthInMM">78</fb:Property>
+      <fb:Property fb:Value="HeightInMM">26</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.EntityRelationship.TableGlyph" id="readers">
+      <fb:Property fb:Value="Caption">readers</fb:Property>
+      <fb:Property fb:Value="Fields">id INTEGER PK
+name TEXT NOT NULL</fb:Property>
+      <fb:Property fb:Value="XInMM">50</fb:Property>
+      <fb:Property fb:Value="YInMM">102</fb:Property>
+      <fb:Property fb:Value="WidthInMM">66</fb:Property>
+      <fb:Property fb:Value="HeightInMM">26</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.EntityRelationship.TableGlyph" id="loans">
+      <fb:Property fb:Value="Caption">loans</fb:Property>
+      <fb:Property fb:Value="Fields">id INTEGER PK
+copy_id INTEGER NOT NULL
+reader_id INTEGER NOT NULL
+issued_on TEXT NOT NULL
+due_on TEXT NOT NULL
+returned_on TEXT</fb:Property>
+      <fb:Property fb:Value="UniqueField">copy_id</fb:Property>
+      <fb:Property fb:Value="WhileNullField">returned_on</fb:Property>
+      <fb:Property fb:Value="XInMM">152</fb:Property>
+      <fb:Property fb:Value="YInMM">102</fb:Property>
+      <fb:Property fb:Value="WidthInMM">78</fb:Property>
+      <fb:Property fb:Value="HeightInMM">56</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.EntityRelationship.RelationshipGlyph" id="book-copies">
+      <fb:Property fb:Value="Caption">book_id</fb:Property>
+      <fb:Property fb:Value="SourceGlyphId">books</fb:Property>
+      <fb:Property fb:Value="SourcePort">1</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">copies</fb:Property>
+      <fb:Property fb:Value="TargetPort">3</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.EntityRelationship.RelationshipGlyph" id="copy-loans">
+      <fb:Property fb:Value="Caption">copy_id</fb:Property>
+      <fb:Property fb:Value="SourceGlyphId">copies</fb:Property>
+      <fb:Property fb:Value="SourcePort">2</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">loans</fb:Property>
+      <fb:Property fb:Value="TargetPort">0</fb:Property>
+    </fb:Glyph>
+    <fb:Glyph fb:ClassName="Makarov.FlowchartBuilder.Glyphs.EntityRelationship.RelationshipGlyph" id="reader-loans">
+      <fb:Property fb:Value="Caption">reader_id</fb:Property>
+      <fb:Property fb:Value="SourceGlyphId">readers</fb:Property>
+      <fb:Property fb:Value="SourcePort">1</fb:Property>
+      <fb:Property fb:Value="TargetGlyphId">loans</fb:Property>
+      <fb:Property fb:Value="TargetPort">3</fb:Property>
+    </fb:Glyph>
+  </fb:Sheet>
+</fb:FlowchartBuilderDocument>
