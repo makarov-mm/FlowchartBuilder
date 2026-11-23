@@ -1,16 +1,146 @@
 # FlowchartBuilder
 
-A modular WinForms diagram editor with an infinite canvas. Start drawing immediately or press Ctrl+N for a new canvas. Drag with the middle mouse button to pan in any direction. Older paper-sized documents open on the same canvas.
+FlowchartBuilder is a Windows diagram editor with an infinite canvas. Draw an algorithm and follow a generated Python line back to its block, step through the events in a state machine, or enter test data against a SQLite schema drawn on the canvas. The electrical tools use the same editor to wire up a circuit and plot its response.
+
+![Voltage doubler schematic in FlowchartBuilder with the circuit simulator plotting output voltage over time](screenshot.png)
+
+## Quick start
+
+Launch `Makarov.FlowchartBuilder.exe` from the extracted Windows application folder. To run from a source checkout, follow the [build instructions](#building).
+
+1. Open **Plugins → Examples → Countdown**, then **Plugins → Flowchart → Python…**. Click the line `while n > 0:` in the preview. The editor selects the decision block on the canvas.
+2. Select the block labelled `n = 3` and change its **Caption** to `n = 5` in Properties. The preview updates. Press **Ctrl+S** in the editor to save your copy of the diagram as an `.mfb` file.
+3. Choose **Save .py…** in the preview and name the file `countdown.py`. With Python 3 installed, run `python countdown.py` from the folder where you saved it. The edited example prints 5, 4, 3, 2 and 1 on separate lines.
+
+### Choose an example
+
+Open any of these by name under **Plugins → Examples**. Each one opens in a fresh document tab.
+
+| Example | Command under Plugins | What to try |
+|---|---|---|
+| [Countdown](Examples/Countdown.mfb) | **Flowchart → Python…** | Change the starting value and compare the diagram with the generated loop. |
+| [Countdown-exercise](Examples/Countdown-exercise.mfb) | **Check flowchart** | Follow a diagnostic to the decision arrow with the incorrect label and fix it. |
+| [Book-loan](Examples/Book-loan.mfb) | **State diagram…** | Simulate a late return, step back one event and inspect the transition history. |
+| [Library-classes](Examples/Library-classes.mfb) | **Class diagram → Python…** | Export the `Member` and `Loan` dataclasses and create a loan linked to a member. |
+| [Library-database](Examples/Library-database.mfb) | **ER diagram → SQLite…** | Add a reader, issue a copy and test the rule that prevents a second open loan for that copy. |
+| [RC-low-pass](Examples/RC-low-pass.mfb) | **Circuit simulation…** | Plot the capacitor voltage over time or measure the filter’s cutoff frequency. |
+
+## Working on the canvas
+
+Press **Ctrl+N** to open a blank diagram. Pick a block in the palette and click the canvas to place it. To connect two flowchart blocks, drag from a link point on the first block to the second block. Select the block or its connector to edit its **Caption** in Properties. Drag with the middle mouse button to pan. Older paper-sized documents open on the same infinite canvas.
+
+Drag the title of the glyph palette or the Properties window toward any edge of the work area.
+Release over the highlighted area to dock, or away from the edges to float the window.
+Drag the divider to resize a docked panel. Escape cancels a drag. The layout is restored on startup.
+
+## Simulation and code export
+
+The **Plugins** menu lists commands from optional `IDocumentTool` assemblies in the executable's `Plugins` directory. Each DLL can be distributed or removed separately. Restart the editor after changing the contents of this directory. **Plugins → Examples** opens a fresh copy of a diagram in its own tab. The first save asks for a destination. Opening a regular `.mfb` file still edits that file.
+
+- **Circuit simulation.** Open **RC-low-pass**, then **Plugins → Circuit simulation**. Select the voltage at C1 or a component current and press **Run**. The oscilloscope shows time in seconds and the selected quantity in volts or amperes. Change the integration step in microseconds, pause, or reset to zero initial energy. **DC operating point** starts at DC equilibrium. **AC sweep** plots the selected node's voltage magnitude from 1 Hz to 100 kHz for a circuit with an AC source. With 1 kΩ and 1 µF the example's cutoff is about 159 Hz.
+- The simulator joins explicit wire endpoints and junctions. Connect both terminals of each component and provide ground and a source. Set **Component value** to e.g. `1k`, `100nF`, `10mH`, `9V`, `5V 50Hz`, `12V 5W` or `2A`. The AC amplitude is peak voltage. The model supports R, L, C, batteries, DC/AC sources, piecewise-linear diodes, resistive lamps, switches and fuses. Switch controls change the simulation session. Reset clears a blown fuse. NPN simulation is unsupported and produces a diagnostic. The adapted MNA solver and SI units parser are from Schematic Editor; its MIT notice ships with the plugin.
+- **Flowchart → Python.** Open **Countdown**, choose the export command and save the preview as `countdown.py`. Running `python countdown.py` prints 3, 2 and 1. A diagram starts at one Begin and reaches its blocks through directed connectors. Operation takes a single Python statement, Subroutine a call, If a Python expression, and In/Out takes `input name` (a string) or `output expression`. Label the two outgoing If connections `true` and `false` (also yes/no, да/нет or так/ні). Simple sequences, single-entry decisions and pre-test loops produce Python statements, `if` / `else` and `while`. Other control-flow graphs use a dispatch loop. Python snippets in captions are copied into the exported source. The preview stays open while you edit the diagram. Click a code line to select its block, or select a block to highlight its code. The preview lets you save the program for execution in Python.
+
+### ER diagrams and SQLite — try a library database
+
+Open **Plugins → Examples → Library-database**, then **Plugins → ER diagram → SQLite…**. The diagram separates a book title from its physical copies. Each loan links one copy to one reader and records the issue date, due date and return date.
+
+The **Test database** tab starts with one title, two physical copies and two readers. Use the query templates to check the lending rule, or add your own rows through the form.
+
+1. In **Query templates**, choose **Lend copy 1 to Anna** and click **Run SQL**. In the result, `returned_on` is `NULL` while the loan is open.
+2. Run **Lend copy 1 to Oleg**. SQLite rejects the second open loan for that copy. Now run **Lend copy 2 to Oleg**. Both readers have the same title, each with a different physical copy.
+3. Run **Return copy 1** and then **Lend copy 1 to Oleg** again. Run **Show loans** to see the closed loan and both open loans. Each successful issue adds a row to the history.
+4. Run **Return copy 1** again to free that copy. To test another reader, pick `readers` in **Table** and click **Add row…**. Leave `id` on **Automatic**, enter the name and click **Add**. Select `loans` and click **Add row…** again. Choose the new reader and copy 1, enter `issued_on` and `due_on`, and leave `returned_on` as **NULL**. If a constraint fails you can correct the values in the same form. The SQL draft stays in the query editor.
+
+Each diagram has a separate in-memory database. After a schema edit, undo the edit to keep testing with your existing rows or click **Rebuild database** to test the new structure with fresh data. Closing the tool ends the session. The **SQL** tab saves the table definitions, keys and indexes in a UTF-8 `.sql` file. Test rows belong to the temporary session.
+
+The form uses the fields and relationships in the current diagram. For foreign keys it suggests up to 100 existing keys and displays a name or title when the referenced table has a corresponding text column. You can also enter a key directly. For a nullable text field, choose **Value** to store an empty string or **NULL** to leave it unset.
+
+To create your own diagram, place **Database table** blocks from the **Entity relationship** palette. Set each table name and enter one field per line in **Table fields**, for example:
+
+```text
+id INTEGER PK
+title TEXT NOT NULL
+isbn TEXT UNIQUE
+```
+
+Supported types are `INTEGER`, `TEXT`, `REAL`, `BLOB` and `NUMERIC`. Quote field names containing spaces with double quotes. Drag a **One-to-many relationship** from the parent table to the child, then set its **Foreign key field** to the child column that references the parent's primary key. In the library example, `loans.copy_id` references `copies.id`. In Properties for `loans`, **Unique field** is `copy_id` and **While null field** is `returned_on`. The exported partial unique index enforces one open loan per copy while keeping its loan history.
+
+#### Check the exported schema in SQLite
+
+Save the schema as `library.sql`. With the SQLite command-line shell installed, run `sqlite3 library.db` in that directory using a new database name. At the `sqlite>` prompt, run `.read library.sql` to create the four tables. You can inspect the relationships with `PRAGMA foreign_key_list(loans);` and the open-loan index with `.indexes loans`. When you open the database in a new connection, run `PRAGMA foreign_keys = ON;` to enforce its foreign keys there as well.
+
+![SQLite rejects a duplicate loan for copy 1 and lists Anna and Oleg with different copies of the same book](docs/screenshots/sqlite-library-loans.png)
+
+*SQLite session using the exported library schema and the example's sample data. Anna already holds copy 1 when the first INSERT runs. The query at the bottom shows the two open loans after Oleg receives copy 2.*
+
+### State diagrams — try a book loan
+
+Open **Plugins → Examples → Book-loan**, then **Plugins → State diagram…**. The **Transitions** tab starts at **Активна** (active). The button labels come from the events on the arrows. The highlighted block is the current state, and the history records each event and destination.
+
+| Starting state | Click this event | Expected state |
+|---|---|---|
+| Активна (active) | Книгу вернули (book returned) | Закрыта (closed) |
+| Активна (active) | Истёк срок (due date passed) | Просрочена (overdue) |
+| Просрочена (overdue) | Книгу вернули (book returned) | Закрыта (closed) |
+
+Try the first row, click **Step back** to return to **Активна**, then try the last two rows in order. Once the loan is closed there are no available events. **Restart** clears the run. You can edit the diagram with the tool open. It keeps the recorded path while those transitions still exist and restarts when an edit invalidates the path.
+
+To draw an automaton, place **State** blocks from the **States** palette. Give each a unique caption. The first state placed is initial. Use **Initial state** and **Final state** in Properties to edit these markers. Drag from a port to another state to create a **Transition**, then set its caption to the event name. To create a self-transition, drag between two different ports of the same state. Event names must be unique within a source state. The tool links validation messages to the affected elements for corrections.
+
+On the **Python** tab, save the module as `book_loan.py`. It uses the standard library and the same transitions as the editor.
+
+```python
+from book_loan import StateMachine
+
+loan = StateMachine()
+assert loan.state.value == "Активна"
+assert loan.handle("Истёк срок").value == "Просрочена"
+assert loan.handle("Книгу вернули").value == "Закрыта"
+assert loan.is_final and loan.available_events() == ()
+loan.reset()
+```
+
+`handle(event)` raises `ValueError` if the event is unavailable. The machine stays in its current state.
+
+### Class diagrams and Python
+
+Open **Plugins → Examples → Library-classes**, then **Plugins → Class diagram → Python**. The example models a library member and a loan. Save the preview as `models.py`. The generated module contains typed dataclasses with constructors and method stubs. For example, in Python:
+
+```python
+from models import Loan, Member
+
+reader = Member(name="Ada", member_id=7)
+loan = Loan(due_day=14, borrower=reader)
+assert loan.borrower.name == "Ada"
+```
+
+To create a diagram, place a **Class** from the **UML classes** palette. Set **Caption** to the Python class name. Enter one field per line in **Attributes** (e.g. `name: str`) and one signature per line in **Methods** (e.g. `can_borrow(active_loans: int) -> bool`). The generator adds `self` and leaves the method body for you to implement.
+
+Draw **Inheritance** from a child to its base class. Draw **Association** from the class that owns a reference to its target, then set the arrow's **Caption** to the field name (e.g. `borrower`). The exporter supports single inheritance and any number of named associations. Use ASCII Python identifiers for class, field and method names. Field and method types can use class names, scalar types, typed collections such as `list[str]` and unions such as `Member | None`. Use Python 3.10 or newer for these annotations. The preview updates after edits and undo. Click a diagnostic to select the class or relationship that needs attention.
+
+### First lesson — fix the countdown
+
+1. Open **Plugins → Examples → Countdown-exercise**. Predict what happens when `n` reaches zero.
+2. Choose **Plugins → Check flowchart**. The two exits of `n > 0` have identical labels. Select each issue to find its arrow on the canvas. Select the arrow leading to End and change its **Caption** to `false` in Properties. The issue list updates when you finish the edit.
+3. Open **Plugins → Flowchart → Python**. Select the line `while n > 0:` to find the decision. Select the block labelled `n -= 1` to find the decrement in Python.
+4. Predict the output, then save the preview as `countdown.py` and run `python countdown.py`. The output is 3, 2, 1 on separate lines. Explain why zero is skipped. Change the starting value to 5 and check your prediction again.
+
+### Filter lab — find the cutoff
+
+1. Open **Plugins → Examples → RC-low-pass**, then **Plugins → Circuit simulation → Gain and phase…**. Select the source terminal as input and the resistor-capacitor junction as output. The RC example selects this pair by default.
+2. Click either plot to move the shared cursor, or enter **159.15 Hz**. With 1 kΩ and 1 µF, the output/input voltage ratio is about **−3.01 dB** and the phase is **−45°**.
+3. Close both measurement and simulation windows. Set C1’s **Component value** to `2uF`, reopen the measurement, and find the same gain and phase at **79.58 Hz**. The time constant doubled, so the cutoff frequency halved.
+
+## Project background
 
 I wrote it in 2008-2011 to explore plugin architecture and declarative metadata, back when MEF,
 modern DI containers and `System.Text.Json` were not part of .NET yet. In 2026 the code was moved
 to .NET 11, cleaned up and given a Direct2D renderer.
 
-![Screenshot](screenshot.png)
+![Earlier FlowchartBuilder editor with the View menu open above a fixed sheet and a selected Subroutine block in Properties](docs/screenshots/classic-editor.png)
 
-Drag the title of the glyph palette or the Properties window toward any edge of the work area.
-Release over the highlighted area to dock, or away from the edges to float the window.
-Drag the divider to resize a docked panel. Escape cancels a drag. The layout is restored on startup.
+*The April 2026 editor used a fixed sheet. The screenshot shows the shape palette on the left, the zoom controls under View, and the selected block’s properties on the right. [Archived revision](https://github.com/makarov-mm/FlowchartBuilder/commit/f25fcb7c859291eb622d864df04a56b70791532e)*
 
 ## Solution layout
 
@@ -102,90 +232,13 @@ language is used after a restart.
 **Single instance.** Starting the application again (for example by opening a document from
 Explorer) passes the file names to the running copy and brings it to the front.
 
-## Simulation and code export
-
-The **Plugins** menu lists commands from optional `IDocumentTool` assemblies in the executable's `Plugins` directory. Each DLL can be distributed or removed separately. Restart the editor after changing the contents of this directory. **Plugins → Examples** opens a fresh copy of a diagram in its own tab. The first save asks for a destination. Opening a regular `.mfb` file still edits that file.
-
-- **Circuit simulation.** Open **RC-low-pass**, then **Plugins → Circuit simulation**. Select the voltage at C1 or a component current and press **Run**. The oscilloscope shows time in seconds and the selected quantity in volts or amperes. Change the integration step in microseconds, pause, or reset to zero initial energy. **DC operating point** starts at DC equilibrium. **AC sweep** plots the selected node's voltage magnitude from 1 Hz to 100 kHz for a circuit with an AC source. With 1 kΩ and 1 µF the example's cutoff is about 159 Hz.
-- The simulator joins explicit wire endpoints and junctions. Connect both terminals of each component and provide ground and a source. Set **Component value** to e.g. `1k`, `100nF`, `10mH`, `9V`, `5V 50Hz`, `12V 5W` or `2A`. The AC amplitude is peak voltage. The model supports R, L, C, batteries, DC/AC sources, piecewise-linear diodes, resistive lamps, switches and fuses. Switch controls change the simulation session. Reset clears a blown fuse. NPN simulation is unsupported and produces a diagnostic. The adapted MNA solver and SI units parser are from Schematic Editor; its MIT notice ships with the plugin.
-- **Flowchart → Python.** Open **Countdown**, choose the export command and save the preview as `countdown.py`. Running `python countdown.py` prints 3, 2 and 1. A diagram starts at one Begin and reaches its blocks through directed connectors. Operation takes a single Python statement, Subroutine a call, If a Python expression, and In/Out takes `input name` (a string) or `output expression`. Label the two outgoing If connections `true` and `false` (also yes/no, да/нет or так/ні). Simple sequences, single-entry decisions and pre-test loops produce Python statements, `if` / `else` and `while`. Other control-flow graphs use a dispatch loop. Python snippets in captions are copied into the exported source. The preview stays open while you edit the diagram. Click a code line to select its block, or select a block to highlight its code. The preview lets you save the program for execution in Python.
-
-### ER diagrams and SQLite — try a library database
-
-Open **Plugins → Examples → Library-database**, then **Plugins → ER diagram → SQLite…**. The diagram separates a book title from its physical copies. Each loan links one copy to one reader and records the issue date, due date and return date.
-
-The **SQL** tab previews the generated schema and saves a UTF-8 `.sql` file. The **Test database** tab opens an in-memory SQLite database. In the library example, try issuing the first copy to a reader, then issuing it again to another reader. The second issue fails while the first loan is open. Issue the second copy of the same title, return the first copy and lend it again. You can edit the SQL commands and inspect the rows. Each diagram has its own temporary data. After a schema edit, the tab keeps your rows, last result and SQL draft. Undo the edit to continue with the same data, or choose **Rebuild database** to start testing the revised schema with fresh data. Each table has a query template for viewing its rows. Closing the tool ends the session.
-
-To add test data, pick `readers` in **Table** and click **Add row…**. Leave `id` on **Automatic**, enter a reader's name and click **Add**. Then choose `loans` to lend a copy to that reader. Pick the copy and reader keys, enter the issue and due dates, and leave `returned_on` as **NULL**. If a copy is already on loan, you can correct the values in the open form. After a successful insert the result grid shows the table, and your SQL draft remains available.
-
-The form uses the fields and relationships in the current diagram. For foreign keys it suggests up to 100 existing keys and displays a name or title when the referenced table has a corresponding text column. You can also enter a key directly. For a nullable text field, choose **Value** to store an empty string or **NULL** to leave it unset.
-
-To create your own diagram, place **Database table** blocks from the **Entity relationship** palette. Set each table name and enter one field per line in **Table fields**, for example:
-
-```text
-id INTEGER PK
-title TEXT NOT NULL
-isbn TEXT UNIQUE
-```
-
-Supported types are `INTEGER`, `TEXT`, `REAL`, `BLOB` and `NUMERIC`. Quote field names containing spaces with double quotes. Drag a **One-to-many relationship** from the parent table to the child, then set its **Foreign key field** to the child column that references the parent's primary key. In the library example, `loans.copy_id` references `copies.id`. In Properties for `loans`, **Unique field** is `copy_id` and **While null field** is `returned_on`. The exported partial unique index enforces one open loan per copy while keeping its loan history.
-
-### State diagrams — try a book loan
-
-Open **Plugins → Examples → Book-loan**, then **Plugins → State diagram…**. The **Transitions** tab starts at **Активна** (active). Click **Книгу вернули** (book returned) for an on-time return. Choose **Step back** to undo that test event. From **Активна**, choose **Истёк срок** (due date passed), then **Книгу вернули** to return an overdue loan. You can step back through the run one event at a time or use **Restart** to return to the initial state. Both paths end at **Закрыта** (closed). The canvas highlights the current state, and the history records each event and its destination. You can change the diagram with the window open. The runner keeps a path that still exists and restarts when an edit invalidates it.
-
-To draw an automaton, place **State** blocks from the **States** palette. Give each a unique caption. The first state placed is initial. Use **Initial state** and **Final state** in Properties to edit these markers. Drag from a port to another state to create a **Transition**, then set its caption to the event name. To create a self-transition, drag between two different ports of the same state. Event names must be unique within a source state. The tool links validation messages to the affected elements for corrections.
-
-On the **Python** tab, save the module as `book_loan.py`. It uses the standard library and the same transitions as the editor.
-
-```python
-from book_loan import StateMachine
-
-loan = StateMachine()
-assert loan.state.value == "Активна"
-assert loan.handle("Истёк срок").value == "Просрочена"
-assert loan.handle("Книгу вернули").value == "Закрыта"
-assert loan.is_final and loan.available_events() == ()
-loan.reset()
-```
-
-`handle(event)` raises `ValueError` if the event is unavailable. The machine stays in its current state.
-
-### Class diagrams and Python
-
-Open **Plugins → Examples → Library-classes**, then **Plugins → Class diagram → Python**. The example models a library member and a loan. Save the preview as `models.py`. The generated module contains typed dataclasses with constructors and method stubs. For example, in Python:
-
-```python
-from models import Loan, Member
-
-reader = Member(name="Ada", member_id=7)
-loan = Loan(due_day=14, borrower=reader)
-assert loan.borrower.name == "Ada"
-```
-
-To create a diagram, place a **Class** from the **UML classes** palette. Set **Caption** to the Python class name. Enter one field per line in **Attributes** (e.g. `name: str`) and one signature per line in **Methods** (e.g. `can_borrow(active_loans: int) -> bool`). The generator adds `self` and leaves the method body for you to implement.
-
-Draw **Inheritance** from a child to its base class. Draw **Association** from the class that owns a reference to its target, then set the arrow's **Caption** to the field name (e.g. `borrower`). The exporter supports single inheritance and any number of named associations. Use ASCII Python identifiers for class, field and method names. Field and method types can use class names, scalar types, typed collections such as `list[str]` and unions such as `Member | None`. Use Python 3.10 or newer for these annotations. The preview updates after edits and undo. Click a diagnostic to select the class or relationship that needs attention.
-
-### First lesson — fix the countdown
-
-1. Open **Plugins → Examples → Countdown-exercise**. Predict what happens when `n` reaches zero.
-2. Choose **Plugins → Check flowchart**. The two exits of `n > 0` have identical labels. Select each issue to find its arrow on the canvas. Select the arrow leading to End and change its **Caption** to `false` in Properties. The issue list updates when you finish the edit.
-3. Open **Plugins → Flowchart → Python**. Select the line `while n > 0:` to find the decision. Select the block labelled `n -= 1` to find the decrement in Python.
-4. Predict the output, then save the preview as `countdown.py` and run `python countdown.py`. The output is 3, 2, 1 on separate lines. Explain why zero is skipped. Change the starting value to 5 and check your prediction again.
-
-### Filter lab — find the cutoff
-
-1. Open **Plugins → Examples → RC-low-pass**, then **Plugins → Circuit simulation → Gain and phase…**. Select the source terminal as input and the resistor-capacitor junction as output. The RC example selects this pair by default.
-2. Click either plot to move the shared cursor, or enter **159.15 Hz**. With 1 kΩ and 1 µF, the output/input voltage ratio is about **−3.01 dB** and the phase is **−45°**.
-3. Close both measurement and simulation windows. Set C1’s **Component value** to `2uF`, reopen the measurement, and find the same gain and phase at **79.58 Hz**. The time constant doubled, so the cutoff frequency halved.
-
 ## Building
 
-You need Windows and Visual Studio 2026 or the .NET 11 SDK.
+On Windows, install the .NET 11 SDK or open the solution in Visual Studio 2026. To build and launch it from PowerShell, run these commands at the repository root.
 
-```
+```powershell
 dotnet build FlowchartBuilder.slnx -c Release
+.\Build\Release\Makarov.FlowchartBuilder.exe
 ```
 
 The application is built into `Build\<Configuration>` and the glyph plugins into
